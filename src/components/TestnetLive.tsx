@@ -111,6 +111,12 @@ export function TestnetLive() {
                 </Link>
               </Button>
             </div>
+            
+            <div className="mt-8 text-[11px] leading-relaxed text-white/50 space-y-2 font-mono">
+              <p>• Current public testnet has 4 bonded active validators.</p>
+              <p>• Testnet tokens have no mainnet value. Mainnet is not live yet.</p>
+              <p>• Remaining external work before mainnet: independent external validators, additional public RPC/sentry outside current provider/account, real alerting/on-call, restore drill, external security review.</p>
+            </div>
           </motion.div>
 
           {/* Endpoints Grid */}

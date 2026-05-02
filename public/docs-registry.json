@@ -1,0 +1,177 @@
+[
+  {
+    "title": "Start Here",
+    "items": [
+      {
+        "id": "en/public-testnet-join",
+        "title": "Public Testnet Join Guide",
+        "path": "docs/en/V2_PUBLIC_TESTNET_JOIN_GUIDE.md"
+      },
+      {
+        "id": "en/ai-web4-official-demo",
+        "title": "AI/Web4 Official Demo",
+        "path": "docs/en/AI_WEB4_OFFICIAL_DEMO.md"
+      },
+      {
+        "id": "en/builder-quickstart",
+        "title": "Builder Quickstart",
+        "path": "docs/en/BUILDER_QUICKSTART.md"
+      },
+      {
+        "id": "en/external-validator-onboarding",
+        "title": "Validator Onboarding",
+        "path": "docs/en/EXTERNAL_VALIDATOR_ONBOARDING_PACKET.md"
+      }
+    ]
+  },
+  {
+    "title": "AI / Web4",
+    "items": [
+      {
+        "id": "en/web4-for-ynx",
+        "title": "Web4 Definition",
+        "path": "docs/en/WEB4_FOR_YNX.md"
+      },
+      {
+        "id": "en/ynx-v2-web4-api",
+        "title": "Web4 API",
+        "path": "docs/en/YNX_v2_WEB4_API.md"
+      },
+      {
+        "id": "en/ynx-v2-ai-settlement-api",
+        "title": "AI Settlement API",
+        "path": "docs/en/YNX_v2_AI_SETTLEMENT_API.md"
+      },
+      {
+        "id": "openapi/ynx-v2-web4-yaml",
+        "title": "Web4 Hub OpenAPI",
+        "path": "infra/openapi/ynx-v2-web4.yaml"
+      },
+      {
+        "id": "openapi/ynx-v2-ai-yaml",
+        "title": "AI Gateway OpenAPI",
+        "path": "infra/openapi/ynx-v2-ai.yaml"
+      }
+    ]
+  },
+  {
+    "title": "Validators & Testnet Ops",
+    "items": [
+      {
+        "id": "en/public-testnet-status-2026-05-02",
+        "title": "Public Testnet Status 2026-05-02",
+        "path": "docs/en/PUBLIC_TESTNET_STATUS_2026_05_02.md"
+      },
+      {
+        "id": "en/testnet-launch-grade-runbook",
+        "title": "Testnet Launch-Grade Runbook",
+        "path": "docs/en/TESTNET_LAUNCH_GRADE_RUNBOOK.md"
+      },
+      {
+        "id": "en/validator-node-join",
+        "title": "Validator Node Join Guide",
+        "path": "docs/en/V2_VALIDATOR_NODE_JOIN_GUIDE.md"
+      },
+      {
+        "id": "en/consensus-validator-join",
+        "title": "Consensus Validator Join Guide",
+        "path": "docs/en/V2_CONSENSUS_VALIDATOR_JOIN_GUIDE.md"
+      }
+    ]
+  },
+  {
+    "title": "Security",
+    "items": [
+      {
+        "id": "en/v2-high-assurance-crypto-model",
+        "title": "High Assurance Crypto Model",
+        "path": "docs/en/V2_HIGH_ASSURANCE_CRYPTO_MODEL.md"
+      },
+      {
+        "id": "en/ares-hybrid-crypto",
+        "title": "YNX ARES Hybrid Crypto Protocol",
+        "path": "docs/en/YNX_ARES_HYBRID_CRYPTO_PROTOCOL.md"
+      },
+      {
+        "id": "en/non-custodial-business-and-compliance-boundary",
+        "title": "Non-Custodial Business and Compliance Boundary",
+        "path": "docs/en/NON_CUSTODIAL_BUSINESS_AND_COMPLIANCE_BOUNDARY.md"
+      }
+    ]
+  },
+  {
+    "title": "Mainnet Readiness",
+    "items": [
+      {
+        "id": "en/mainnet-and-industry-readiness-gates",
+        "title": "Mainnet and Industry Readiness Gates",
+        "path": "docs/en/MAINNET_AND_INDUSTRY_READINESS_GATES.md"
+      },
+      {
+        "id": "zh/project-launch-packet",
+        "title": "Project Non-Technical Launch Packet",
+        "path": "docs/zh/项目非技术上线手续包.md"
+      }
+    ]
+  },
+  {
+    "title": "Chinese Docs",
+    "items": [
+      {
+        "id": "zh/ai-web4-official-demo",
+        "title": "AI/Web4 官方演示",
+        "path": "docs/zh/AI_WEB4_官方演示.md"
+      },
+      {
+        "id": "zh/web4-definition",
+        "title": "WEB4 在YNX中的定义",
+        "path": "docs/zh/WEB4_在YNX中的定义.md"
+      },
+      {
+        "id": "zh/ynx-v2-web4-blueprint",
+        "title": "YNX v2 WEB4 蓝图",
+        "path": "docs/zh/YNX_v2_WEB4_蓝图.md"
+      },
+      {
+        "id": "zh/ynx-v2-web4-api-spec",
+        "title": "YNX v2 WEB4 API 接口说明",
+        "path": "docs/zh/YNX_v2_WEB4_API_接口说明.md"
+      },
+      {
+        "id": "zh/public-testnet-join",
+        "title": "V2 公开测试网加入手册",
+        "path": "docs/zh/V2_公开测试网加入手册.md"
+      },
+      {
+        "id": "zh/validator-node-join",
+        "title": "V2 验证节点加入手册",
+        "path": "docs/zh/V2_验证节点加入手册.md"
+      },
+      {
+        "id": "zh/consensus-validator-join",
+        "title": "V2 共识验证人加入手册",
+        "path": "docs/zh/V2_共识验证人加入手册.md"
+      },
+      {
+        "id": "zh/v2-high-assurance-crypto",
+        "title": "V2 高保证加密与抗量子安全模型",
+        "path": "docs/zh/V2_高保证加密与抗量子安全模型.md"
+      },
+      {
+        "id": "zh/ares-hybrid-crypto",
+        "title": "YNX ARES 混合抗量子加密协议",
+        "path": "docs/zh/YNX_ARES_混合抗量子加密协议.md"
+      },
+      {
+        "id": "zh/non-custodial-business",
+        "title": "YNX 非托管商业与合规边界",
+        "path": "docs/zh/YNX_非托管商业与合规边界.md"
+      },
+      {
+        "id": "zh/mainnet-readiness-gates",
+        "title": "主网与行业级上线门禁",
+        "path": "docs/zh/主网与行业级上线门禁.md"
+      }
+    ]
+  }
+]

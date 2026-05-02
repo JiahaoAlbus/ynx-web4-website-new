@@ -25,7 +25,7 @@ export default function App() {
         <Route path="testnet" element={<Testnet />} />
         <Route path="faq" element={<FAQPage />} />
         <Route path="about" element={<About />} />
-        <Route path="docs" element={<Navigate to="/docs/all" replace />} />
+        <Route path="docs" element={<Navigate to="/docs/en/public-testnet-join" replace />} />
         <Route path="docs/*" element={<Docs />} />
       </Route>
     </Routes>

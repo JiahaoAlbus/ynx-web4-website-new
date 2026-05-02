@@ -102,7 +102,7 @@ export default {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-32">
+      <section className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-20">
         <BuildPathCard 
           icon={<Code2 className="w-8 h-8" />}
           title="EVM Developers"
@@ -124,6 +124,53 @@ export default {
           features={["/web4/policies", "/web4/sessions", "/web4/audit"]}
           link={NETWORK.endpoints.web4}
         />
+      </section>
+
+      <section className="max-w-7xl mx-auto px-6 mb-32">
+        <div className="bg-surface border border-border p-8 md:p-12 rounded-[32px] grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-klein/10 text-klein rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+              Official Demo
+            </div>
+            <h2 className="text-3xl font-display font-bold mb-6">AI/Web4 Settlement</h2>
+            <p className="text-ink/70 leading-relaxed mb-6">
+              A user grants an AI agent bounded authority, the agent completes a job, and YNX settles the reward through the AI settlement layer.
+            </p>
+            <p className="text-ink/60 text-sm leading-relaxed mb-8">
+              用户给 AI Agent 一个有限授权，Agent 完成任务后，通过 YNX 的 AI 结算层自动付款。
+            </p>
+            <div className="space-y-4 text-sm font-medium">
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Create Web4 policy</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Issue bounded session key</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Create AI payment vault</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Publish AI job</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Worker commits result hash</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Finalize job</div>
+              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Reward settles from vault</div>
+            </div>
+            <p className="text-xs text-ink/40 mt-8 italic">JSON evidence is written under output/ai_web4_demo/&lt;run-id&gt;/</p>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <div className="relative bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-x-auto shadow-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-slate-700" />
+                  <div className="w-3 h-3 rounded-full bg-slate-700" />
+                  <div className="w-3 h-3 rounded-full bg-slate-700" />
+                </div>
+              </div>
+              <pre className="text-emerald-400">
+                {`# Clone the core protocol repository
+git clone https://github.com/JiahaoAlbus/YNX
+cd YNX
+
+# Run the official settlement workflow
+./scripts/ai_web4_settlement_demo.sh`}
+              </pre>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="bg-ink text-white py-24 relative overflow-hidden rounded-3xl mx-6">

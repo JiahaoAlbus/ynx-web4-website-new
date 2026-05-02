@@ -8,37 +8,31 @@ import {
   Search,
   ExternalLink,
   Download,
-  AlertTriangle,
   Terminal,
+  MessageSquareWarning,
+  Loader2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github-dark.css";
-import { docsData as rawDocsData, expectedFilesCount, expectedWordsCount, expectedCorpusSha256, expectedFilePaths, expectedFileShas, expectedCorpusBytes, buildStamp } from "../data/docs";
 import { Magnetic } from "../components/ui/Magnetic";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import CryptoJS from "crypto-js";
 
-const ALLOWED_DOCS = [
-  "docs/en/V2_PUBLIC_TESTNET_JOIN_GUIDE.md",
-  "docs/en/V2_VALIDATOR_NODE_JOIN_GUIDE.md",
-  "docs/en/V2_CONSENSUS_VALIDATOR_JOIN_GUIDE.md",
-  "docs/en/RELEASE_YNXWEB4.md",
-  "docs/en/YNX_v2_WEB4_SPEC.md",
-  "docs/en/YNX_v2_WEB4_API.md",
-  "docs/en/YNX_v2_AI_SETTLEMENT_API.md",
-  "docs/zh/V2_公开测试网加入手册.md",
-  "docs/zh/V2_验证节点加入手册.md",
-  "docs/zh/V2_共识验证人加入手册.md",
-  "docs/zh/YNXWEB4_版本说明.md",
-  "docs/zh/WEB4_在YNX中的定义.md",
-  "docs/zh/YNX_v2_WEB4_API_接口说明.md",
-  "docs/zh/YNX_v2_WEB4_蓝图.md",
-  "infra/openapi/ynx-v2-ai.yaml",
-  "infra/openapi/ynx-v2-web4.yaml"
-];
+type DocItem = {
+  id: string;
+  title: string;
+  language: string;
+  category: string;
+  sourcePath: string;
+  publicPath: string;
+};
+
+type DocCategory = {
+  title: string;
+  items: DocItem[];
+};
 
 const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
   const isEn = lang === "en";
@@ -94,61 +88,90 @@ const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
   );
 };
 
-const START_FROM_ZERO_EN = `<div><start-from-zero lang="en"></start-from-zero></div>`;
-const START_FROM_ZERO_ZH = `<div><start-from-zero lang="zh"></start-from-zero></div>`;
-
-const allRawItems = rawDocsData.flatMap(c => c.items);
-const allowedItems = allRawItems.filter(item => ALLOWED_DOCS.includes(item.path));
-
-const docsData = rawDocsData.map(category => ({
-  ...category,
-  items: category.items.filter(item => ALLOWED_DOCS.includes(item.path))
-})).filter(category => category.items.length > 0);
-
 export function Docs() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine active doc based on URL
+  const [registry, setRegistry] = useState<DocCategory[]>([]);
+  const [isRegistryLoading, setIsRegistryLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/docs/registry.json")
+      .then(res => res.json())
+      .then(data => {
+        setRegistry(data);
+        setIsRegistryLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load registry", err);
+        setIsRegistryLoading(false);
+      });
+  }, []);
+
   const currentPath = location.pathname.replace(/^\/docs\//, "").replace(/\/$/, "");
 
-  const allItems = useMemo(() => rawDocsData.flatMap(c => c.items).filter(item => ALLOWED_DOCS.includes(item.path)), []);
+  const allItems = useMemo(() => registry.flatMap(c => c.items), [registry]);
 
-  const isIncomplete = false;
+  const [docContent, setDocContent] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Find current doc content
-  let currentDoc = null;
-  if (currentPath === "all") {
-    currentDoc = {
-      id: "all",
-      title: "All Documentation",
-      path: "",
-      content: allItems.map(item => item.content.trim().startsWith('# ') ? item.content : `# ${item.title}\n\n${item.content}`).join('\n\n---\n\n')
-    };
-  } else {
-    for (const category of docsData) {
-      const found = category.items.find((item) => item.id === currentPath);
-      if (found) {
-        currentDoc = found;
-        break;
-      }
+  // Find current doc metadata
+  let currentDoc: DocItem | null = null;
+  for (const category of registry) {
+    const found = category.items.find((item) => item.id === currentPath);
+    if (found) {
+      currentDoc = found;
+      break;
     }
   }
 
-  // If no specific doc is selected (e.g. /docs root), redirect to first doc
-  if (location.pathname === "/docs" || location.pathname === "/docs/") {
-    // Handled by router
-  }
+  // Fetch document content
+  useEffect(() => {
+    if (!currentDoc) {
+      setDocContent(null);
+      setFetchError(null);
+      return;
+    }
+    
+    let isMounted = true;
+    setIsLoading(true);
+    setDocContent(null);
+    setFetchError(null);
+    
+    fetch(`/docs/${currentDoc.id}.md`)
+      .then(res => {
+        if (!res.ok) throw new Error("Document not found");
+        return res.text();
+      })
+      .then(text => {
+        if (isMounted) {
+          setDocContent(text);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load document", err);
+        if (isMounted) {
+          setDocContent(null);
+          setFetchError(`Failed to fetch from ${currentDoc?.sourcePath}`);
+          setIsLoading(false);
+        }
+      });
 
-  const filteredDocs = docsData
+    return () => {
+      isMounted = false;
+    };
+  }, [currentDoc?.id, currentDoc?.sourcePath]);
+
+  const filteredDocs = registry
     .map((category) => ({
       ...category,
       items: category.items.filter(
         (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.content.toLowerCase().includes(searchQuery.toLowerCase()),
+          item.title.toLowerCase().includes(searchQuery.toLowerCase())
       ),
     }))
     .filter((category) => category.items.length > 0);
@@ -188,32 +211,6 @@ export function Docs() {
           </div>
 
           <nav className="space-y-8 pb-12">
-            <div>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    to="/docs/all"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`
-                      w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group
-                      ${
-                        currentPath === "all"
-                          ? "bg-klein/5 text-klein font-medium"
-                          : "text-ink/60 hover:text-ink hover:bg-surface"
-                      }
-                    `}
-                  >
-                    All Documentation
-                    {currentPath === "all" && (
-                      <motion.div
-                        layoutId="activeDoc"
-                        className="w-1.5 h-1.5 rounded-full bg-klein"
-                      />
-                    )}
-                  </Link>
-                </li>
-              </ul>
-            </div>
             {filteredDocs.map((category, i) => (
               <div key={i}>
                 <h3 className="text-xs font-mono font-bold text-ink/40 uppercase tracking-widest mb-4 px-2">
@@ -251,11 +248,11 @@ export function Docs() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 h-full overflow-y-auto py-12 lg:py-8 min-w-0 scroll-smooth">
+        <main className="flex-1 h-full overflow-y-auto py-12 lg:py-8 min-w-0 scroll-smooth relative">
           <div className="flex justify-end mb-4 gap-4">
-            {currentDoc && currentPath !== "all" && (
+            {currentDoc && currentPath !== "docs" && (
               <a
-                href={`https://github.com/JiahaoAlbus/YNX/blob/main/${currentDoc.path}`}
+                href={`https://github.com/JiahaoAlbus/YNX/blob/main/${currentDoc.sourcePath}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-ink/60 hover:text-ink hover:bg-surface rounded-lg transition-colors"
@@ -264,16 +261,16 @@ export function Docs() {
                 View Source
               </a>
             )}
-            {currentDoc && currentPath !== "all" && (
+            {currentDoc && docContent && currentPath !== "docs" && (
               <button
                 onClick={() => {
-                  const blob = new Blob([currentDoc.content], {
+                  const blob = new Blob([docContent], {
                     type: "text/markdown",
                   });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `${currentDoc.id}.md`;
+                  a.download = `${currentDoc.id.replace(/\//g, "-")}.md`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
@@ -283,29 +280,31 @@ export function Docs() {
                 Download Page
               </button>
             )}
-            <button
-              onClick={() => {
-                const allContent = docsData
-                  .map((cat) =>
-                    cat.items.map((item) => item.content).join("\n\n---\n\n"),
-                  )
-                  .join("\n\n---\n\n");
-                const blob = new Blob([allContent], { type: "text/markdown" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `ynx-docs-all.md`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-klein hover:bg-klein/90 rounded-lg transition-colors"
-            >
-              <Download size={16} />
-              Download All
-            </button>
           </div>
-          <article className="prose prose-lg prose-slate max-w-none">
-            {currentDoc ? (
+          
+          <article className="prose prose-lg prose-slate max-w-none min-h-[50vh]">
+            {isLoading ? (
+              <div className="animate-pulse space-y-6">
+                <div className="h-10 bg-slate-200 rounded w-2/3"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                </div>
+                <div className="space-y-3 pt-6">
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                  <div className="h-4 bg-slate-200 rounded w-4/5"></div>
+                  <div className="h-4 bg-slate-200 rounded w-full"></div>
+                </div>
+              </div>
+            ) : fetchError ? (
+              <div className="text-red-500 bg-red-50 p-6 rounded-lg text-center">
+                <MessageSquareWarning className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <h3 className="font-bold mb-2">Error Loading Document</h3>
+                <p>{fetchError}</p>
+                <p className="text-sm mt-4 text-red-400">If you are the developer, ensure the Sync script has run.</p>
+              </div>
+            ) : docContent ? (
               <div className="mb-20 pb-12">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
@@ -439,22 +438,27 @@ export function Docs() {
                             </code>
                           </div>
                           <CopyButton
-                            text={String(children).replace(/\n$/, "")}
+                            text={String(children).replace(/\\n$/, "")}
                           />
                         </div>
                       );
                     },
                   } as any}
                 >
-                  {currentDoc.content}
+                  {docContent}
                 </ReactMarkdown>
               </div>
-            ) : currentPath && currentPath !== "docs" ? (
+            ) : currentPath && currentPath !== "docs" && !isRegistryLoading ? (
               <div className="flex flex-col items-center justify-center h-full text-ink/40 py-20">
-                <AlertTriangle size={48} className="mb-4 opacity-50" />
-                <h2 className="text-2xl font-bold text-ink mb-2">404 - Document Not Found</h2>
-                <p>The document you are looking for does not exist or is not available.</p>
+                <MessageSquareWarning size={48} className="mb-4 opacity-50" />
+                <h2 className="text-2xl font-bold text-ink mb-2">Document Not Found</h2>
+                <p>The document you are looking for does not exist or hasn't been synced.</p>
                 <Link to="/docs" className="mt-6 text-klein hover:underline">Return to Documentation</Link>
+              </div>
+            ) : isRegistryLoading ? (
+              <div className="flex flex-col items-center justify-center py-32 text-ink/50">
+                <Loader2 className="w-8 h-8 animate-spin mb-4 text-klein" />
+                <p>Loading document registry...</p>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-ink/40 py-20">
@@ -471,7 +475,7 @@ export function Docs() {
               rel="noreferrer"
               className="hover:text-klein transition-colors"
             >
-              Edit this page on GitHub
+              Protocol GitHub
             </a>
           </div>
         </main>
@@ -482,9 +486,6 @@ export function Docs() {
             On this page
           </h4>
           <ul className="space-y-2 border-l border-border pl-4">
-            {/* Since we are rendering markdown, we don't have easy access to headers without parsing. 
-                For now, we can just show the current doc title as active. 
-                A full TOC parser would be needed for sub-headers. */}
             {currentDoc && (
               <li>
                 <button className="text-sm text-left transition-colors text-klein font-medium">

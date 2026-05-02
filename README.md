@@ -1,35 +1,38 @@
 # YNX Web4 Website
 
-The official portal for YNX Web4 — an AI-native sovereign execution layer for humans and AI agents.
+This is the official portal for the YNX Web4 public testnet and sovereign execution layer.
 
-## Overview
-This repository contains the frontend source for the YNX Web4 website. The site serves as the primary interface for developers, validators, and researchers to interact with the YNX public testnet.
+- **Frontend Repository:** [JiahaoAlbus/ynx-web4-website-new](https://github.com/JiahaoAlbus/ynx-web4-website-new)
+- **Core Protocol Repository:** [JiahaoAlbus/YNX](https://github.com/JiahaoAlbus/YNX)
 
-## Core Positioning
-- **AI-Native Sovereign Execution Layer**: Not just a chain, but an execution environment designed for machine-native coordination.
-- **Web4 Primitives**: Owner > Policy > Session Key > Agent Action.
-- **Public Testnet**: Currently in V2-Web4 track, optimized for security-hardening and external validator onboarding.
+## Local Development
 
-## Project Structure
-- `src/pages`: Main application views (Home, Builders, Validators, Research, Testnet, About, Docs).
-- `src/contexts`: Multi-language support and global state.
-- `src/constants`: Network endpoints and project-level constants.
-- `src/data`: Documentation registry and static content.
+To run this project locally, execute the following commands:
 
-## Tech Stack
-- React + Vite + TypeScript
-- Tailwind CSS
-- Framer Motion (Animations)
-- Lucide React (Icons)
-
-## Development
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Sync docs from the YNX Core repository
+npm run sync:docs
+
+# Note: You can sync docs from a local copy of the YNX core protocol repository instead of github using an environment variable like so:
+# YNX_CORE_REPO_PATH=/path/to/YNX npm run sync:docs
+
+# 3. Run the development server
 npm run dev
 ```
 
-## Deployment
-Builds into a standard SPA in `dist/`. Suitable for static hosting or as part of a full-stack Express service.
+## Production Build
 
-## Security Notice
-The YNX Web4 public testnet is under active development. Test tokens (anyxt) have no mainnet value. Do not share private keys or production credentials within testnet environments.
+```bash
+# This automatically runs the \`sync:docs\` before building.
+npm run build
+```
+
+## Deployment Notes
+
+- This project is a standard React SPA built with Vite.
+- Docs live in the `public/docs` folder but are initially pulled from the core protocol repository via the sync script. Ensure \`npm run build\` has access to network requests to fetch these documents.
+- Ensure that you configure the production environment to serve `index.html` for any unresolved paths so that React Router can handle routing (SPA fallback).
+
