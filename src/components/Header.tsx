@@ -7,7 +7,7 @@ import { useTranslation } from "../contexts/LanguageContext";
 
 export function Header() {
   const { t, language, setLanguage } = useTranslation();
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -45,6 +45,10 @@ export function Header() {
         isScrolled ? "bg-white/80 backdrop-blur-xl border-b border-border/50 shadow-sm" : "bg-transparent"
       }`}
     >
+      <motion.div
+        className="absolute inset-x-0 bottom-0 h-px origin-left bg-gradient-to-r from-klein via-emerald-400 to-klein"
+        style={{ scaleX: scrollYProgress }}
+      />
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="font-display font-bold text-2xl tracking-tighter text-ink hover:text-klein transition-colors">

@@ -8,6 +8,8 @@ import { NetworkStatusGrid } from "../components/NetworkStatusGrid";
 import { Roadmap } from "../components/Roadmap";
 import { NETWORK } from "../constants/network";
 import { ExecutionFlow } from "../components/motion/ExecutionFlow";
+import { KineticGrid } from "../components/motion/KineticGrid";
+import { SettlementFlow } from "../components/motion/SettlementFlow";
 import { Stagger } from "../components/motion/Reveal";
 import { motionEase, revealSoft, staggerSlow } from "../lib/motion";
 
@@ -38,6 +40,7 @@ function Hero() {
   
   return (
     <section className="pt-40 pb-32 px-6 bg-gradient-to-b from-surface to-white border-b border-border/50 overflow-hidden relative">
+      <KineticGrid />
       <ExecutionFlow />
       <motion.div
         className="absolute inset-x-0 top-20 h-px bg-gradient-to-r from-transparent via-klein/20 to-transparent"
@@ -79,19 +82,19 @@ function Hero() {
             transition={{ delay: 0.18, duration: 0.48, ease: motionEase.standard }}
             className="flex flex-wrap items-center gap-6 mb-16"
           >
-            <Button size="xl" className="group shadow-2xl shadow-klein/30" asChild>
+            <Button size="xl" className="group relative overflow-hidden shadow-2xl shadow-klein/30 before:absolute before:inset-y-0 before:-left-1/2 before:w-1/3 before:skew-x-[-18deg] before:bg-white/20 before:opacity-0 before:transition-all before:duration-700 hover:before:left-[120%] hover:before:opacity-100" asChild>
               <a href={NETWORK.endpoints.explorer} target="_blank" rel="noreferrer">
                 {t("hero.cta.explorer")}
                 <ExternalLink className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
               </a>
             </Button>
-            <Button size="xl" variant="outline" className="group" asChild>
+            <Button size="xl" variant="outline" className="group relative overflow-hidden hover:shadow-xl hover:shadow-klein/10" asChild>
               <Link to="/docs/en/ai-web4-official-demo">
                 {t("hero.cta.build")}
                 <Zap className="ml-2 w-5 h-5 opacity-40 group-hover:opacity-100 transition-all text-amber-500" />
               </Link>
             </Button>
-            <Button size="xl" variant="ghost" className="group" asChild>
+            <Button size="xl" variant="ghost" className="group hover:bg-klein/5" asChild>
               <Link to="/testnet">
                 {t("hero.cta.join")}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -217,8 +220,14 @@ function AISettlementDemo() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="bg-ink rounded-[40px] p-8 md:p-16 text-white relative overflow-hidden">
           {/* Decorative mesh background */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none" 
+          <motion.div
+               className="absolute inset-0 opacity-10 pointer-events-none"
                style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+          <motion.div
+            className="absolute -right-24 top-12 h-72 w-72 rounded-full bg-klein/25 blur-[90px]"
+            animate={{ opacity: [0.35, 0.75, 0.35], scale: [1, 1.08, 1] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
           
           <div className="relative z-10 grid lg:grid-cols-2 gap-20 items-center">
             <div>
@@ -266,29 +275,52 @@ function AISettlementDemo() {
               </Button>
             </div>
             
-            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-3xl">
+            <motion.div
+              className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-3xl relative overflow-hidden"
+              initial={{ opacity: 0, x: 24, filter: "blur(8px)" }}
+              whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.52, ease: motionEase.emphasized }}
+            >
+              <SettlementFlow />
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Workflow Proof — Finalized</span>
                 <Check className="text-emerald-400 w-4 h-4" />
               </div>
-              <div className="space-y-4 font-mono text-xs leading-relaxed">
-                <div className="text-emerald-400/80"># Created Web4 Policy: wp_9x2j...</div>
-                <div className="text-blue-400/80"># Issued Session Token: st_k0p1...</div>
-                <div className="text-white/60">$ ynx ai-job create --reward 10.5anyxt</div>
-                <div className="pl-4 py-2 border-l border-white/10 text-white/40 italic">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.14 } } }}
+                className="space-y-4 font-mono text-xs leading-relaxed"
+              >
+                <motion.div variants={revealSoft} className="text-emerald-400/80"># Created Web4 Policy: wp_9x2j...</motion.div>
+                <motion.div variants={revealSoft} className="text-blue-400/80"># Issued Session Token: st_k0p1...</motion.div>
+                <motion.div variants={revealSoft} className="text-white/60">$ ynx ai-job create --reward 10.5anyxt</motion.div>
+                <motion.div variants={revealSoft} className="pl-4 py-2 border-l border-white/10 text-white/40 italic">
                   {"{"}
                   <br /> &nbsp;&nbsp;"job_id": "job_0x4f2a...",
                   <br /> &nbsp;&nbsp;"status": "COMMITTED",
                   <br /> &nbsp;&nbsp;"settlement": "PENDING_VERIFICATION"
                   <br /> {"}"}
-                </div>
-                <div className="text-white/60">$ ynx ai-job finalize job_0x4f2a...</div>
-                <div className="text-emerald-400">Success: Reward 10.5 ANYXT settled to Worker 0xac...</div>
-                <div className="text-white/30 truncate mt-4 border-t border-white/5 pt-4">
+                </motion.div>
+                <motion.div variants={revealSoft} className="text-white/60">$ ynx ai-job finalize job_0x4f2a...</motion.div>
+                <motion.div
+                  variants={revealSoft}
+                  className="relative overflow-hidden rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3 text-emerald-300"
+                >
+                  <motion.span
+                    className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    animate={{ x: ["-100%", "620%"] }}
+                    transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  Success: Reward 10.5 ANYXT settled to Worker 0xac...
+                </motion.div>
+                <motion.div variants={revealSoft} className="text-white/30 truncate mt-4 border-t border-white/5 pt-4">
                    Evidence: output/ai_web4_demo/9102-run-001/final_state.json
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>
