@@ -7,6 +7,9 @@ import { useTranslation } from "../contexts/LanguageContext";
 import { NetworkStatusGrid } from "../components/NetworkStatusGrid";
 import { Roadmap } from "../components/Roadmap";
 import { NETWORK } from "../constants/network";
+import { ExecutionFlow } from "../components/motion/ExecutionFlow";
+import { Stagger } from "../components/motion/Reveal";
+import { motionEase, revealSoft, staggerSlow } from "../lib/motion";
 
 export function Home() {
   const { t } = useTranslation();
@@ -35,12 +38,19 @@ function Hero() {
   
   return (
     <section className="pt-40 pb-32 px-6 bg-gradient-to-b from-surface to-white border-b border-border/50 overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-klein/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
+      <ExecutionFlow />
+      <motion.div
+        className="absolute inset-x-0 top-20 h-px bg-gradient-to-r from-transparent via-klein/20 to-transparent"
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ duration: 1.2, ease: motionEase.emphasized }}
+      />
       <div className="max-w-7xl mx-auto w-full relative z-10">
         <div className="max-w-5xl">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.42, ease: motionEase.emphasized }}
             className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-klein/5 border border-klein/10 text-klein text-xs font-bold uppercase tracking-widest mb-8"
           >
             <span className="w-2 h-2 rounded-full bg-klein animate-pulse" />
@@ -49,7 +59,7 @@ function Hero() {
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.72, ease: motionEase.emphasized }}
             className="text-6xl md:text-8xl font-display font-bold text-ink leading-[0.95] tracking-tighter mb-8"
           >
             {t("hero.title")}
@@ -57,7 +67,7 @@ function Hero() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.6 }}
+            transition={{ delay: 0.1, duration: 0.52, ease: motionEase.standard }}
             className="text-xl md:text-2xl text-ink/70 leading-relaxed mb-12 max-w-3xl font-light"
           >
             {t("hero.subtitle")}
@@ -66,7 +76,7 @@ function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            transition={{ delay: 0.18, duration: 0.48, ease: motionEase.standard }}
             className="flex flex-wrap items-center gap-6 mb-16"
           >
             <Button size="xl" className="group shadow-2xl shadow-klein/30" asChild>
@@ -92,7 +102,7 @@ function Hero() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.42, duration: 0.5 }}
             className="flex flex-wrap items-center gap-x-12 gap-y-6 pt-12 border-t border-border/50"
           >
             {[
@@ -101,10 +111,16 @@ function Hero() {
               { label: "Consensus Hub", value: t("hero.stats.nodes") },
               { label: "Protocol Track", value: "v2-web4-stable" },
             ].map((stat, i) => (
-              <div key={i} className="flex flex-col">
+              <motion.div
+                key={i}
+                className="flex flex-col"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + i * 0.05, duration: 0.34, ease: motionEase.standard }}
+              >
                 <span className="text-[10px] uppercase font-bold text-ink/40 tracking-widest mb-1">{stat.label}</span>
                 <span className="text-sm font-mono font-bold text-ink/80">{stat.value}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -132,7 +148,8 @@ function DeveloperSection() {
       
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
-          <div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={staggerSlow}>
+            <motion.div variants={revealSoft}>
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-8 leading-tight">
               {t("dev.title")}
             </h2>
@@ -140,14 +157,21 @@ function DeveloperSection() {
               {t("dev.desc")}
             </p>
             
-            <div className="space-y-4">
+            </motion.div>
+            <Stagger className="space-y-4">
               {endpoints.map((ep, i) => (
                 <EndpointRow key={i} {...ep} />
               ))}
-            </div>
-          </div>
+            </Stagger>
+          </motion.div>
           
-          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, x: 24, filter: "blur(8px)" }}
+            whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.58, ease: motionEase.emphasized }}
+            className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl p-8 shadow-2xl"
+          >
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-rose-500" />
               <div className="w-3 h-3 rounded-full bg-amber-500" />
@@ -178,7 +202,7 @@ function DeveloperSection() {
                 <Link to="/testnet" className="text-klein text-xs font-bold hover:underline">View Status →</Link>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -344,7 +368,7 @@ function EndpointRow({ label, value, badge }: { label: string, value: string, ba
   };
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl group transition-all hover:bg-white/10 hover:border-white/20">
+    <motion.div variants={revealSoft} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl group transition-all hover:bg-white/10 hover:border-white/20">
       <div className="min-w-0 pr-4">
         <div className="flex items-center gap-3 mb-1">
           <span className="text-[10px] uppercase font-bold text-white/30 tracking-widest">{label}</span>
@@ -352,10 +376,10 @@ function EndpointRow({ label, value, badge }: { label: string, value: string, ba
         </div>
         <div className="text-sm font-mono text-white/80 truncate">{value}</div>
       </div>
-      <button onClick={copy} className="p-2.5 rounded-xl bg-white/5 text-white/40 hover:text-white hover:bg-klein transition-all active:scale-95">
+      <motion.button whileTap={{ scale: 0.92 }} onClick={copy} className="p-2.5 rounded-xl bg-white/5 text-white/40 hover:text-white hover:bg-klein transition-all active:scale-95">
         {copied ? <Check size={18} /> : <Copy size={18} />}
-      </button>
-    </div>
+      </motion.button>
+    </motion.div>
   );
 }
 
@@ -395,19 +419,26 @@ function CapabilitiesOverview() {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-12">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={staggerSlow}
+          className="grid md:grid-cols-3 gap-12"
+        >
           {caps.map((cap, i) => (
             <motion.div 
               key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              variants={revealSoft}
               className="group"
             >
-              <div className="mb-8 p-4 bg-surface rounded-3xl w-fit group-hover:bg-klein/5 group-hover:scale-110 transition-all duration-500">
+              <motion.div
+                className="mb-8 p-4 bg-surface rounded-3xl w-fit group-hover:bg-klein/5 transition-all duration-500"
+                whileHover={{ scale: 1.08, rotate: -2 }}
+                transition={{ type: "spring", stiffness: 320, damping: 22 }}
+              >
                 {cap.icon}
-              </div>
+              </motion.div>
               <h3 className="text-2xl font-bold text-ink mb-4">{cap.title}</h3>
               <p className="text-ink/60 leading-relaxed mb-8">
                 {cap.desc}
@@ -422,7 +453,7 @@ function CapabilitiesOverview() {
               </ul>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -469,7 +500,7 @@ function SovereigntyOrder() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+            variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
             className="space-y-4"
           >
             {[
@@ -480,7 +511,7 @@ function SovereigntyOrder() {
             ].map((item, i) => (
               <motion.div 
                 key={i} 
-                variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0 } }}
+                variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { duration: 0.38, ease: motionEase.standard } } }}
                 className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between group hover:bg-white/10 transition-all"
               >
                 <div>

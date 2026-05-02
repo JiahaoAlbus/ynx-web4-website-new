@@ -11,6 +11,7 @@ import {
   User,
   Wallet,
 } from "lucide-react";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 export function Architecture() {
   const nodes = [
@@ -106,52 +107,75 @@ export function Architecture() {
           {/* Abstract Connection Lines */}
           <div className="absolute inset-0 pointer-events-none hidden lg:block">
             <svg className="w-full h-full" style={{ minHeight: "400px" }}>
-              <path
+              <motion.path
                 d="M 100,50 C 200,50 300,150 400,150"
                 stroke="rgba(255,255,255,0.1)"
                 strokeWidth="2"
                 fill="none"
                 strokeDasharray="4 4"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, ease: motionEase.standard }}
               />
-              <path
+              <motion.path
                 d="M 400,150 C 500,150 600,50 700,50"
                 stroke="rgba(255,255,255,0.1)"
                 strokeWidth="2"
                 fill="none"
                 strokeDasharray="4 4"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.14, duration: 0.7, ease: motionEase.standard }}
               />
-              <path
+              <motion.path
                 d="M 100,250 C 200,250 300,150 400,150"
                 stroke="rgba(255,255,255,0.1)"
                 strokeWidth="2"
                 fill="none"
                 strokeDasharray="4 4"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.28, duration: 0.7, ease: motionEase.standard }}
               />
-              <path
+              <motion.path
                 d="M 400,150 C 500,150 600,250 700,250"
                 stroke="rgba(255,255,255,0.1)"
                 strokeWidth="2"
                 fill="none"
                 strokeDasharray="4 4"
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.42, duration: 0.7, ease: motionEase.standard }}
               />
             </svg>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 gap-y-12 relative z-10">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={stagger}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 gap-y-12 relative z-10"
+          >
             {nodes.map((node, index) => (
               <motion.div
                 key={node.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                variants={revealSoft}
                 className="flex flex-col items-center text-center group"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:bg-klein/20 group-hover:border-klein/50 transition-all duration-300 relative">
+                <motion.div
+                  className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:bg-klein/20 group-hover:border-klein/50 transition-all duration-300 relative"
+                  whileHover={{ y: -5, scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                >
                   {node.icon}
                   {/* Glowing dot */}
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-klein rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(0,47,167,0.8)]" />
-                </div>
+                </motion.div>
                 <h4 className="text-sm font-display font-semibold text-white mb-1">
                   {node.label}
                 </h4>
@@ -165,7 +189,7 @@ export function Architecture() {
                 )}
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@ import { Magnetic } from "../components/ui/Magnetic";
 import { Link } from "react-router-dom";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { NETWORK } from "../constants/network";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 export function Testnet() {
   const { status, loading, error, refetch } = useNetworkStatus();
@@ -119,22 +120,38 @@ export function Testnet() {
           </div>
         </TiltCard>
 
-        <div className="lg:col-span-2 grid sm:grid-cols-2 gap-4">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          className="lg:col-span-2 grid sm:grid-cols-2 gap-4"
+        >
           {endpoints.map((endpoint, index) => (
             <motion.div
               key={endpoint.label}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
+              variants={revealSoft}
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ duration: 0.18, ease: motionEase.standard }}
               className="bg-white p-6 rounded-2xl border border-border flex flex-col justify-between group hover:border-klein/30 hover:shadow-xl transition-all relative overflow-hidden"
             >
+              {status?.[endpoint.id]?.status === "online" && (
+                <motion.div
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent"
+                  animate={{ x: ["-120%", "120%"] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 }}
+                />
+              )}
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[10px] font-mono text-ink/50 uppercase tracking-widest font-bold">
                   {endpoint.label}
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${getStatusDot(status?.[endpoint.id]?.status)} ${loading ? "animate-pulse" : ""}`} />
+                  <motion.div
+                    className={`w-2 h-2 rounded-full ${getStatusDot(status?.[endpoint.id]?.status)} ${loading ? "animate-pulse" : ""}`}
+                    animate={status?.[endpoint.id]?.status === "online" ? { scale: [1, 1.7, 1], opacity: [1, 0.65, 1] } : undefined}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  />
                   <span className={`text-[10px] font-mono font-bold uppercase ${getStatusColor(status?.[endpoint.id]?.status)}`}>
                     {status?.[endpoint.id]?.status || (loading ? 'checking' : 'unknown')}
                   </span>
@@ -144,8 +161,9 @@ export function Testnet() {
                 <code className="text-xs font-mono text-ink/70 truncate flex-1 bg-surface py-2 px-3 rounded-xl border border-border/50 select-all">
                   {endpoint.url}
                 </code>
-                <button
+                <motion.button
                   onClick={() => handleCopy(endpoint.url, index)}
+                  whileTap={{ scale: 0.92 }}
                   className={`p-2 rounded-xl transition-all shrink-0 ${
                     copiedIndex === index 
                       ? "bg-emerald-100 text-emerald-600" 
@@ -153,17 +171,23 @@ export function Testnet() {
                   }`}
                 >
                   {copiedIndex === index ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       <section className="max-w-7xl mx-auto px-6 mb-32">
         <h2 className="text-3xl font-display font-bold mb-10">Current Network Topology</h2>
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-surface p-8 rounded-3xl border border-border">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={stagger}
+          className="grid md:grid-cols-2 gap-8"
+        >
+          <motion.div variants={revealSoft} className="bg-surface p-8 rounded-3xl border border-border">
             <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
               <Server className="text-klein" />
               Main Public Hub
@@ -185,9 +209,9 @@ export function Testnet() {
             <p className="mt-6 text-sm text-ink/60">
               The main public hub utilizes a high-performance proxy for secure TLS termination and provides entry shards for new testnet participants.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface p-8 rounded-3xl border border-border">
+          <motion.div variants={revealSoft} className="bg-surface p-8 rounded-3xl border border-border">
             <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
               <Globe className="text-emerald-500" />
               Global Validator Mesh
@@ -213,8 +237,8 @@ export function Testnet() {
             <p className="mt-6 text-sm text-ink/60">
               4 bonded validators are currently active and unjailed. External validators are encouraged to join via the install script to enhance network decentralization.
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       <section className="max-w-7xl mx-auto px-6 mb-32">

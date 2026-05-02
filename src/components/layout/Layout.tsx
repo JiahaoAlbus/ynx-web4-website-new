@@ -5,6 +5,7 @@ import { Footer } from "../Footer";
 import { Cursor } from "../ui/Cursor";
 import { Background } from "../ui/Background";
 import { useEffect } from "react";
+import { motionDuration, motionEase } from "../../lib/motion";
 
 export function Layout() {
   const location = useLocation();
@@ -21,10 +22,10 @@ export function Layout() {
       <AnimatePresence mode="wait">
         <motion.main
           key={location.pathname}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
+          initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
+          transition={{ duration: motionDuration.standard, ease: motionEase.standard }}
           className="pt-20"
         >
           <Outlet />

@@ -8,6 +8,7 @@ import {
   Cpu,
   Link,
 } from "lucide-react";
+import { revealSoft, stagger } from "../lib/motion";
 
 export function ProofOfReadiness() {
   const statuses = [
@@ -74,17 +75,34 @@ export function ProofOfReadiness() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
+            variants={{
+              hidden: { opacity: 0, x: 20 },
+              visible: {
+                opacity: 1,
+                x: 0,
+                transition: { duration: 0.6, staggerChildren: 0.07 },
+              },
+            }}
             className="grid sm:grid-cols-2 gap-4"
           >
             {statuses.map((item, index) => (
-              <div
+              <motion.div
                 key={item.label}
-                className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface/50 hover:bg-surface transition-colors"
+                variants={revealSoft}
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface/50 hover:bg-surface transition-colors relative overflow-hidden"
               >
+                <motion.div
+                  className="absolute inset-y-0 left-0 w-1 bg-emerald-500"
+                  initial={{ scaleY: 0 }}
+                  whileInView={{ scaleY: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05, duration: 0.28 }}
+                  style={{ transformOrigin: "bottom" }}
+                />
                 <div className="flex items-center gap-3 text-ink/80">
                   {item.icon}
                   <span className="font-medium text-sm">{item.label}</span>
@@ -92,7 +110,7 @@ export function ProofOfReadiness() {
                 <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 font-semibold bg-emerald-100 px-2 py-1 rounded-md">
                   {item.status}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>

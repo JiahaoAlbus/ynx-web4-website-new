@@ -16,6 +16,7 @@ import { Magnetic } from "../components/ui/Magnetic";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NETWORK } from "../constants/network";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 function BuildPathCard({
   icon,
@@ -32,7 +33,12 @@ function BuildPathCard({
 }) {
   return (
     <TiltCard className="h-full">
-      <motion.div className="p-8 bg-surface border border-border rounded-[32px] h-full hover:border-klein/30 transition-all flex flex-col">
+      <motion.div
+        variants={revealSoft}
+        whileHover={{ y: -5, scale: 1.01 }}
+        transition={{ duration: 0.2, ease: motionEase.standard }}
+        className="p-8 bg-surface border border-border rounded-[32px] h-full hover:border-klein/30 transition-all flex flex-col"
+      >
         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-klein mb-8 shadow-sm border border-border/50">
           {icon}
         </div>
@@ -137,7 +143,13 @@ export default {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-20">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={stagger}
+        className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-20"
+      >
         <BuildPathCard
           icon={<Code2 className="w-8 h-8" />}
           title="EVM Developers"
@@ -163,10 +175,16 @@ export default {
           features={["/web4/policies", "/web4/sessions", "/web4/audit"]}
           link={NETWORK.endpoints.web4}
         />
-      </section>
+      </motion.section>
 
       <section className="max-w-7xl mx-auto px-6 mb-32">
-        <div className="bg-surface border border-border p-8 md:p-12 rounded-[32px] grid lg:grid-cols-2 gap-12 items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: motionEase.emphasized }}
+          className="bg-surface border border-border p-8 md:p-12 rounded-[32px] grid lg:grid-cols-2 gap-12 items-center"
+        >
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-klein/10 text-klein rounded-full text-xs font-bold uppercase tracking-widest mb-6">
               Official Demo
@@ -224,7 +242,16 @@ export default {
           </div>
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-x-auto shadow-2xl">
+            <motion.div
+              className="relative bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-x-auto shadow-2xl"
+              whileHover={{ y: -3 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+                animate={{ x: ["-120%", "120%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
               <div className="flex justify-between items-center mb-4">
                 <div className="flex gap-2">
                   <div className="w-3 h-3 rounded-full bg-slate-700" />
@@ -240,9 +267,9 @@ cd YNX
 # Run the official settlement workflow
 ./scripts/ai_web4_settlement_demo.sh`}
               </pre>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <section className="bg-ink text-white py-24 relative overflow-hidden rounded-3xl mx-6">

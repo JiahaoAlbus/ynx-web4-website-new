@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Check, Clock, ShieldCheck, Zap } from "lucide-react";
 import { useTranslation } from "../contexts/LanguageContext";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 export function Roadmap() {
   const { t } = useTranslation();
@@ -38,19 +39,41 @@ export function Roadmap() {
 
   return (
     <div className="py-12">
-      <div className="grid md:grid-cols-4 gap-8">
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={stagger}
+        className="grid md:grid-cols-4 gap-8"
+      >
         {steps.map((step, i) => (
-          <div key={i} className="relative">
+          <motion.div key={i} variants={revealSoft} className="relative">
             {i < steps.length - 1 && (
-              <div className="hidden md:block absolute top-6 left-1/2 w-full h-px bg-border -z-10" />
+              <div className="hidden md:block absolute top-6 left-1/2 w-full h-px bg-border -z-10 overflow-hidden">
+                {step.status !== "pending" && (
+                  <motion.div
+                    className="h-full bg-klein"
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.12, duration: 0.55, ease: motionEase.emphasized }}
+                    style={{ transformOrigin: "left" }}
+                  />
+                )}
+              </div>
             )}
-            <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-6 transition-all ${
+            <motion.div
+              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center mb-6 transition-all ${
               step.status === 'completed' ? 'bg-klein border-klein text-white' : 
               step.status === 'current' ? 'bg-white border-klein text-klein shadow-lg shadow-klein/20' : 
               'bg-white border-border text-ink/20'
-            }`}>
+            }`}
+              whileHover={{ scale: 1.08 }}
+              animate={step.status === "current" ? { boxShadow: ["0 0 0 rgba(0,47,167,0)", "0 0 28px rgba(0,47,167,0.24)", "0 0 0 rgba(0,47,167,0)"] } : undefined}
+              transition={{ duration: 2.4, repeat: step.status === "current" ? Infinity : 0, ease: "easeInOut" }}
+            >
               {step.status === 'completed' ? <Check className="w-6 h-6" /> : step.icon}
-            </div>
+            </motion.div>
             <div className="space-y-3">
               <h4 className={`text-lg font-bold ${step.status === 'pending' ? 'text-ink/40' : 'text-ink'}`}>
                 {step.title}
@@ -67,9 +90,9 @@ export function Roadmap() {
                 ))}
               </ul>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }
