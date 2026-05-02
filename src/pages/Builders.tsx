@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Terminal,
   ArrowRight,
@@ -102,7 +102,7 @@ export default {
             <div className="flex justify-center gap-4">
               <Magnetic>
                 <Button variant="klein" size="lg" asChild>
-                  <Link to="/docs/en/public-testnet-join">
+                  <Link to="/docs/en/builder-quickstart">
                     Read the Docs
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
@@ -182,37 +182,45 @@ export default {
               用户给 AI Agent 一个有限授权，Agent 完成任务后，通过 YNX 的 AI
               结算层自动付款。
             </p>
-            <div className="space-y-4 text-sm font-medium">
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Create Web4
-                policy
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Issue bounded
-                session key
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Create AI payment
-                vault
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Publish AI job
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Worker commits
-                result hash
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Finalize job
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="text-emerald-500 w-4 h-4" /> Reward settles
-                from vault
-              </div>
-            </div>
-            <p className="text-xs text-ink/40 mt-8 italic">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.15 } }
+              }}
+              className="space-y-4 text-sm font-medium"
+            >
+              {[
+                "Create Web4 policy",
+                "Issue bounded session key",
+                "Create AI payment vault",
+                "Publish AI job",
+                "Worker commits result hash",
+                "Finalize job",
+                "Reward settles from vault"
+              ].map((step, i) => (
+                <motion.div
+                  key={i}
+                  variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 50 } }
+                  }}
+                  className="flex items-center gap-3"
+                >
+                  <Check className="text-emerald-500 w-4 h-4 shrink-0" /> {step}
+                </motion.div>
+              ))}
+            </motion.div>
+            <p className="text-xs text-ink/40 mt-8 mb-6 italic">
               JSON evidence is written under output/ai_web4_demo/&lt;run-id&gt;/
             </p>
+            <Button variant="klein" size="lg" asChild>
+              <Link to="/docs/en/ai-web4-official-demo">
+                Read Demo Docs
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
           </div>
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Menu,
   X,
@@ -27,6 +27,8 @@ type DocItem = {
   category: string;
   sourcePath: string;
   publicPath: string;
+  description?: string;
+  tags?: string[];
 };
 
 type DocCategory = {
@@ -144,6 +146,21 @@ export function Docs() {
     }
   }
 
+  const filteredDocs = registry
+    .map((category) => ({
+      ...category,
+      items: category.items.filter((item) => {
+        const query = searchQuery.toLowerCase();
+        return (
+          item.title.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query) ||
+          item.tags?.some((tag: string) => tag.toLowerCase().includes(query)) ||
+          item.sourcePath.toLowerCase().includes(query)
+        );
+      }),
+    }))
+    .filter((category) => category.items.length > 0);
+
   // Fetch document content
   useEffect(() => {
     if (!currentDoc) {
@@ -157,7 +174,7 @@ export function Docs() {
     setDocContent(null);
     setFetchError(null);
 
-    fetch(`/docs/${currentDoc.id}.md`)
+    fetch(currentDoc.publicPath)
       .then((res) => {
         if (!res.ok) throw new Error("Document not found");
         return res.text();
@@ -172,7 +189,7 @@ export function Docs() {
         console.error("Failed to load document", err);
         if (isMounted) {
           setDocContent(null);
-          setFetchError(`Failed to fetch from ${currentDoc?.sourcePath}`);
+          setFetchError(`Failed to fetch from ${currentDoc?.sourcePath}. Missing public output at ${currentDoc?.publicPath}`);
           setIsLoading(false);
         }
       });
@@ -180,16 +197,7 @@ export function Docs() {
     return () => {
       isMounted = false;
     };
-  }, [currentDoc?.id, currentDoc?.sourcePath]);
-
-  const filteredDocs = registry
-    .map((category) => ({
-      ...category,
-      items: category.items.filter((item) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-    }))
-    .filter((category) => category.items.length > 0);
+  }, [currentDoc?.id, currentDoc?.sourcePath, currentDoc?.publicPath]);
 
   return (
     <div className="h-[calc(100vh-5rem)] bg-white overflow-hidden">
@@ -297,9 +305,10 @@ export function Docs() {
             )}
           </div>
 
-          <article className="prose prose-lg prose-slate max-w-none min-h-[50vh]">
+          <article className="prose prose-lg prose-slate max-w-none min-h-[50vh] relative">
+            <AnimatePresence mode="wait">
             {isLoading ? (
-              <div className="animate-pulse space-y-6">
+              <motion.div key="loading" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="animate-pulse space-y-6">
                 <div className="h-10 bg-slate-200 rounded w-2/3"></div>
                 <div className="space-y-3">
                   <div className="h-4 bg-slate-200 rounded w-full"></div>
@@ -311,18 +320,18 @@ export function Docs() {
                   <div className="h-4 bg-slate-200 rounded w-4/5"></div>
                   <div className="h-4 bg-slate-200 rounded w-full"></div>
                 </div>
-              </div>
+              </motion.div>
             ) : fetchError ? (
-              <div className="text-red-500 bg-red-50 p-6 rounded-lg text-center">
+              <motion.div key="error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-red-500 bg-red-50 p-6 rounded-lg text-center">
                 <MessageSquareWarning className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <h3 className="font-bold mb-2">Error Loading Document</h3>
                 <p>{fetchError}</p>
                 <p className="text-sm mt-4 text-red-400">
-                  If you are the developer, ensure the Sync script has run.
+                  If you are the developer, try running <code>npm run sync:docs</code>.
                 </p>
-              </div>
+              </motion.div>
             ) : docContent ? (
-              <div className="mb-20 pb-12">
+              <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="mb-20 pb-12">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -498,31 +507,50 @@ export function Docs() {
                 >
                   {docContent}
                 </ReactMarkdown>
-              </div>
+              </motion.div>
             ) : currentPath && currentPath !== "docs" && !isRegistryLoading ? (
-              <div className="flex flex-col items-center justify-center h-full text-ink/40 py-20">
+              <motion.div key="not-found" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full text-ink/40 py-20">
                 <MessageSquareWarning size={48} className="mb-4 opacity-50" />
                 <h2 className="text-2xl font-bold text-ink mb-2">
-                  Document Not Found
+                  404: Document Not Found
                 </h2>
                 <p>
-                  The document you are looking for does not exist or hasn't been
-                  synced.
+                  No match found for slug: {currentPath}
                 </p>
-                <Link to="/docs" className="mt-6 text-klein hover:underline">
-                  Return to Documentation
+                <Link to="/docs" className="mt-6 text-klein hover:underline bg-klein/5 px-6 py-2 rounded-lg font-medium">
+                  Go to Documentation Home
                 </Link>
-              </div>
+              </motion.div>
             ) : isRegistryLoading ? (
-              <div className="flex flex-col items-center justify-center py-32 text-ink/50">
+              <motion.div key="registry-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-32 text-ink/50">
                 <Loader2 className="w-8 h-8 animate-spin mb-4 text-klein" />
                 <p>Loading document registry...</p>
-              </div>
+              </motion.div>
             ) : (
-              <div className="flex items-center justify-center h-full text-ink/40 py-20">
-                Select a document to view
-              </div>
+              <motion.div key="index" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-ink py-10">
+                <h1 className="text-4xl font-display font-bold text-ink mb-4 tracking-tight">YNX v2 Documentation</h1>
+                <p className="text-xl text-ink/60 mb-12">Select a topic from the sidebar or explore the key areas below.</p>
+                
+                <div className="grid md:grid-cols-2 gap-6 not-prose">
+                  {registry.slice(0, 4).map(category => (
+                    <div key={category.title} className="p-6 rounded-2xl bg-surface border border-border group">
+                      <h3 className="text-lg font-bold font-mono tracking-widest uppercase mb-4 text-klein">{category.title}</h3>
+                      <ul className="space-y-3">
+                        {category.items.slice(0, 3).map(item => (
+                          <li key={item.id}>
+                            <Link to={`/docs/${item.id}`} className="text-ink/70 hover:text-klein transition-colors font-medium flex items-center gap-2">
+                              <ExternalLink className="w-3 h-3 text-ink/30" />
+                              {item.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </article>
 
           <div className="mt-20 pt-10 border-t border-border flex justify-between text-sm text-ink/40 pb-10">

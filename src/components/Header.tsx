@@ -93,7 +93,7 @@ export function Header() {
             </a>
           </Button>
           <Button variant="klein" size="sm" asChild className="shadow-lg shadow-klein/20 hover:shadow-klein/30 transition-all">
-            <Link to="/docs/en/public-testnet-join">{t("hero.cta.build")}</Link>
+            <Link to="/docs/en/ai-web4-official-demo">{t("hero.cta.build")}</Link>
           </Button>
         </div>
 
@@ -143,7 +143,7 @@ export function Header() {
             </a>
           </Button>
           <Button variant="klein" className="w-full justify-center" asChild>
-            <Link to="/docs/en/public-testnet-join" onClick={() => setMobileMenuOpen(false)}>
+            <Link to="/docs/en/ai-web4-official-demo" onClick={() => setMobileMenuOpen(false)}>
               {t("hero.cta.build")}
             </Link>
           </Button>

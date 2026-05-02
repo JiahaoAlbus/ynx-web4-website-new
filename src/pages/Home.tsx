@@ -76,7 +76,7 @@ function Hero() {
               </a>
             </Button>
             <Button size="xl" variant="outline" className="group" asChild>
-              <Link to="/docs">
+              <Link to="/docs/en/ai-web4-official-demo">
                 {t("hero.cta.build")}
                 <Zap className="ml-2 w-5 h-5 opacity-40 group-hover:opacity-100 transition-all text-amber-500" />
               </Link>
@@ -208,24 +208,34 @@ function AISettlementDemo() {
                 {t("demo.desc")}
               </p>
               
-              <div className="space-y-6 mb-12">
+              <motion.div 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={{ visible: { transition: { staggerChildren: 0.2 } } }}
+                className="space-y-6 mb-12"
+              >
                 {[
                   { id: "01", title: t("demo.step1"), desc: "Define spend limits and action rules on-chain." },
                   { id: "02", title: t("demo.step2"), desc: "Issue time-bounded session keys to the agent." },
                   { id: "03", title: t("demo.step3"), desc: "Protocol-enforced reward release upon proof." }
                 ].map((step, i) => (
-                  <div key={i} className="flex gap-6 group">
+                  <motion.div 
+                    key={i} 
+                    variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } }}
+                    className="flex gap-6 group"
+                  >
                     <div className="text-2xl font-display font-bold text-white/20 group-hover:text-klein transition-colors leading-none">{step.id}</div>
                     <div>
                       <div className="font-bold text-white mb-1">{step.title}</div>
                       <div className="text-sm text-white/40 leading-relaxed">{step.desc}</div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               
               <Button size="xl" className="bg-white text-klein hover:bg-surface border-none shadow-2xl shadow-white/5" asChild>
-                <Link to="/docs/en/ai-web4-demo">
+                <Link to="/docs/en/ai-web4-official-demo">
                   Explore Demo Docs
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
@@ -455,22 +465,32 @@ function SovereigntyOrder() {
             </div>
           </div>
           
-          <div className="space-y-4">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+            className="space-y-4"
+          >
             {[
               { title: "1. Owner (Root)", desc: "The human user with recovery authority." },
               { title: "2. Policy (Immutable Constraint)", desc: "Hard-coded rules on-chain for the agent's life." },
               { title: "3. Session (Time-Limited Key)", desc: "A fleeting capability delegated to an agent." },
               { title: "4. Agent Action", desc: "Verifiable execution on the YNX chain." }
             ].map((item, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between group hover:bg-white/10 transition-all">
+              <motion.div 
+                key={i} 
+                variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0 } }}
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between group hover:bg-white/10 transition-all"
+              >
                 <div>
                   <div className="text-lg font-bold text-white mb-1">{item.title}</div>
                   <div className="text-sm text-white/40">{item.desc}</div>
                 </div>
                 <ArrowRight className="text-klein opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-2" />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
