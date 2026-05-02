@@ -186,7 +186,7 @@ export function Docs() {
   }, [isRegistryLoading, registry.length]);
 
   const currentPath = location.pathname
-    .replace(/^\/docs\//, "")
+    .replace(/^\/docs\/?/, "")
     .replace(/\/$/, "");
 
   const [docContent, setDocContent] = useState<string | null>(null);
@@ -198,6 +198,7 @@ export function Docs() {
     }
     return null;
   }, [currentPath, registry]);
+  const registryReady = registry.length > 0;
 
   const filteredDocs = useMemo(
     () =>
@@ -362,7 +363,7 @@ export function Docs() {
           <article className="prose prose-lg prose-slate max-w-none min-h-[50vh] relative">
             {currentDoc ? (
               <DocArticle key={currentDoc.id} doc={currentDoc} onLoaded={setDocContent} />
-            ) : currentPath && currentPath !== "docs" && !isRegistryLoading ? (
+            ) : currentPath && registryReady ? (
               <motion.div key="not-found" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full text-ink/40 py-20">
                 <MessageSquareWarning size={48} className="mb-4 opacity-50" />
                 <h2 className="text-2xl font-bold text-ink mb-2">
@@ -375,7 +376,7 @@ export function Docs() {
                   Go to Documentation Home
                 </Link>
               </motion.div>
-            ) : isRegistryLoading ? (
+            ) : !registryReady || isRegistryLoading ? (
               <motion.div key="registry-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-32 text-ink/50">
                 <Loader2 className="w-8 h-8 animate-spin mb-4 text-klein" />
                 <p>Loading document registry...</p>

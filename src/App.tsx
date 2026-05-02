@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 
@@ -15,6 +15,13 @@ const Testnet = lazy(() => import("./pages/Testnet").then((module) => ({ default
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
 const About = lazy(() => import("./pages/About").then((module) => ({ default: module.About })));
 const Docs = lazy(() => import("./pages/Docs").then((module) => ({ default: module.Docs })));
+
+function warmDocsRoute() {
+  void import("./pages/Docs");
+  void fetch("/docs/registry.json", { cache: "force-cache" }).catch(() => {});
+  void fetch("/docs/en/public-testnet-join.md", { cache: "force-cache" }).catch(() => {});
+  void fetch("/docs/en/ai-web4-official-demo.md", { cache: "force-cache" }).catch(() => {});
+}
 
 function PageFallback() {
   return (
@@ -33,6 +40,11 @@ function PageFallback() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const id = window.setTimeout(warmDocsRoute, 1200);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
