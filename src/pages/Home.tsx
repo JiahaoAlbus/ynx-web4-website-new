@@ -199,7 +199,7 @@ function AISettlementDemo() {
           <div className="relative z-10 grid lg:grid-cols-2 gap-20 items-center">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-klein mb-6 border border-white/5">
-                Official Demoo Path
+                Official Demo Path
               </div>
               <h2 className="text-4xl md:text-5xl font-display font-bold mb-8 leading-tight">
                 {t("demo.title")}

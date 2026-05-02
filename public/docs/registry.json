@@ -3,6 +3,20 @@
     "title": "Start Here",
     "items": [
       {
+        "id": "en/public-testnet-join",
+        "title": "Public Testnet Join Guide",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/V2_PUBLIC_TESTNET_JOIN_GUIDE.md",
+        "publicPath": "/docs/en/public-testnet-join.md",
+        "description": "Guide to joining the V2 public testnet.",
+        "tags": [
+          "testnet",
+          "join",
+          "guide"
+        ]
+      },
+      {
         "id": "en/ai-web4-official-demo",
         "title": "AI/Web4 Official Demo",
         "language": "en",
@@ -14,19 +28,6 @@
           "ai",
           "web4",
           "demo"
-        ]
-      },
-      {
-        "id": "en/external-validator-onboarding",
-        "title": "Validator Onboarding",
-        "language": "en",
-        "category": "Start Here",
-        "sourcePath": "docs/en/EXTERNAL_VALIDATOR_ONBOARDING_PACKET.md",
-        "publicPath": "/docs/en/external-validator-onboarding.md",
-        "description": "Onboarding packet for external validators.",
-        "tags": [
-          "validator",
-          "onboarding"
         ]
       },
       {
@@ -43,17 +44,16 @@
         ]
       },
       {
-        "id": "en/public-testnet-join",
-        "title": "Public Testnet Join Guide",
+        "id": "en/external-validator-onboarding",
+        "title": "Validator Onboarding",
         "language": "en",
         "category": "Start Here",
-        "sourcePath": "docs/en/V2_PUBLIC_TESTNET_JOIN_GUIDE.md",
-        "publicPath": "/docs/en/public-testnet-join.md",
-        "description": "Guide to joining the V2 public testnet.",
+        "sourcePath": "docs/en/EXTERNAL_VALIDATOR_ONBOARDING_PACKET.md",
+        "publicPath": "/docs/en/external-validator-onboarding.md",
+        "description": "Onboarding packet for external validators.",
         "tags": [
-          "testnet",
-          "join",
-          "guide"
+          "validator",
+          "onboarding"
         ]
       }
     ]
@@ -75,19 +75,6 @@
         ]
       },
       {
-        "id": "openapi/ynx-v2-ai-yaml",
-        "title": "AI Gateway OpenAPI",
-        "language": "en",
-        "category": "AI / Web4",
-        "sourcePath": "infra/openapi/ynx-v2-ai.yaml",
-        "publicPath": "/docs/openapi/ynx-v2-ai-yaml.md",
-        "description": "OpenAPI spec for AI Gateway.",
-        "tags": [
-          "openapi",
-          "ai"
-        ]
-      },
-      {
         "id": "en/ynx-v2-web4-api",
         "title": "Web4 API",
         "language": "en",
@@ -97,6 +84,20 @@
         "description": "Web4 coordination Hub API specification.",
         "tags": [
           "web4",
+          "api"
+        ]
+      },
+      {
+        "id": "en/ynx-v2-ai-settlement-api",
+        "title": "AI Settlement API",
+        "language": "en",
+        "category": "AI / Web4",
+        "sourcePath": "docs/en/YNX_v2_AI_SETTLEMENT_API.md",
+        "publicPath": "/docs/en/ynx-v2-ai-settlement-api.md",
+        "description": "AI Settlement Gateway API specification.",
+        "tags": [
+          "ai",
+          "settlement",
           "api"
         ]
       },
@@ -114,17 +115,16 @@
         ]
       },
       {
-        "id": "en/ynx-v2-ai-settlement-api",
-        "title": "AI Settlement API",
+        "id": "openapi/ynx-v2-ai-yaml",
+        "title": "AI Gateway OpenAPI",
         "language": "en",
         "category": "AI / Web4",
-        "sourcePath": "docs/en/YNX_v2_AI_SETTLEMENT_API.md",
-        "publicPath": "/docs/en/ynx-v2-ai-settlement-api.md",
-        "description": "AI Settlement Gateway API specification.",
+        "sourcePath": "infra/openapi/ynx-v2-ai.yaml",
+        "publicPath": "/docs/openapi/ynx-v2-ai-yaml.md",
+        "description": "OpenAPI spec for AI Gateway.",
         "tags": [
-          "ai",
-          "settlement",
-          "api"
+          "openapi",
+          "ai"
         ]
       }
     ]
@@ -132,19 +132,6 @@
   {
     "title": "Validators & Testnet Ops",
     "items": [
-      {
-        "id": "en/testnet-launch-grade-runbook",
-        "title": "Testnet Launch-Grade Runbook",
-        "language": "en",
-        "category": "Validators & Testnet Ops",
-        "sourcePath": "docs/en/TESTNET_LAUNCH_GRADE_RUNBOOK.md",
-        "publicPath": "/docs/en/testnet-launch-grade-runbook.md",
-        "description": "Runbook for maintaining launch-grade testnet.",
-        "tags": [
-          "testnet",
-          "runbook"
-        ]
-      },
       {
         "id": "en/public-testnet-status-2026-05-02",
         "title": "Public Testnet Status 2026-05-02",
@@ -159,17 +146,16 @@
         ]
       },
       {
-        "id": "en/consensus-validator-join",
-        "title": "Consensus Validator Join Guide",
+        "id": "en/testnet-launch-grade-runbook",
+        "title": "Testnet Launch-Grade Runbook",
         "language": "en",
         "category": "Validators & Testnet Ops",
-        "sourcePath": "docs/en/V2_CONSENSUS_VALIDATOR_JOIN_GUIDE.md",
-        "publicPath": "/docs/en/consensus-validator-join.md",
-        "description": "Guide to joining as a consensus validator.",
+        "sourcePath": "docs/en/TESTNET_LAUNCH_GRADE_RUNBOOK.md",
+        "publicPath": "/docs/en/testnet-launch-grade-runbook.md",
+        "description": "Runbook for maintaining launch-grade testnet.",
         "tags": [
-          "validator",
-          "consensus",
-          "join"
+          "testnet",
+          "runbook"
         ]
       },
       {
@@ -185,6 +171,20 @@
           "node",
           "join"
         ]
+      },
+      {
+        "id": "en/consensus-validator-join",
+        "title": "Consensus Validator Join Guide",
+        "language": "en",
+        "category": "Validators & Testnet Ops",
+        "sourcePath": "docs/en/V2_CONSENSUS_VALIDATOR_JOIN_GUIDE.md",
+        "publicPath": "/docs/en/consensus-validator-join.md",
+        "description": "Guide to joining as a consensus validator.",
+        "tags": [
+          "validator",
+          "consensus",
+          "join"
+        ]
       }
     ]
   },
@@ -192,16 +192,16 @@
     "title": "Security",
     "items": [
       {
-        "id": "en/non-custodial-business-and-compliance-boundary",
-        "title": "Non-Custodial Business and Compliance Boundary",
+        "id": "en/v2-high-assurance-crypto-model",
+        "title": "High Assurance Crypto Model",
         "language": "en",
         "category": "Security",
-        "sourcePath": "docs/en/NON_CUSTODIAL_BUSINESS_AND_COMPLIANCE_BOUNDARY.md",
-        "publicPath": "/docs/en/non-custodial-business-and-compliance-boundary.md",
-        "description": "Non-custodial and compliance boundaries of YNX.",
+        "sourcePath": "docs/en/V2_HIGH_ASSURANCE_CRYPTO_MODEL.md",
+        "publicPath": "/docs/en/v2-high-assurance-crypto-model.md",
+        "description": "YNX v2 high assurance cryptography model.",
         "tags": [
-          "compliance",
-          "business"
+          "security",
+          "crypto"
         ]
       },
       {
@@ -219,16 +219,16 @@
         ]
       },
       {
-        "id": "en/v2-high-assurance-crypto-model",
-        "title": "High Assurance Crypto Model",
+        "id": "en/non-custodial-business-and-compliance-boundary",
+        "title": "Non-Custodial Business and Compliance Boundary",
         "language": "en",
         "category": "Security",
-        "sourcePath": "docs/en/V2_HIGH_ASSURANCE_CRYPTO_MODEL.md",
-        "publicPath": "/docs/en/v2-high-assurance-crypto-model.md",
-        "description": "YNX v2 high assurance cryptography model.",
+        "sourcePath": "docs/en/NON_CUSTODIAL_BUSINESS_AND_COMPLIANCE_BOUNDARY.md",
+        "publicPath": "/docs/en/non-custodial-business-and-compliance-boundary.md",
+        "description": "Non-custodial and compliance boundaries of YNX.",
         "tags": [
-          "security",
-          "crypto"
+          "compliance",
+          "business"
         ]
       }
     ]
@@ -284,16 +284,16 @@
         ]
       },
       {
-        "id": "zh/public-testnet-join",
-        "title": "V2 公开测试网加入手册",
+        "id": "zh/web4-definition",
+        "title": "WEB4 在YNX中的定义",
         "language": "zh",
         "category": "Chinese Docs",
-        "sourcePath": "docs/zh/V2_公开测试网加入手册.md",
-        "publicPath": "/docs/zh/public-testnet-join.md",
-        "description": "加入 V2 公开测试网的手册。",
+        "sourcePath": "docs/zh/WEB4_在YNX中的定义.md",
+        "publicPath": "/docs/zh/web4-definition.md",
+        "description": "Web4 在 YNX v2 中的意义。",
         "tags": [
-          "testnet",
-          "join",
+          "web4",
+          "definition",
           "zh"
         ]
       },
@@ -312,34 +312,6 @@
         ]
       },
       {
-        "id": "zh/web4-definition",
-        "title": "WEB4 在YNX中的定义",
-        "language": "zh",
-        "category": "Chinese Docs",
-        "sourcePath": "docs/zh/WEB4_在YNX中的定义.md",
-        "publicPath": "/docs/zh/web4-definition.md",
-        "description": "Web4 在 YNX v2 中的意义。",
-        "tags": [
-          "web4",
-          "definition",
-          "zh"
-        ]
-      },
-      {
-        "id": "zh/mainnet-readiness-gates",
-        "title": "主网与行业级上线门禁",
-        "language": "zh",
-        "category": "Chinese Docs",
-        "sourcePath": "docs/zh/主网与行业级上线门禁.md",
-        "publicPath": "/docs/zh/mainnet-readiness-gates.md",
-        "description": "主网上线必须满足的门禁。",
-        "tags": [
-          "mainnet",
-          "readiness",
-          "zh"
-        ]
-      },
-      {
         "id": "zh/ynx-v2-web4-api-spec",
         "title": "YNX v2 Web4 API 接口说明",
         "language": "zh",
@@ -354,17 +326,16 @@
         ]
       },
       {
-        "id": "zh/ares-hybrid-crypto",
-        "title": "YNX ARES 混合抗量子加密协议",
+        "id": "zh/public-testnet-join",
+        "title": "V2 公开测试网加入手册",
         "language": "zh",
         "category": "Chinese Docs",
-        "sourcePath": "docs/zh/YNX_ARES_混合抗量子加密协议.md",
-        "publicPath": "/docs/zh/ares-hybrid-crypto.md",
-        "description": "ARES 混合抗量子加密协议。",
+        "sourcePath": "docs/zh/V2_公开测试网加入手册.md",
+        "publicPath": "/docs/zh/public-testnet-join.md",
+        "description": "加入 V2 公开测试网的手册。",
         "tags": [
-          "security",
-          "crypto",
-          "ares",
+          "testnet",
+          "join",
           "zh"
         ]
       },
@@ -397,6 +368,35 @@
         ]
       },
       {
+        "id": "zh/v2-high-assurance-crypto",
+        "title": "V2 高保证加密与抗量子安全模型",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/V2_高保证加密与抗量子安全模型.md",
+        "publicPath": "/docs/zh/v2-high-assurance-crypto.md",
+        "description": "V2 高保证加密模型。",
+        "tags": [
+          "security",
+          "crypto",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/ares-hybrid-crypto",
+        "title": "YNX ARES 混合抗量子加密协议",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/YNX_ARES_混合抗量子加密协议.md",
+        "publicPath": "/docs/zh/ares-hybrid-crypto.md",
+        "description": "ARES 混合抗量子加密协议。",
+        "tags": [
+          "security",
+          "crypto",
+          "ares",
+          "zh"
+        ]
+      },
+      {
         "id": "zh/non-custodial-business",
         "title": "YNX 非托管商业与合规边界",
         "language": "zh",
@@ -411,16 +411,16 @@
         ]
       },
       {
-        "id": "zh/v2-high-assurance-crypto",
-        "title": "V2 高保证加密与抗量子安全模型",
+        "id": "zh/mainnet-readiness-gates",
+        "title": "主网与行业级上线门禁",
         "language": "zh",
         "category": "Chinese Docs",
-        "sourcePath": "docs/zh/V2_高保证加密与抗量子安全模型.md",
-        "publicPath": "/docs/zh/v2-high-assurance-crypto.md",
-        "description": "V2 高保证加密模型。",
+        "sourcePath": "docs/zh/主网与行业级上线门禁.md",
+        "publicPath": "/docs/zh/mainnet-readiness-gates.md",
+        "description": "主网上线必须满足的门禁。",
         "tags": [
-          "security",
-          "crypto",
+          "mainnet",
+          "readiness",
           "zh"
         ]
       }

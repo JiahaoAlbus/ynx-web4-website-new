@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
+import type { ServiceStatus as SharedServiceStatus } from "../lib/networkStatus";
 
-export interface ServiceStatus {
-  status: "online" | "offline" | "degraded";
-  data?: any;
-  error?: string;
-  code?: number;
-}
+export type ServiceStatus = SharedServiceStatus;
 
-export type NetworkStatus = Record<string, ServiceStatus>;
+export type NetworkStatus = Record<string, any>;
 
 export function useNetworkStatus() {
   const [status, setStatus] = useState<NetworkStatus | null>(null);
@@ -17,7 +13,6 @@ export function useNetworkStatus() {
   const fetchStatus = async () => {
     try {
       const fetchUrl = "/api/network/status";
-      console.log(`[StatusHook] Fetching from ${fetchUrl}...`);
       const response = await fetch(fetchUrl, {
         headers: {
           'Accept': 'application/json',
@@ -26,14 +21,11 @@ export function useNetworkStatus() {
       });
       
       if (!response.ok) {
-        const text = await response.text().catch(() => "N/A");
-        console.error(`[StatusHook] Server error: ${response.status} ${response.statusText}`, text.substring(0, 100));
         throw new Error(`Status API unavailable (${response.status})`);
       }
       
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.error(`[StatusHook] Invalid content type: ${contentType}`);
         throw new Error("Status API returned invalid format. Check server routing.");
       }
 
@@ -41,19 +33,13 @@ export function useNetworkStatus() {
       setStatus(data);
       setError(null);
     } catch (err: any) {
-      console.error("[StatusHook] Fetch failure:", {
-        message: err.message,
-        name: err.name,
-        stack: err.stack
-      });
-      
       let displayError = err.message;
       if (err.message === "Failed to fetch") {
         displayError = "Connection failed. The dashboard server might be restarting or unreachable.";
       }
       
       setError(displayError);
-      setStatus(null); 
+      setStatus((current) => current); 
     } finally {
       setLoading(false);
     }

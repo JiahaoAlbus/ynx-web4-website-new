@@ -46,8 +46,8 @@ const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
       </h4>
       <p className="text-blue-900 mb-4">
         {isEn
-          ? "The official YNX Web4 CLI one-liner (GCP track). Run on a clean Ubuntu 22.04+ server:"
-          : "官方 YNX Web4 CLI 一键安装脚本（GCP 赛道）。请在全新的 Ubuntu 22.04+ 服务器上运行："}
+          ? "The official YNX Web4 CLI one-liner. Run on a clean Ubuntu 22.04+ server:"
+          : "官方 YNX Web4 CLI 一键安装脚本。请在全新的 Ubuntu 22.04+ 服务器上运行："}
       </p>
 
       <div className="space-y-4">

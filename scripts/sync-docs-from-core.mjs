@@ -74,7 +74,7 @@ async function syncDocs() {
   const failedPaths = [];
   const fallbackedPaths = [];
 
-  const promises = docList.map(async (doc) => {
+  const promises = docList.map(async (doc, index) => {
     let content = '';
     const isYaml = doc.sourcePath.endsWith('.yaml');
     let isSuccess = true;
@@ -124,6 +124,7 @@ async function syncDocs() {
     fs.writeFileSync(filePath, content, 'utf8');
     
     registryItems.push({
+      order: index,
       id: doc.id,
       title: doc.title,
       language: doc.language,
@@ -136,6 +137,7 @@ async function syncDocs() {
   });
 
   await Promise.all(promises);
+  registryItems.sort((a, b) => a.order - b.order);
   
   if (failedPaths.length > 0) {
     console.error('\n!!! SYNC FAILED !!!');
@@ -155,14 +157,14 @@ async function syncDocs() {
   
   const registry = categories.map(cat => ({
     title: cat,
-    items: registryItems.filter(item => item.category === cat)
+    items: registryItems.filter(item => item.category === cat).map(({ order, ...item }) => item)
   }));
   
   // Also push any uncategorized items if they exist
   const categorizedIds = registry.flatMap(c => c.items).map(i => i.id);
   const uncategorized = registryItems.filter(i => !categorizedIds.includes(i.id));
   if (uncategorized.length > 0) {
-    registry.push({ title: 'Other Info', items: uncategorized });
+    registry.push({ title: 'Other Info', items: uncategorized.map(({ order, ...item }) => item) });
   }
 
   const registryPath = path.join(publicDocsPath, 'registry.json');

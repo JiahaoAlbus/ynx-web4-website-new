@@ -11,7 +11,7 @@ export function Roadmap() {
       desc: t("roadmap.testnet_status"),
       status: "completed",
       icon: <Zap className="w-5 h-5" />,
-      items: ["GCP Infrastructure Setup", "Multi-validator Consensus", "AI Settlement Primitives"]
+      items: ["Public Testnet Infrastructure", "Multi-validator Consensus", "AI Settlement Primitives"]
     },
     {
       title: "Public Stress Check",

@@ -30,16 +30,18 @@ export function Testnet() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const getStatusColor = (svcStatus: string) => {
+  const getStatusColor = (svcStatus?: string) => {
     if (svcStatus === 'online') return 'text-emerald-600';
     if (svcStatus === 'degraded') return 'text-amber-600';
-    return 'text-rose-600';
+    if (svcStatus === 'offline') return 'text-rose-600';
+    return 'text-ink/40';
   };
 
-  const getStatusDot = (svcStatus: string) => {
+  const getStatusDot = (svcStatus?: string) => {
     if (svcStatus === 'online') return 'bg-emerald-500';
     if (svcStatus === 'degraded') return 'bg-amber-500';
-    return 'bg-rose-500';
+    if (svcStatus === 'offline') return 'bg-rose-500';
+    return 'bg-ink/20';
   };
 
   return (
@@ -132,9 +134,9 @@ export function Testnet() {
                   {endpoint.label}
                 </span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${getStatusDot(status?.[endpoint.id]?.status || 'offline')} animate-pulse`} />
-                  <span className={`text-[10px] font-mono font-bold uppercase ${getStatusColor(status?.[endpoint.id]?.status || 'offline')}`}>
-                    {status?.[endpoint.id]?.status || 'checking'}
+                  <div className={`w-2 h-2 rounded-full ${getStatusDot(status?.[endpoint.id]?.status)} ${loading ? "animate-pulse" : ""}`} />
+                  <span className={`text-[10px] font-mono font-bold uppercase ${getStatusColor(status?.[endpoint.id]?.status)}`}>
+                    {status?.[endpoint.id]?.status || (loading ? 'checking' : 'unknown')}
                   </span>
                 </div>
               </div>
