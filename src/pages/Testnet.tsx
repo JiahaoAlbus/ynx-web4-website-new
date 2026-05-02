@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { NETWORK } from "../constants/network";
 import { motionEase, revealSoft, stagger } from "../lib/motion";
+import { SignalRail } from "../components/motion/SignalRail";
 
 export function Testnet() {
   const { status, loading, error, refetch } = useNetworkStatus();
@@ -47,14 +48,19 @@ export function Testnet() {
 
   return (
     <div className="pt-24 pb-32">
-      <section className="relative py-20 px-6">
+      <section className="relative py-20 px-6 overflow-hidden">
+        <SignalRail density="active" className="opacity-75" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-border mb-6 shadow-sm">
+            <motion.div
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-border mb-6 shadow-sm"
+              whileHover={{ y: -2, scale: 1.02 }}
+              transition={{ duration: 0.18 }}
+            >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -62,7 +68,7 @@ export function Testnet() {
               <span className="text-xs font-mono font-medium tracking-wide text-ink/70 uppercase">
                 Public Infrastructure Active
               </span>
-            </div>
+            </motion.div>
             <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-ink mb-6">
               Network <span className="text-klein">Status</span>
             </h1>
@@ -135,6 +141,11 @@ export function Testnet() {
               transition={{ duration: 0.18, ease: motionEase.standard }}
               className="bg-white p-6 rounded-2xl border border-border flex flex-col justify-between group hover:border-klein/30 hover:shadow-xl transition-all relative overflow-hidden"
             >
+              <motion.div
+                className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-klein/0 blur-2xl group-hover:bg-klein/10"
+                animate={status?.[endpoint.id]?.status === "online" ? { opacity: [0.2, 0.7, 0.2], scale: [1, 1.18, 1] } : undefined}
+                transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", delay: index * 0.09 }}
+              />
               {status?.[endpoint.id]?.status === "online" && (
                 <motion.div
                   className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent"
@@ -164,13 +175,22 @@ export function Testnet() {
                 <motion.button
                   onClick={() => handleCopy(endpoint.url, index)}
                   whileTap={{ scale: 0.92 }}
+                  whileHover={{ y: -1 }}
                   className={`p-2 rounded-xl transition-all shrink-0 ${
                     copiedIndex === index 
                       ? "bg-emerald-100 text-emerald-600" 
                       : "hover:bg-surface text-ink/40 hover:text-klein border border-transparent hover:border-border"
                   }`}
                 >
-                  {copiedIndex === index ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <motion.span
+                    key={copiedIndex === index ? "copied" : "copy"}
+                    initial={{ scale: 0.72, rotate: -8, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 520, damping: 24 }}
+                    className="block"
+                  >
+                    {copiedIndex === index ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </motion.span>
                 </motion.button>
               </div>
             </motion.div>
@@ -187,7 +207,12 @@ export function Testnet() {
           variants={stagger}
           className="grid md:grid-cols-2 gap-8"
         >
-          <motion.div variants={revealSoft} className="bg-surface p-8 rounded-3xl border border-border">
+          <motion.div variants={revealSoft} whileHover={{ y: -5 }} className="bg-surface p-8 rounded-3xl border border-border relative overflow-hidden group">
+            <motion.div
+              className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+              animate={{ x: ["-120%", "120%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
             <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
               <Server className="text-klein" />
               Main Public Hub
@@ -211,7 +236,12 @@ export function Testnet() {
             </p>
           </motion.div>
 
-          <motion.div variants={revealSoft} className="bg-surface p-8 rounded-3xl border border-border">
+          <motion.div variants={revealSoft} whileHover={{ y: -5 }} className="bg-surface p-8 rounded-3xl border border-border relative overflow-hidden group">
+            <motion.div
+              className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-0 group-hover:opacity-100"
+              animate={{ x: ["-120%", "120%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            />
             <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
               <Globe className="text-emerald-500" />
               Global Validator Mesh
@@ -243,7 +273,18 @@ export function Testnet() {
 
       <section className="max-w-7xl mx-auto px-6 mb-32">
         <h2 className="text-3xl font-display font-bold mb-10">Verify the Network</h2>
-        <div className="bg-ink text-white p-8 rounded-3xl shadow-2xl overflow-hidden relative">
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.52, ease: motionEase.emphasized }}
+          className="bg-ink text-white p-8 rounded-3xl shadow-2xl overflow-hidden relative"
+        >
+          <motion.div
+            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+            animate={{ x: ["-100%", "100%"] }}
+            transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+          />
           <div className="flex items-center gap-2 mb-6">
             <div className="w-3 h-3 rounded-full bg-rose-500" />
             <div className="w-3 h-3 rounded-full bg-amber-500" />
@@ -260,7 +301,7 @@ export function Testnet() {
             <code className="text-white">curl -s https://ai.ynxweb4.com/ready | jq</code>{"\n"}
             <code className="text-white">curl -s https://web4.ynxweb4.com/ready | jq</code>
           </pre>
-        </div>
+        </motion.div>
       </section>
 
       <section className="max-w-7xl mx-auto px-6 mb-32">
@@ -288,14 +329,28 @@ export function Testnet() {
               link: "https://github.com/JiahaoAlbus/YNX/blob/main/docs/en/FAUCET.md" 
             },
           ].map((doc, i) => (
-            <a key={i} href={doc.link} target="_blank" rel="noreferrer" className="bg-white border border-border p-6 rounded-2xl group hover:border-klein hover:shadow-xl transition-all">
+            <motion.a
+              key={i}
+              href={doc.link}
+              target="_blank"
+              rel="noreferrer"
+              whileHover={{ y: -6, scale: 1.012 }}
+              whileTap={{ scale: 0.99 }}
+              transition={{ duration: 0.18, ease: motionEase.standard }}
+              className="bg-white border border-border p-6 rounded-2xl group hover:border-klein hover:shadow-xl transition-all relative overflow-hidden"
+            >
+              <motion.div
+                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+                animate={{ x: ["-120%", "120%"] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: i * 0.12 }}
+              />
               <div className="flex items-center justify-between mb-4">
                 <Terminal className="text-ink/20 group-hover:text-klein transition-colors" />
                 <ArrowRight className="w-4 h-4 text-ink/20 group-hover:text-klein group-hover:translate-x-1 transition-all" />
               </div>
               <h4 className="font-bold text-ink mb-2">{doc.title}</h4>
               <p className="text-xs text-ink/50 leading-relaxed">{doc.desc}</p>
-            </a>
+            </motion.a>
           ))}
         </div>
       </section>
@@ -319,7 +374,17 @@ export function Testnet() {
           ].map((item, i) => {
             const svc = status?.[item.id];
             return (
-              <div key={i} className="bg-white border border-border p-6 rounded-2xl flex flex-col gap-4 hover:shadow-lg transition-all">
+              <motion.div
+                key={i}
+                whileHover={{ y: -5, scale: 1.012 }}
+                transition={{ duration: 0.18, ease: motionEase.standard }}
+                className="bg-white border border-border p-6 rounded-2xl flex flex-col gap-4 hover:shadow-lg transition-all relative overflow-hidden group"
+              >
+                <motion.div
+                  className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+                  animate={{ x: ["-120%", "120%"] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
+                />
                 <div className="flex items-center justify-between">
                   <div className="p-2 bg-surface rounded-xl text-ink/40">{item.icon}</div>
                   <div className={`text-[10px] font-mono font-bold uppercase ${getStatusColor(svc?.status || 'offline')}`}>
@@ -331,10 +396,11 @@ export function Testnet() {
                   <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: svc?.status === 'online' ? '100%' : '20%' }}
+                    transition={{ duration: 0.65, ease: motionEase.emphasized }}
                     className={`h-full ${svc?.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'}`}
                   />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

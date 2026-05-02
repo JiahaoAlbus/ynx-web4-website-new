@@ -4,11 +4,14 @@ import { Button } from "../components/ui/button";
 import { TiltCard } from "../components/ui/TiltCard";
 import { Magnetic } from "../components/ui/Magnetic";
 import { Link } from "react-router-dom";
+import { SignalRail } from "../components/motion/SignalRail";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 export function Validators() {
   return (
     <div className="pt-40 pb-32">
-      <section className="relative py-20 px-6">
+      <section className="relative py-20 px-6 overflow-hidden">
+        <SignalRail density="active" className="opacity-70" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -25,37 +28,54 @@ export function Validators() {
             <p className="text-xl text-ink/60 max-w-2xl mx-auto leading-relaxed mb-10">
               The YNX consensus layer is powered by a set of bonded validators. We are currently seeking external node operators to join the public testnet mesh and stress-test the AI-native execution logic.
             </p>
-            <div className="flex justify-center gap-4">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: 0.24 } } }}
+              className="flex justify-center gap-4"
+            >
               <Magnetic>
+                <motion.div variants={revealSoft}>
                 <Button variant="klein" size="lg" asChild>
                   <Link to="/docs/en/public-testnet-join">
                     Join Testnet
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
+                </motion.div>
               </Magnetic>
               <Magnetic>
+                <motion.div variants={revealSoft}>
                 <Button variant="outline" size="lg" asChild>
                   <a href="https://explorer.ynxweb4.com" target="_blank" rel="noreferrer">
                     <Activity className="mr-2 w-4 h-4" />
                     Explorer
                   </a>
                 </Button>
+                </motion.div>
               </Magnetic>
               <Magnetic>
+                <motion.div variants={revealSoft}>
                 <Button variant="ghost" size="lg" asChild>
                   <Link to="/docs/en/public-testnet-join">
                     <Server className="mr-2 w-4 h-4" />
                     Operator Guide
                   </Link>
                 </Button>
+                </motion.div>
               </Magnetic>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-32">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={stagger}
+        className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-32"
+      >
         {[
           {
             icon: <Shield className="w-8 h-8" />,
@@ -75,23 +95,44 @@ export function Validators() {
         ].map((feature, i) => (
           <TiltCard key={i} className="h-full">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="p-8 bg-surface border border-border rounded-2xl h-full hover:border-klein/30 transition-colors"
+              variants={revealSoft}
+              whileHover={{ y: -8, scale: 1.012 }}
+              transition={{ duration: 0.2, ease: motionEase.standard }}
+              className="p-8 bg-surface border border-border rounded-2xl h-full hover:border-klein/30 transition-colors relative overflow-hidden group"
             >
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-klein mb-6 shadow-sm">
+              <motion.div
+                className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+                animate={{ x: ["-120%", "120%"] }}
+                transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.18 }}
+              />
+              <motion.div
+                className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-klein mb-6 shadow-sm"
+                whileHover={{ rotate: -3, scale: 1.08 }}
+                transition={{ type: "spring", stiffness: 360, damping: 22 }}
+              >
                 {feature.icon}
-              </div>
+              </motion.div>
               <h3 className="text-2xl font-display font-bold mb-3">{feature.title}</h3>
               <p className="text-ink/70 leading-relaxed">{feature.desc}</p>
             </motion.div>
           </TiltCard>
         ))}
-      </section>
+      </motion.section>
 
       <section className="bg-surface py-24 relative overflow-hidden rounded-3xl mx-6 shadow-sm border border-border/50">
+        <motion.div
+          className="absolute left-[calc(50%-2px)] top-44 hidden h-[62%] w-px bg-gradient-to-b from-klein/0 via-klein/25 to-klein/0 md:block"
+          initial={{ scaleY: 0 }}
+          whileInView={{ scaleY: 1 }}
+          viewport={{ once: true, margin: "-120px" }}
+          transition={{ duration: 1.1, ease: motionEase.emphasized }}
+          style={{ originY: 0 }}
+        />
+        <motion.div
+          className="absolute left-[calc(50%-4px)] top-44 hidden h-2 w-2 rounded-full bg-klein shadow-[0_0_24px_rgba(0,47,167,0.5)] md:block"
+          animate={{ y: [0, 420, 0], opacity: [0.2, 1, 0.2] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <h2 className="text-4xl font-display font-bold text-center mb-16">Onboarding Steps</h2>
           
@@ -129,18 +170,26 @@ export function Validators() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex items-start gap-8"
+                className="flex items-start gap-8 group"
               >
-                <div className="w-12 h-12 rounded-2xl bg-klein text-white flex items-center justify-center font-display font-bold text-xl shrink-0 shadow-lg shadow-klein/20">
+                <motion.div
+                  className="w-12 h-12 rounded-2xl bg-klein text-white flex items-center justify-center font-display font-bold text-xl shrink-0 shadow-lg shadow-klein/20"
+                  whileHover={{ scale: 1.1, rotate: 2 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 20 }}
+                >
                   {i + 1}
-                </div>
-                <div className="flex-1 bg-white p-8 rounded-3xl border border-border shadow-sm hover:shadow-xl transition-all group">
+                </motion.div>
+                <motion.div
+                  whileHover={{ x: 8, y: -2 }}
+                  transition={{ duration: 0.18, ease: motionEase.standard }}
+                  className="flex-1 bg-white p-8 rounded-3xl border border-border shadow-sm hover:shadow-xl transition-all group"
+                >
                   <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
                   <p className="text-ink/60 mb-6 leading-relaxed">{step.desc}</p>
                   
                   {step.code && (
                     <div className="relative">
-                      <pre className="p-4 bg-ink text-emerald-400 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre">
+                      <pre className="p-4 bg-ink text-emerald-400 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre relative">
                         <code>{step.code}</code>
                       </pre>
                       <button 
@@ -162,7 +211,7 @@ export function Validators() {
                       Canonical Guide <ArrowRight size={16} />
                     </a>
                   )}
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </div>

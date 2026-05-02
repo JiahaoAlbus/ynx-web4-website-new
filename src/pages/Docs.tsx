@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Menu,
@@ -19,6 +19,7 @@ import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github-dark.css";
 import { Magnetic } from "../components/ui/Magnetic";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { motionEase, revealSoft, stagger } from "../lib/motion";
 
 type DocItem = {
   id: string;
@@ -107,6 +108,7 @@ const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
 export function Docs() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -150,7 +152,7 @@ export function Docs() {
     .map((category) => ({
       ...category,
       items: category.items.filter((item) => {
-        const query = searchQuery.toLowerCase();
+        const query = deferredSearchQuery.toLowerCase();
         return (
           item.title.toLowerCase().includes(query) ||
           item.description?.toLowerCase().includes(query) ||
@@ -215,14 +217,21 @@ export function Docs() {
 
       <div className="max-w-7xl mx-auto px-6 flex items-start gap-12 h-full">
         {/* Sidebar Navigation */}
-        <aside
+        <motion.aside
+          initial={{ opacity: 0, x: -18 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.36, ease: motionEase.emphasized }}
           className={`
             fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-border transform transition-transform duration-300 ease-in-out 
             lg:static lg:translate-x-0 lg:w-64 lg:h-full lg:border-none shrink-0 overflow-y-auto
             ${isMobileMenuOpen ? "translate-x-0 pt-24 px-6 shadow-2xl" : "-translate-x-full lg:pt-8 lg:px-0 lg:shadow-none"}
           `}
         >
-          <div className="mb-8 relative">
+          <motion.div
+            className="mb-8 relative"
+            whileHover={{ scale: 1.01 }}
+            transition={{ duration: 0.16 }}
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink/40" />
             <input
               type="text"
@@ -231,61 +240,87 @@ export function Docs() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-surface border border-border rounded-lg text-sm focus:outline-none focus:border-klein/50 transition-colors"
             />
-          </div>
+            {searchQuery && (
+              <motion.div
+                className="absolute inset-y-0 right-3 flex items-center text-[10px] font-mono uppercase text-klein"
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+              >
+                live
+              </motion.div>
+            )}
+          </motion.div>
 
-          <nav className="space-y-8 pb-12">
+          <motion.nav initial="hidden" animate="visible" variants={stagger} className="space-y-8 pb-12">
             {filteredDocs.map((category, i) => (
-              <div key={i}>
+              <motion.div key={i} variants={revealSoft}>
                 <h3 className="text-xs font-mono font-bold text-ink/40 uppercase tracking-widest mb-4 px-2">
                   {category.title}
                 </h3>
                 <ul className="space-y-1">
                   {category.items.map((item) => (
                     <li key={item.id}>
-                      <Link
-                        to={`/docs/${item.id}`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`
-                          w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group
-                          ${
-                            currentPath === item.id
-                              ? "bg-klein/5 text-klein font-medium"
-                              : "text-ink/60 hover:text-ink hover:bg-surface"
-                          }
-                        `}
+                      <motion.div
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.985 }}
+                        transition={{ duration: 0.14 }}
                       >
-                        {item.title}
-                        {currentPath === item.id && (
-                          <motion.div
-                            layoutId="activeDoc"
-                            className="w-1.5 h-1.5 rounded-full bg-klein"
-                          />
-                        )}
-                      </Link>
+                        <Link
+                          to={`/docs/${item.id}`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={`
+                            w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group relative overflow-hidden
+                            ${
+                              currentPath === item.id
+                                ? "bg-klein/5 text-klein font-medium"
+                                : "text-ink/60 hover:text-ink hover:bg-surface"
+                            }
+                          `}
+                        >
+                          {currentPath === item.id && (
+                            <motion.span
+                              layoutId="activeDocPill"
+                              className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-klein"
+                            />
+                          )}
+                          <span className="truncate">{item.title}</span>
+                          {currentPath === item.id && (
+                            <motion.div
+                              layoutId="activeDoc"
+                              className="w-1.5 h-1.5 rounded-full bg-klein"
+                              animate={{ scale: [1, 1.45, 1], opacity: [1, 0.65, 1] }}
+                              transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                          )}
+                        </Link>
+                      </motion.div>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
-          </nav>
-        </aside>
+          </motion.nav>
+        </motion.aside>
 
         {/* Main Content */}
         <main className="flex-1 h-full overflow-y-auto py-12 lg:py-8 min-w-0 scroll-smooth relative">
           <div className="flex justify-end mb-4 gap-4">
             {currentDoc && currentPath !== "docs" && (
-              <a
+              <motion.a
                 href={`https://github.com/JiahaoAlbus/YNX/blob/main/${currentDoc.sourcePath}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-ink/60 hover:text-ink hover:bg-surface rounded-lg transition-colors"
               >
                 <ExternalLink size={16} />
                 View Source
-              </a>
+              </motion.a>
             )}
             {currentDoc && docContent && currentPath !== "docs" && (
-              <button
+              <motion.button
                 onClick={() => {
                   const blob = new Blob([docContent], {
                     type: "text/markdown",
@@ -297,23 +332,25 @@ export function Docs() {
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-klein bg-klein/5 hover:bg-klein/10 rounded-lg transition-colors"
               >
                 <Download size={16} />
                 Download Page
-              </button>
+              </motion.button>
             )}
           </div>
 
           <article className="prose prose-lg prose-slate max-w-none min-h-[50vh] relative">
             <AnimatePresence mode="wait">
             {isLoading ? (
-              <motion.div key="loading" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="animate-pulse space-y-6">
-                <div className="h-10 bg-slate-200 rounded w-2/3"></div>
+              <motion.div key="loading" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6 overflow-hidden">
+                <motion.div className="h-10 bg-slate-200 rounded w-2/3" animate={{ opacity: [0.45, 0.9, 0.45] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}></motion.div>
                 <div className="space-y-3">
-                  <div className="h-4 bg-slate-200 rounded w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded w-full"></div>
-                  <div className="h-4 bg-slate-200 rounded w-5/6"></div>
+                  <motion.div className="h-4 bg-slate-200 rounded w-full" animate={{ opacity: [0.35, 0.85, 0.35] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}></motion.div>
+                  <motion.div className="h-4 bg-slate-200 rounded w-full" animate={{ opacity: [0.35, 0.85, 0.35] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.12 }}></motion.div>
+                  <motion.div className="h-4 bg-slate-200 rounded w-5/6" animate={{ opacity: [0.35, 0.85, 0.35] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.24 }}></motion.div>
                 </div>
                 <div className="space-y-3 pt-6">
                   <div className="h-4 bg-slate-200 rounded w-full"></div>
@@ -477,7 +514,18 @@ export function Docs() {
                         }
 
                         return (
-                          <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg">
+                          <motion.div
+                            initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
+                            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            viewport={{ once: true, margin: "-60px" }}
+                            transition={{ duration: 0.38, ease: motionEase.emphasized }}
+                            className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg"
+                          >
+                            <motion.div
+                              className="absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+                              animate={{ x: ["-120%", "120%"] }}
+                              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                            />
                             <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
                               <div className="flex gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
@@ -499,7 +547,7 @@ export function Docs() {
                             <CopyButton
                               text={String(children).replace(/\\n$/, "")}
                             />
-                          </div>
+                          </motion.div>
                         );
                       },
                     } as any
@@ -532,8 +580,20 @@ export function Docs() {
                 <p className="text-xl text-ink/60 mb-12">Select a topic from the sidebar or explore the key areas below.</p>
                 
                 <div className="grid md:grid-cols-2 gap-6 not-prose">
-                  {registry.slice(0, 4).map(category => (
-                    <div key={category.title} className="p-6 rounded-2xl bg-surface border border-border group">
+                  {registry.slice(0, 4).map((category, index) => (
+                    <motion.div
+                      key={category.title}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.38, delay: index * 0.06, ease: motionEase.emphasized }}
+                      whileHover={{ y: -6, scale: 1.012 }}
+                      className="p-6 rounded-2xl bg-surface border border-border group relative overflow-hidden"
+                    >
+                      <motion.div
+                        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+                        animate={{ x: ["-120%", "120%"] }}
+                        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: index * 0.12 }}
+                      />
                       <h3 className="text-lg font-bold font-mono tracking-widest uppercase mb-4 text-klein">{category.title}</h3>
                       <ul className="space-y-3">
                         {category.items.slice(0, 3).map(item => (
@@ -545,7 +605,7 @@ export function Docs() {
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </motion.div>
@@ -596,12 +656,22 @@ function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button
+    <motion.button
       onClick={handleCopy}
+      whileHover={{ y: -1, scale: 1.05 }}
+      whileTap={{ scale: 0.9 }}
       className="absolute top-3 right-3 p-1.5 rounded-md text-white/40 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
       aria-label="Copy code"
     >
-      {copied ? <Check size={14} /> : <Copy size={14} />}
-    </button>
+      <motion.span
+        key={copied ? "copied" : "copy"}
+        initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 520, damping: 24 }}
+        className="block"
+      >
+        {copied ? <Check size={14} /> : <Copy size={14} />}
+      </motion.span>
+    </motion.button>
   );
 }

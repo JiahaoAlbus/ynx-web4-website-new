@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NETWORK } from "../constants/network";
 import { motionEase, revealSoft, stagger } from "../lib/motion";
+import { SignalRail } from "../components/motion/SignalRail";
 
 function BuildPathCard({
   icon,
@@ -35,30 +36,46 @@ function BuildPathCard({
     <TiltCard className="h-full">
       <motion.div
         variants={revealSoft}
-        whileHover={{ y: -5, scale: 1.01 }}
+        whileHover={{ y: -8, scale: 1.012 }}
         transition={{ duration: 0.2, ease: motionEase.standard }}
-        className="p-8 bg-surface border border-border rounded-[32px] h-full hover:border-klein/30 transition-all flex flex-col"
+        className="p-8 bg-surface border border-border rounded-[32px] h-full hover:border-klein/30 transition-all flex flex-col relative overflow-hidden group"
       >
-        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-klein mb-8 shadow-sm border border-border/50">
+        <motion.div
+          className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-klein to-transparent opacity-0 group-hover:opacity-100"
+          animate={{ x: ["-120%", "120%"] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-klein mb-8 shadow-sm border border-border/50"
+          whileHover={{ rotate: 3, scale: 1.06 }}
+          transition={{ type: "spring", stiffness: 360, damping: 22 }}
+        >
           {icon}
-        </div>
+        </motion.div>
         <h3 className="text-2xl font-display font-bold mb-4">{title}</h3>
         <p className="text-ink/60 leading-relaxed mb-8 flex-1">{desc}</p>
         <div className="space-y-3 mb-8">
           {features.map((f, i) => (
-            <div
+            <motion.div
               key={i}
+              initial={{ opacity: 0.64, x: 0 }}
+              whileHover={{ opacity: 1, x: 4 }}
+              transition={{ duration: 0.16 }}
               className="flex items-center gap-3 text-xs font-mono font-bold text-ink/40 uppercase tracking-tighter"
             >
               <div className="w-1 h-1 rounded-full bg-klein/40" />
               {f}
-            </div>
+            </motion.div>
           ))}
         </div>
-        <Button variant="outline" className="w-full justify-between" asChild>
+        <Button variant="outline" className="w-full justify-between group/button overflow-hidden relative" asChild>
           <a href={link} target="_blank" rel="noreferrer">
             Endpoint API
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <motion.div
+              className="w-2 h-2 rounded-full bg-emerald-500"
+              animate={{ scale: [1, 1.75, 1], opacity: [1, 0.55, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            />
           </a>
         </Button>
       </motion.div>
@@ -86,7 +103,8 @@ export default {
 
   return (
     <div className="pt-40 pb-32">
-      <section className="relative py-20 px-6">
+      <section className="relative py-20 px-6 overflow-hidden">
+        <SignalRail density="active" className="opacity-80" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -105,16 +123,24 @@ export default {
               Deploy your existing Solidity contracts or build autonomous agents
               with policy-bounded execution.
             </p>
-            <div className="flex justify-center gap-4">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: 0.24 } } }}
+              className="flex justify-center gap-4"
+            >
               <Magnetic>
-                <Button variant="klein" size="lg" asChild>
+                <motion.div variants={revealSoft}>
+                <Button variant="klein" size="lg" className="relative overflow-hidden shadow-xl shadow-klein/20" asChild>
                   <Link to="/docs/en/builder-quickstart">
                     Read the Docs
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
+                </motion.div>
               </Magnetic>
               <Magnetic>
+                <motion.div variants={revealSoft}>
                 <Button variant="outline" size="lg" asChild>
                   <a
                     href="https://explorer.ynxweb4.com"
@@ -125,8 +151,10 @@ export default {
                     View Explorer
                   </a>
                 </Button>
+                </motion.div>
               </Magnetic>
               <Magnetic>
+                <motion.div variants={revealSoft}>
                 <Button variant="ghost" size="lg" asChild>
                   <a
                     href="https://github.com/JiahaoAlbus/YNX"
@@ -137,8 +165,9 @@ export default {
                     GitHub
                   </a>
                 </Button>
+                </motion.div>
               </Magnetic>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -222,11 +251,18 @@ export default {
                   key={i}
                   variants={{
                     hidden: { opacity: 0, x: -20 },
-                    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 50 } }
+                    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 70, damping: 16 } }
                   }}
-                  className="flex items-center gap-3"
+                  whileHover={{ x: 6 }}
+                  className="flex items-center gap-3 group"
                 >
-                  <Check className="text-emerald-500 w-4 h-4 shrink-0" /> {step}
+                  <motion.span
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"
+                    whileHover={{ scale: 1.15 }}
+                  >
+                    <Check className="w-3.5 h-3.5 shrink-0" />
+                  </motion.span>
+                  <span className="group-hover:text-klein transition-colors">{step}</span>
                 </motion.div>
               ))}
             </motion.div>
@@ -240,14 +276,19 @@ export default {
               </Link>
             </Button>
           </div>
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <motion.div
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+              <motion.div
               className="relative bg-[#0d1117] rounded-xl border border-white/10 p-6 font-mono text-sm overflow-x-auto shadow-2xl"
               whileHover={{ y: -3 }}
               transition={{ duration: 0.2 }}
-            >
-              <motion.div
+              >
+                <motion.div
+                  className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white/8 to-transparent"
+                  animate={{ x: ["-120%", "780%"] }}
+                  transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
                 className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
                 animate={{ x: ["-120%", "120%"] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
