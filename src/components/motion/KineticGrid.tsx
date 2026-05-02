@@ -19,8 +19,8 @@ export function KineticGrid() {
     <div className="pointer-events-none absolute inset-x-0 top-20 z-0 h-[32rem] overflow-hidden opacity-80 [mask-image:linear-gradient(to_bottom,transparent,#000_18%,#000_70%,transparent)]">
       <motion.div
         className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,47,167,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,47,167,0.045)_1px,transparent_1px)] bg-[size:64px_64px]"
-        animate={reduceMotion ? undefined : { backgroundPosition: ["0px 0px", "64px 32px"] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+        animate={reduceMotion ? undefined : { opacity: [0.72, 0.92, 0.72] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <svg viewBox="0 0 1220 220" className="absolute inset-x-0 top-20 h-56 w-full">
         <defs>
@@ -47,11 +47,10 @@ export function KineticGrid() {
           packets.map((packet) => (
             <motion.circle
               key={packet.delay}
-              r="4"
+              r="3.5"
               fill={packet.color}
-              filter="drop-shadow(0 0 12px rgba(0,47,167,0.55))"
               animate={{ offsetDistance: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 5.4, delay: packet.delay, repeat: Infinity, ease: "easeInOut" }}
+              transition={{ duration: 7.2, delay: packet.delay, repeat: Infinity, ease: "easeInOut" }}
               style={{ offsetPath: `path('${packet.path}')` }}
             />
           ))}

@@ -11,13 +11,21 @@ export function Cursor() {
   useEffect(() => {
     if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
 
+    let raf = 0;
     const onMove = (event: PointerEvent) => {
-      rawX.set(event.clientX - 180);
-      rawY.set(event.clientY - 180);
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        rawX.set(event.clientX - 140);
+        rawY.set(event.clientY - 140);
+        raf = 0;
+      });
     };
 
     window.addEventListener("pointermove", onMove);
-    return () => window.removeEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
   }, [rawX, rawY, reduceMotion]);
 
   if (reduceMotion) return null;
@@ -25,7 +33,7 @@ export function Cursor() {
   return (
     <motion.div
       aria-hidden="true"
-      className="pointer-events-none fixed z-30 hidden h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(0,47,167,0.12),rgba(0,47,167,0.045)_34%,transparent_68%)] blur-xl lg:block"
+      className="pointer-events-none fixed z-30 hidden h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(0,47,167,0.10),rgba(0,47,167,0.035)_34%,transparent_68%)] blur-lg will-change-transform lg:block"
       style={{ x, y }}
     />
   );

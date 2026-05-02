@@ -23,8 +23,8 @@ const docList = [
   { sourcePath: 'docs/en/WEB4_FOR_YNX.md', fallbackPath: 'content/fallback-docs/en/web4-for-ynx.md', category: 'AI / Web4', id: 'en/web4-for-ynx', title: 'Web4 Definition', language: 'en', description: 'What Web4 means in YNX v2.', tags: ['web4', 'definition'] },
   { sourcePath: 'docs/en/YNX_v2_WEB4_API.md', fallbackPath: 'content/fallback-docs/en/ynx-v2-web4-api.md', category: 'AI / Web4', id: 'en/ynx-v2-web4-api', title: 'Web4 API', language: 'en', description: 'Web4 coordination Hub API specification.', tags: ['web4', 'api'] },
   { sourcePath: 'docs/en/YNX_v2_AI_SETTLEMENT_API.md', fallbackPath: 'content/fallback-docs/en/ynx-v2-ai-settlement-api.md', category: 'AI / Web4', id: 'en/ynx-v2-ai-settlement-api', title: 'AI Settlement API', language: 'en', description: 'AI Settlement Gateway API specification.', tags: ['ai', 'settlement', 'api'] },
-  { sourcePath: 'infra/openapi/ynx-v2-web4.yaml', category: 'AI / Web4', id: 'openapi/ynx-v2-web4-yaml', title: 'Web4 Hub OpenAPI', language: 'en', description: 'OpenAPI spec for Web4 Hub.', tags: ['openapi', 'web4'] },
-  { sourcePath: 'infra/openapi/ynx-v2-ai.yaml', category: 'AI / Web4', id: 'openapi/ynx-v2-ai-yaml', title: 'AI Gateway OpenAPI', language: 'en', description: 'OpenAPI spec for AI Gateway.', tags: ['openapi', 'ai'] },
+  { sourcePath: 'infra/openapi/ynx-v2-web4.yaml', fallbackPath: 'content/fallback-docs/openapi/ynx-v2-web4-yaml.md', category: 'AI / Web4', id: 'openapi/ynx-v2-web4-yaml', title: 'Web4 Hub OpenAPI', language: 'en', description: 'OpenAPI spec for Web4 Hub.', tags: ['openapi', 'web4'] },
+  { sourcePath: 'infra/openapi/ynx-v2-ai.yaml', fallbackPath: 'content/fallback-docs/openapi/ynx-v2-ai-yaml.md', category: 'AI / Web4', id: 'openapi/ynx-v2-ai-yaml', title: 'AI Gateway OpenAPI', language: 'en', description: 'OpenAPI spec for AI Gateway.', tags: ['openapi', 'ai'] },
   
   // Validators & Testnet Ops
   { sourcePath: 'docs/en/PUBLIC_TESTNET_STATUS_2026_05_02.md', fallbackPath: 'content/fallback-docs/en/public-testnet-status-2026-05-02.md', category: 'Validators & Testnet Ops', id: 'en/public-testnet-status-2026-05-02', title: 'Public Testnet Status 2026-05-02', language: 'en', description: 'Status of the public testnet as of May 2, 2026.', tags: ['testnet', 'status'] },
@@ -112,7 +112,7 @@ async function syncDocs() {
     }
     
     // Wrap yaml output
-    if (isYaml) {
+    if (isYaml && !content.trimStart().startsWith('# ')) {
       content = `# ${doc.title}\n\n\`\`\`yaml\n${content}\n\`\`\``;
     }
     

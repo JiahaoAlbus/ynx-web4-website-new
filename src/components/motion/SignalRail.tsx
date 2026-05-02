@@ -13,16 +13,16 @@ const rails = [
 
 export function SignalRail({ className = "", density = "calm" }: SignalRailProps) {
   const reduceMotion = useReducedMotion();
-  const packetCount = density === "active" ? 9 : 5;
+  const packetCount = density === "active" ? 5 : 3;
 
   return (
-    <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
+    <div className={`pointer-events-none absolute inset-0 hidden overflow-hidden md:block ${className}`} aria-hidden="true">
       <motion.div
         className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,47,167,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,47,167,0.05)_1px,transparent_1px)] bg-[size:72px_72px]"
         animate={reduceMotion ? undefined : { backgroundPosition: ["0px 0px", "72px 36px"] }}
         transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
       />
-      <svg className="absolute inset-x-0 top-8 h-[360px] w-full" viewBox="0 0 1320 360" preserveAspectRatio="none">
+      <svg className="absolute inset-x-0 top-8 h-[320px] w-full" viewBox="0 0 1320 360" preserveAspectRatio="none">
         <defs>
           <linearGradient id="signal-rail-gradient" x1="0" x2="1">
             <stop offset="0%" stopColor="#002FA7" stopOpacity="0" />
@@ -61,7 +61,7 @@ export function SignalRail({ className = "", density = "calm" }: SignalRailProps
           })}
       </svg>
       <motion.div
-        className="absolute right-[8%] top-20 h-64 w-64 rounded-full bg-klein/10 blur-[80px]"
+        className="absolute right-[8%] top-20 h-56 w-56 rounded-full bg-klein/10 blur-[64px]"
         animate={reduceMotion ? undefined : { opacity: [0.24, 0.56, 0.24], scale: [1, 1.08, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
