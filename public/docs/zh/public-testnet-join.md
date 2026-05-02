@@ -1,4 +1,140 @@
-# YNX v2 公开测试网加入手册
+# YNX v2 公开测试网加入手册（Web4 赛道）
 
-Network: ynx_9102-1
-EVM Chain ID: 9102 (0x238e)
+状态：active  
+适用对象：体验用户、开发者、节点运营者、共识验证人候选者  
+最后更新：2026-04-19
+
+## 1. 手册目的
+
+这是 YNX v2 公测网对外入口手册。
+
+本页只负责帮助你选路径，完整步骤请进入对应手册。
+
+## 1.1 如果你是从零开始（新机器直接打开本页）
+
+干净 Linux 服务器最快路径：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+ynx join --role full-node
+```
+
+共识验证人候选路径：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+ynx join --role validator
+```
+
+当前公开测试网默认使用 state sync 加入。这是为了和现网状态兼容，新机器不再从旧 genesis 历史重放。
+
+手动备用路径：
+
+```bash
+sudo apt-get update -y
+sudo apt-get install -y git curl jq build-essential ca-certificates
+```
+
+```bash
+export YNX_REPO="$HOME/YNX"
+if [ ! -d "$YNX_REPO/.git" ]; then
+  git clone https://github.com/JiahaoAlbus/YNX.git "$YNX_REPO"
+else
+  cd "$YNX_REPO" && git pull --ff-only
+fi
+```
+
+然后继续下面路径 A / B / C。
+
+## 2. 网络基础信息
+
+- 网络名：`YNX v2 Public Testnet (Web4 Track)`
+- Cosmos Chain ID：`ynx_9102-1`
+- EVM Chain ID：`0x238e`（十进制 `9102`）
+- Denom：`anyxt`
+
+公开端点：
+
+- RPC：`https://rpc.ynxweb4.com`
+- EVM RPC：`https://evm.ynxweb4.com`
+- EVM WS：`wss://evm-ws.ynxweb4.com`
+- REST：`https://rest.ynxweb4.com`
+- Faucet：`https://faucet.ynxweb4.com`
+- Indexer：`https://indexer.ynxweb4.com`
+- Explorer：`https://explorer.ynxweb4.com`
+- AI Gateway：`https://ai.ynxweb4.com`
+- Web4 Hub：`https://web4.ynxweb4.com`
+
+官方仓库：
+
+- `https://github.com/JiahaoAlbus/YNX`
+
+## 3. 先选路径
+
+### 路径 A：普通用户 / 开发者（不需要服务器）
+
+- 连接钱包
+- 领取测试币
+- 发第一笔交易
+- 接入 EVM / RPC
+
+快速检查：
+
+```bash
+curl -s https://rpc.ynxweb4.com/status | jq -r '.result.node_info.network,.result.sync_info.latest_block_height'
+```
+
+```bash
+curl -s -X POST https://evm.ynxweb4.com \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' | jq
+```
+
+```bash
+curl -s https://faucet.ynxweb4.com/health | jq
+```
+
+### 路径 B：加入验证节点（不进共识）
+
+运行并同步节点，但不参与共识投票签名。
+
+完整手册：
+
+- `docs/zh/V2_验证节点加入手册.md`
+
+### 路径 C：加入共识验证人（BONDED）
+
+先有同步节点，再提交 `create-validator`，状态进入 `BOND_STATUS_BONDED`，参与投票签名。
+
+完整手册：
+
+- `docs/zh/V2_共识验证人加入手册.md`
+
+## 4. 常见问题
+
+### 这是主网吗？
+
+不是。这是公开测试网，测试币不等于主网资产。
+
+### “验证节点”和“共识验证人”区别是什么？
+
+- 验证节点：只同步和转发链数据。
+- 共识验证人：已 BONDED，参与出块投票签名。
+
+### 能不能先跑节点再进共识？
+
+可以，建议按这个顺序。
+
+## 5. 风险提示
+
+- 公测网可能升级、重置或调参。
+- 不要使用生产资产和生产密钥。
+- 助记词/私钥必须离线保管。
+
+## 6. 官方入口
+
+- 仓库：`https://github.com/JiahaoAlbus/YNX`
+- 浏览器：`https://explorer.ynxweb4.com`
+- 网络概览：`https://indexer.ynxweb4.com/ynx/overview`

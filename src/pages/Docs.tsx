@@ -52,10 +52,16 @@ const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
         <div>
           <div className="relative group">
             <pre className="bg-blue-900/10 p-4 rounded-md text-sm font-mono text-blue-900 overflow-x-auto whitespace-pre-wrap">
-              curl -fsSL https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh | bash
+              curl -fsSL
+              https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh
+              | bash
             </pre>
             <button
-              onClick={() => navigator.clipboard.writeText("curl -fsSL https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh | bash")}
+              onClick={() =>
+                navigator.clipboard.writeText(
+                  "curl -fsSL https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/scripts/install_ynx.sh | bash",
+                )
+              }
               className="absolute right-2 top-2 p-1.5 bg-blue-500/10 hover:bg-blue-500/20 rounded text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
               title="Copy"
             >
@@ -70,13 +76,21 @@ const StartFromZero = ({ lang }: { lang: "en" | "zh" }) => {
           </p>
           <div className="flex flex-wrap gap-2">
             <Link
-              to={isEn ? "/docs/en/public-testnet-join" : "/docs/zh/public-testnet-join"}
+              to={
+                isEn
+                  ? "/docs/en/public-testnet-join"
+                  : "/docs/zh/public-testnet-join"
+              }
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors no-underline text-sm font-medium"
             >
               {isEn ? "Full Node (State Sync)" : "全节点 (状态同步)"}
             </Link>
             <Link
-              to={isEn ? "/docs/en/validator-node-join" : "/docs/zh/validator-node-join"}
+              to={
+                isEn
+                  ? "/docs/en/validator-node-join"
+                  : "/docs/zh/validator-node-join"
+              }
               className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors no-underline text-sm font-medium"
             >
               {isEn ? "Validator (Consensus)" : "验证者 (共识)"}
@@ -99,20 +113,22 @@ export function Docs() {
 
   useEffect(() => {
     fetch("/docs/registry.json")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setRegistry(data);
         setIsRegistryLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to load registry", err);
         setIsRegistryLoading(false);
       });
   }, []);
 
-  const currentPath = location.pathname.replace(/^\/docs\//, "").replace(/\/$/, "");
+  const currentPath = location.pathname
+    .replace(/^\/docs\//, "")
+    .replace(/\/$/, "");
 
-  const allItems = useMemo(() => registry.flatMap(c => c.items), [registry]);
+  const allItems = useMemo(() => registry.flatMap((c) => c.items), [registry]);
 
   const [docContent, setDocContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,24 +151,24 @@ export function Docs() {
       setFetchError(null);
       return;
     }
-    
+
     let isMounted = true;
     setIsLoading(true);
     setDocContent(null);
     setFetchError(null);
-    
+
     fetch(`/docs/${currentDoc.id}.md`)
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error("Document not found");
         return res.text();
       })
-      .then(text => {
+      .then((text) => {
         if (isMounted) {
           setDocContent(text);
           setIsLoading(false);
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Failed to load document", err);
         if (isMounted) {
           setDocContent(null);
@@ -169,9 +185,8 @@ export function Docs() {
   const filteredDocs = registry
     .map((category) => ({
       ...category,
-      items: category.items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      items: category.items.filter((item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
     }))
     .filter((category) => category.items.length > 0);
@@ -281,7 +296,7 @@ export function Docs() {
               </button>
             )}
           </div>
-          
+
           <article className="prose prose-lg prose-slate max-w-none min-h-[50vh]">
             {isLoading ? (
               <div className="animate-pulse space-y-6">
@@ -302,148 +317,184 @@ export function Docs() {
                 <MessageSquareWarning className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <h3 className="font-bold mb-2">Error Loading Document</h3>
                 <p>{fetchError}</p>
-                <p className="text-sm mt-4 text-red-400">If you are the developer, ensure the Sync script has run.</p>
+                <p className="text-sm mt-4 text-red-400">
+                  If you are the developer, ensure the Sync script has run.
+                </p>
               </div>
             ) : docContent ? (
               <div className="mb-20 pb-12">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                  components={{
-                    "start-from-zero": ({ lang }: any) => <StartFromZero lang={lang} />,
-                    h1: ({ node, ...props }) => (
-                      <h1
-                        className="text-4xl font-display font-bold text-ink mb-6 tracking-tight"
-                        {...props}
-                      />
-                    ),
-                    h2: ({ node, ...props }) => (
-                      <h2
-                        className="text-2xl font-display font-semibold text-ink mt-12 mb-4 flex items-center gap-2 group"
-                        {...props}
-                      >
-                        {props.children}
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-klein/40 ml-2">
-                          #
-                        </span>
-                      </h2>
-                    ),
-                    h3: ({ node, ...props }) => (
-                      <h3
-                        className="text-xl font-bold text-ink mt-8 mb-3"
-                        {...props}
-                      />
-                    ),
-                    p: ({ node, children, ...props }: any) => {
-                      const childrenArray = React.Children.toArray(children);
-                      const isBlock = childrenArray.some((child: any) => {
-                        const tagName = child?.props?.node?.tagName || child?.type;
-                        return ["div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "blockquote", "table", "pre", "p", "start-from-zero"].includes(tagName);
-                      });
-                      
-                      if (isBlock) {
-                        return <div className="mb-6" {...props}>{children}</div>;
-                      }
-                      
-                      return (
-                        <p
-                          className="text-ink/70 leading-relaxed mb-6"
+                  components={
+                    {
+                      "start-from-zero": ({ lang }: any) => (
+                        <StartFromZero lang={lang} />
+                      ),
+                      h1: ({ node, ...props }) => (
+                        <h1
+                          className="text-4xl font-display font-bold text-ink mb-6 tracking-tight"
+                          {...props}
+                        />
+                      ),
+                      h2: ({ node, ...props }) => (
+                        <h2
+                          className="text-2xl font-display font-semibold text-ink mt-12 mb-4 flex items-center gap-2 group"
                           {...props}
                         >
-                          {children}
-                        </p>
-                      );
-                    },
-                    ul: ({ node, ...props }) => (
-                      <ul
-                        className="list-disc list-outside ml-6 mb-6 text-ink/70 space-y-2"
-                        {...props}
-                      />
-                    ),
-                    ol: ({ node, ...props }) => (
-                      <ol
-                        className="list-decimal list-outside ml-6 mb-6 text-ink/70 space-y-2"
-                        {...props}
-                      />
-                    ),
-                    li: ({ node, ...props }) => (
-                      <li className="pl-2" {...props} />
-                    ),
-                    a: ({ node, ...props }) => (
-                      <a
-                        className="text-klein hover:underline underline-offset-4 font-medium inline-flex items-center gap-1"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        {...props}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        {props.children}
-                      </a>
-                    ),
-                    blockquote: ({ node, ...props }) => (
-                      <blockquote
-                        className="border-l-4 border-klein/30 pl-6 italic text-ink/60 my-8 bg-surface/50 py-4 rounded-r-lg"
-                        {...props}
-                      />
-                    ),
-                    table: ({ node, ...props }) => (
-                      <div className="overflow-x-auto my-8">
-                        <table className="min-w-full text-left border-collapse" {...props} />
-                      </div>
-                    ),
-                    th: ({ node, ...props }) => (
-                      <th className="border-b border-border py-3 px-4 font-bold text-ink bg-surface/50" {...props} />
-                    ),
-                    td: ({ node, ...props }) => (
-                      <td className="border-b border-border py-3 px-4 text-ink/70" {...props} />
-                    ),
-                    pre: ({ node, children, ref, ...props }) => (
-                      <div className="not-prose" {...(props as any)}>
-                        {children}
-                      </div>
-                    ),
-                    code: ({ node, className, children, ...props }) => {
-                      const match = /language-(\w+)/.exec(className || "");
-                      const isInline = !match;
+                          {props.children}
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-klein/40 ml-2">
+                            #
+                          </span>
+                        </h2>
+                      ),
+                      h3: ({ node, ...props }) => (
+                        <h3
+                          className="text-xl font-bold text-ink mt-8 mb-3"
+                          {...props}
+                        />
+                      ),
+                      p: ({ node, children, ...props }: any) => {
+                        const childrenArray = React.Children.toArray(children);
+                        const isBlock = childrenArray.some((child: any) => {
+                          const tagName =
+                            child?.props?.node?.tagName || child?.type;
+                          return [
+                            "div",
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4",
+                            "h5",
+                            "h6",
+                            "ul",
+                            "ol",
+                            "li",
+                            "blockquote",
+                            "table",
+                            "pre",
+                            "p",
+                            "start-from-zero",
+                          ].includes(tagName);
+                        });
 
-                      if (isInline) {
+                        if (isBlock) {
+                          return (
+                            <div className="mb-6" {...props}>
+                              {children}
+                            </div>
+                          );
+                        }
+
                         return (
-                          <code
-                            className="bg-surface px-1.5 py-0.5 rounded text-sm font-mono text-klein font-medium border border-border/50"
+                          <p
+                            className="text-ink/70 leading-relaxed mb-6"
                             {...props}
                           >
                             {children}
-                          </code>
+                          </p>
                         );
-                      }
+                      },
+                      ul: ({ node, ...props }) => (
+                        <ul
+                          className="list-disc list-outside ml-6 mb-6 text-ink/70 space-y-2"
+                          {...props}
+                        />
+                      ),
+                      ol: ({ node, ...props }) => (
+                        <ol
+                          className="list-decimal list-outside ml-6 mb-6 text-ink/70 space-y-2"
+                          {...props}
+                        />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li className="pl-2" {...props} />
+                      ),
+                      a: ({ node, ...props }) => (
+                        <a
+                          className="text-klein hover:underline underline-offset-4 font-medium inline-flex items-center gap-1"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          {...props}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {props.children}
+                        </a>
+                      ),
+                      blockquote: ({ node, ...props }) => (
+                        <blockquote
+                          className="border-l-4 border-klein/30 pl-6 italic text-ink/60 my-8 bg-surface/50 py-4 rounded-r-lg"
+                          {...props}
+                        />
+                      ),
+                      table: ({ node, ...props }) => (
+                        <div className="overflow-x-auto my-8">
+                          <table
+                            className="min-w-full text-left border-collapse"
+                            {...props}
+                          />
+                        </div>
+                      ),
+                      th: ({ node, ...props }) => (
+                        <th
+                          className="border-b border-border py-3 px-4 font-bold text-ink bg-surface/50"
+                          {...props}
+                        />
+                      ),
+                      td: ({ node, ...props }) => (
+                        <td
+                          className="border-b border-border py-3 px-4 text-ink/70"
+                          {...props}
+                        />
+                      ),
+                      pre: ({ node, children, ref, ...props }) => (
+                        <div className="not-prose" {...(props as any)}>
+                          {children}
+                        </div>
+                      ),
+                      code: ({ node, className, children, ...props }) => {
+                        const match = /language-(\w+)/.exec(className || "");
+                        const isInline = !match;
 
-                      return (
-                        <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg">
-                          <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
-                            <div className="flex gap-1.5">
-                              <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
-                              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20" />
-                              <div className="w-2.5 h-2.5 rounded-full bg-green-500/20" />
-                            </div>
-                            <span className="text-xs font-mono text-white/30 uppercase">
-                              {match?.[1] || "text"}
-                            </span>
-                          </div>
-                          <div className="p-4 overflow-x-auto">
+                        if (isInline) {
+                          return (
                             <code
-                              className={`text-sm font-mono text-emerald-400 block ${className}`}
+                              className="bg-surface px-1.5 py-0.5 rounded text-sm font-mono text-klein font-medium border border-border/50"
                               {...props}
                             >
                               {children}
                             </code>
+                          );
+                        }
+
+                        return (
+                          <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg">
+                            <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
+                              <div className="flex gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20" />
+                                <div className="w-2.5 h-2.5 rounded-full bg-green-500/20" />
+                              </div>
+                              <span className="text-xs font-mono text-white/30 uppercase">
+                                {match?.[1] || "text"}
+                              </span>
+                            </div>
+                            <div className="p-4 overflow-x-auto">
+                              <code
+                                className={`text-sm font-mono text-emerald-400 block ${className}`}
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            </div>
+                            <CopyButton
+                              text={String(children).replace(/\\n$/, "")}
+                            />
                           </div>
-                          <CopyButton
-                            text={String(children).replace(/\\n$/, "")}
-                          />
-                        </div>
-                      );
-                    },
-                  } as any}
+                        );
+                      },
+                    } as any
+                  }
                 >
                   {docContent}
                 </ReactMarkdown>
@@ -451,9 +502,16 @@ export function Docs() {
             ) : currentPath && currentPath !== "docs" && !isRegistryLoading ? (
               <div className="flex flex-col items-center justify-center h-full text-ink/40 py-20">
                 <MessageSquareWarning size={48} className="mb-4 opacity-50" />
-                <h2 className="text-2xl font-bold text-ink mb-2">Document Not Found</h2>
-                <p>The document you are looking for does not exist or hasn't been synced.</p>
-                <Link to="/docs" className="mt-6 text-klein hover:underline">Return to Documentation</Link>
+                <h2 className="text-2xl font-bold text-ink mb-2">
+                  Document Not Found
+                </h2>
+                <p>
+                  The document you are looking for does not exist or hasn't been
+                  synced.
+                </p>
+                <Link to="/docs" className="mt-6 text-klein hover:underline">
+                  Return to Documentation
+                </Link>
               </div>
             ) : isRegistryLoading ? (
               <div className="flex flex-col items-center justify-center py-32 text-ink/50">

@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
+    "sync:docs": "node scripts/sync-docs-from-core.mjs",
+    "prebuild": "npm run sync:docs",
+    "dev": "npm run sync:docs && tsx server.ts",
     "build": "vite build",
     "start": "node server.ts",
     "preview": "vite preview",

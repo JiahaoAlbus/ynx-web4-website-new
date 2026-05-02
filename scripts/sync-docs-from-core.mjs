@@ -80,8 +80,8 @@ async function syncDocs() {
       try {
         content = fs.readFileSync(fullPath, 'utf8');
       } catch (err) {
-        console.warn(`Local file missing: ${fullPath}, using placeholder.`);
-        content = `# ${doc.title}\n\nDocument not found locally at \`${doc.sourcePath}\`.`;
+        console.warn(`Local file missing: ${fullPath}, skipping...`);
+        return;
       }
     } else {
       const url = `${coreRepoBaseUrl}${doc.sourcePath}`;
@@ -89,8 +89,8 @@ async function syncDocs() {
       try {
         content = await fetchUrl(url);
       } catch (err) {
-        console.warn(`Remote file missing: ${url}, using placeholder.`);
-        content = `# ${doc.title}\n\nDocument not found remotely at \`${doc.sourcePath}\`.`;
+        console.warn(`Remote file missing: ${url}, skipping...`);
+        return;
       }
     }
     

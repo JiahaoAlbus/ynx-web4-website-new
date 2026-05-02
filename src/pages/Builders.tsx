@@ -1,5 +1,15 @@
 import { motion } from "motion/react";
-import { Terminal, ArrowRight, Code2, Box, Layers, Copy, Check, Globe, Cpu } from "lucide-react";
+import {
+  Terminal,
+  ArrowRight,
+  Code2,
+  Box,
+  Layers,
+  Copy,
+  Check,
+  Globe,
+  Cpu,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import { TiltCard } from "../components/ui/TiltCard";
 import { Magnetic } from "../components/ui/Magnetic";
@@ -7,7 +17,19 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { NETWORK } from "../constants/network";
 
-function BuildPathCard({ icon, title, desc, features, link }: { icon: any, title: string, desc: string, features: string[], link: string }) {
+function BuildPathCard({
+  icon,
+  title,
+  desc,
+  features,
+  link,
+}: {
+  icon: any;
+  title: string;
+  desc: string;
+  features: string[];
+  link: string;
+}) {
   return (
     <TiltCard className="h-full">
       <motion.div className="p-8 bg-surface border border-border rounded-[32px] h-full hover:border-klein/30 transition-all flex flex-col">
@@ -18,7 +40,10 @@ function BuildPathCard({ icon, title, desc, features, link }: { icon: any, title
         <p className="text-ink/60 leading-relaxed mb-8 flex-1">{desc}</p>
         <div className="space-y-3 mb-8">
           {features.map((f, i) => (
-            <div key={i} className="flex items-center gap-3 text-xs font-mono font-bold text-ink/40 uppercase tracking-tighter">
+            <div
+              key={i}
+              className="flex items-center gap-3 text-xs font-mono font-bold text-ink/40 uppercase tracking-tighter"
+            >
               <div className="w-1 h-1 rounded-full bg-klein/40" />
               {f}
             </div>
@@ -70,7 +95,9 @@ export default {
               <span className="text-klein">Execution Layer</span>
             </h1>
             <p className="text-xl text-ink/60 max-w-2xl mx-auto leading-relaxed mb-10">
-              YNX offers an EVM-first surface with native Web4 primitives. Deploy your existing Solidity contracts or build autonomous agents with policy-bounded execution.
+              YNX offers an EVM-first surface with native Web4 primitives.
+              Deploy your existing Solidity contracts or build autonomous agents
+              with policy-bounded execution.
             </p>
             <div className="flex justify-center gap-4">
               <Magnetic>
@@ -83,7 +110,11 @@ export default {
               </Magnetic>
               <Magnetic>
                 <Button variant="outline" size="lg" asChild>
-                  <a href="https://explorer.ynxweb4.com" target="_blank" rel="noreferrer">
+                  <a
+                    href="https://explorer.ynxweb4.com"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <Globe className="mr-2 w-4 h-4" />
                     View Explorer
                   </a>
@@ -91,7 +122,11 @@ export default {
               </Magnetic>
               <Magnetic>
                 <Button variant="ghost" size="lg" asChild>
-                  <a href="https://github.com/JiahaoAlbus/YNX" target="_blank" rel="noreferrer">
+                  <a
+                    href="https://github.com/JiahaoAlbus/YNX"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <Terminal className="mr-2 w-4 h-4" />
                     GitHub
                   </a>
@@ -103,21 +138,25 @@ export default {
       </section>
 
       <section className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-20">
-        <BuildPathCard 
+        <BuildPathCard
           icon={<Code2 className="w-8 h-8" />}
           title="EVM Developers"
           desc="Solidity / Hardhat / Foundry via EVM RPC. Full Ethereum-grade compatibility."
-          features={["Chain ID 9102", "Geth-compatible RPC", "High-throughput execution"]}
+          features={[
+            "Chain ID 9102",
+            "Geth-compatible RPC",
+            "High-throughput execution",
+          ]}
           link={NETWORK.endpoints.evm}
         />
-        <BuildPathCard 
+        <BuildPathCard
           icon={<Cpu className="w-8 h-8" />}
           title="AI Agent Developers"
           desc="Programmatic job lifecycle, machine-payment vaults, and x402 resource flows."
           features={["/ai/jobs", "/ai/vaults", "/ai/payments"]}
           link={NETWORK.endpoints.ai}
         />
-        <BuildPathCard 
+        <BuildPathCard
           icon={<Layers className="w-8 h-8" />}
           title="Web4 Developers"
           desc="Bounded autonomy through owner policies, session delegation, and intents."
@@ -132,23 +171,48 @@ export default {
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-klein/10 text-klein rounded-full text-xs font-bold uppercase tracking-widest mb-6">
               Official Demo
             </div>
-            <h2 className="text-3xl font-display font-bold mb-6">AI/Web4 Settlement</h2>
+            <h2 className="text-3xl font-display font-bold mb-6">
+              AI/Web4 Settlement
+            </h2>
             <p className="text-ink/70 leading-relaxed mb-6">
-              A user grants an AI agent bounded authority, the agent completes a job, and YNX settles the reward through the AI settlement layer.
+              A user grants an AI agent bounded authority, the agent completes a
+              job, and YNX settles the reward through the AI settlement layer.
             </p>
             <p className="text-ink/60 text-sm leading-relaxed mb-8">
-              用户给 AI Agent 一个有限授权，Agent 完成任务后，通过 YNX 的 AI 结算层自动付款。
+              用户给 AI Agent 一个有限授权，Agent 完成任务后，通过 YNX 的 AI
+              结算层自动付款。
             </p>
             <div className="space-y-4 text-sm font-medium">
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Create Web4 policy</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Issue bounded session key</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Create AI payment vault</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Publish AI job</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Worker commits result hash</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Finalize job</div>
-              <div className="flex items-center gap-3"><Check className="text-emerald-500 w-4 h-4"/> Reward settles from vault</div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Create Web4
+                policy
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Issue bounded
+                session key
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Create AI payment
+                vault
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Publish AI job
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Worker commits
+                result hash
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Finalize job
+              </div>
+              <div className="flex items-center gap-3">
+                <Check className="text-emerald-500 w-4 h-4" /> Reward settles
+                from vault
+              </div>
             </div>
-            <p className="text-xs text-ink/40 mt-8 italic">JSON evidence is written under output/ai_web4_demo/&lt;run-id&gt;/</p>
+            <p className="text-xs text-ink/40 mt-8 italic">
+              JSON evidence is written under output/ai_web4_demo/&lt;run-id&gt;/
+            </p>
           </div>
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-klein to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
@@ -178,22 +242,36 @@ cd YNX
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-4xl font-display font-bold mb-6">Quick Start</h2>
+              <h2 className="text-4xl font-display font-bold mb-6">
+                Quick Start
+              </h2>
               <p className="text-white/60 mb-8 text-lg">
-                Connect to the public testnet and deploy your first contract in minutes.
+                Connect to the public testnet and deploy your first contract in
+                minutes.
               </p>
               <div className="space-y-6">
                 {[
-                  { title: "Add Network", desc: "Configure your wallet with Chain ID 9102." },
-                  { title: "Get Funds", desc: "Request anyxt from the testnet faucet." },
-                  { title: "Deploy", desc: "Use Hardhat or Foundry with the RPC endpoint." }
+                  {
+                    title: "Add Network",
+                    desc: "Configure your wallet with Chain ID 9102.",
+                  },
+                  {
+                    title: "Get Funds",
+                    desc: "Request anyxt from the testnet faucet.",
+                  },
+                  {
+                    title: "Deploy",
+                    desc: "Use Hardhat or Foundry with the RPC endpoint.",
+                  },
                 ].map((step, i) => (
                   <div key={i} className="flex items-start gap-4 group">
                     <div className="w-8 h-8 rounded-full bg-klein/20 text-white flex items-center justify-center shrink-0 text-sm font-mono border border-klein/30 group-hover:bg-klein group-hover:text-white transition-colors">
                       {i + 1}
                     </div>
                     <div>
-                      <h4 className="font-bold mb-1 group-hover:text-klein transition-colors">{step.title}</h4>
+                      <h4 className="font-bold mb-1 group-hover:text-klein transition-colors">
+                        {step.title}
+                      </h4>
                       <p className="text-white/60 text-sm">{step.desc}</p>
                     </div>
                   </div>
@@ -201,15 +279,41 @@ cd YNX
               </div>
 
               <div className="mt-12 space-y-4">
-                <p className="text-xs text-white/40 uppercase tracking-widest font-mono">Quick Checks</p>
+                <p className="text-xs text-white/40 uppercase tracking-widest font-mono">
+                  Quick Checks
+                </p>
                 <div className="space-y-3">
                   <div className="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-[11px] leading-relaxed group relative">
-                    <code className="text-emerald-400">{'curl -s https://evm.ynxweb4.com -H \'content-type: application/json\' -d \'{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}\' | jq'}</code>
-                    <button onClick={() => navigator.clipboard.writeText("curl -s https://evm.ynxweb4.com -H 'content-type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}' | jq")} className="absolute top-2 right-2 p-1.5 opacity-0 group-hover:opacity-100 bg-white/10 rounded hover:bg-white/20 transition-all"><Copy size={12} /></button>
+                    <code className="text-emerald-400">
+                      {
+                        'curl -s https://evm.ynxweb4.com -H \'content-type: application/json\' -d \'{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}\' | jq'
+                      }
+                    </code>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          'curl -s https://evm.ynxweb4.com -H \'content-type: application/json\' -d \'{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}\' | jq',
+                        )
+                      }
+                      className="absolute top-2 right-2 p-1.5 opacity-0 group-hover:opacity-100 bg-white/10 rounded hover:bg-white/20 transition-all"
+                    >
+                      <Copy size={12} />
+                    </button>
                   </div>
                   <div className="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-[11px] leading-relaxed group relative">
-                    <code className="text-emerald-400">curl -s https://faucet.ynxweb4.com/health | jq</code>
-                    <button onClick={() => navigator.clipboard.writeText("curl -s https://faucet.ynxweb4.com/health | jq")} className="absolute top-2 right-2 p-1.5 opacity-0 group-hover:opacity-100 bg-white/10 rounded hover:bg-white/20 transition-all"><Copy size={12} /></button>
+                    <code className="text-emerald-400">
+                      curl -s https://faucet.ynxweb4.com/health | jq
+                    </code>
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          "curl -s https://faucet.ynxweb4.com/health | jq",
+                        )
+                      }
+                      className="absolute top-2 right-2 p-1.5 opacity-0 group-hover:opacity-100 bg-white/10 rounded hover:bg-white/20 transition-all"
+                    >
+                      <Copy size={12} />
+                    </button>
                   </div>
                 </div>
                 <p className="text-[10px] text-white/30 italic">
@@ -226,15 +330,19 @@ cd YNX
                     <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
                     <div className="w-3 h-3 rounded-full bg-green-500/20" />
                   </div>
-                  <button 
+                  <button
                     onClick={handleCopy}
                     className="text-white/40 hover:text-white transition-colors"
                   >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
                 <pre className="text-emerald-400">
-{`// hardhat.config.ts
+                  {`// hardhat.config.ts
 export default {
   networks: {
     ynx_testnet: {
