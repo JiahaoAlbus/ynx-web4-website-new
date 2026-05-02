@@ -9,6 +9,7 @@ import { motionDuration, motionEase } from "../../lib/motion";
 
 export function Layout() {
   const location = useLocation();
+  const routeGroup = location.pathname.split("/")[1] || "home";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -19,9 +20,9 @@ export function Layout() {
       <Cursor />
       <Background />
       <Header />
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="sync">
         <motion.main
-          key={location.pathname}
+          key={routeGroup}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}

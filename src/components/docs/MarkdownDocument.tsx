@@ -5,7 +5,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Link } from "react-router-dom";
-import { motionEase } from "../../lib/motion";
 
 function StartFromZero({ lang }: { lang: "en" | "zh" }) {
   const isEn = lang === "en";
@@ -192,13 +191,7 @@ export function MarkdownDocument({ content }: { content: string }) {
             }
 
             return (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.3, ease: motionEase.emphasized }}
-                className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg"
-              >
+              <div className="relative group my-6 rounded-xl overflow-hidden border border-border bg-[#0d1117] shadow-lg">
                 <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/5">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
@@ -213,7 +206,7 @@ export function MarkdownDocument({ content }: { content: string }) {
                   </code>
                 </div>
                 <CopyButton text={String(children).replace(/\\n$/, "")} />
-              </motion.div>
+              </div>
             );
           },
         } as any

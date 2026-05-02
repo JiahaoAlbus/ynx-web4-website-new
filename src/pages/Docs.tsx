@@ -32,6 +32,20 @@ type DocCategory = {
 let registryCache: DocCategory[] | null = null;
 let registryPromise: Promise<DocCategory[]> | null = null;
 const docContentCache = new Map<string, string>();
+const pendingDocContent = new Map<string, Promise<string>>();
+
+function requestIdle(callback: () => void) {
+  const idleWindow = window as Window & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  if (idleWindow.requestIdleCallback && idleWindow.cancelIdleCallback) {
+    const id = idleWindow.requestIdleCallback(callback, { timeout: 2500 });
+    return () => idleWindow.cancelIdleCallback?.(id);
+  }
+  const id = window.setTimeout(callback, 300);
+  return () => window.clearTimeout(id);
+}
 
 function loadRegistry() {
   if (registryCache) return Promise.resolve(registryCache);
@@ -49,20 +63,36 @@ function loadRegistry() {
   return registryPromise;
 }
 
-async function loadDocContent(doc: DocItem, signal: AbortSignal) {
+async function loadDocContent(doc: DocItem) {
   const cached = docContentCache.get(doc.publicPath);
   if (cached) return cached;
 
-  const response = await fetch(doc.publicPath, { signal });
-  if (!response.ok) throw new Error("Document not found");
+  const pending = pendingDocContent.get(doc.publicPath);
+  if (pending) return pending;
 
-  const text = await response.text();
-  if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
-    throw new Error("Document route returned HTML instead of markdown");
-  }
+  const promise = fetch(doc.publicPath, { cache: "force-cache" })
+    .then(async (response) => {
+      if (!response.ok) throw new Error("Document not found");
 
-  docContentCache.set(doc.publicPath, text);
-  return text;
+      const text = await response.text();
+      if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
+        throw new Error("Document route returned HTML instead of markdown");
+      }
+
+      docContentCache.set(doc.publicPath, text);
+      return text;
+    })
+    .finally(() => {
+      pendingDocContent.delete(doc.publicPath);
+    });
+
+  pendingDocContent.set(doc.publicPath, promise);
+  return promise;
+}
+
+function preloadDoc(doc: DocItem) {
+  if (docContentCache.has(doc.publicPath) || pendingDocContent.has(doc.publicPath)) return;
+  void loadDocContent(doc).catch(() => {});
 }
 
 const MarkdownDocument = lazy(() => import("../components/docs/MarkdownDocument").then((module) => ({ default: module.MarkdownDocument })));
@@ -101,20 +131,21 @@ function DocArticle({
       return;
     }
 
-    const controller = new AbortController();
+    let isActive = true;
     setLoading(true);
     setContent(null);
     setError(null);
     onLoaded(null);
 
-    loadDocContent(doc, controller.signal)
+    loadDocContent(doc)
       .then((text) => {
+        if (!isActive) return;
         setContent(text);
         setLoading(false);
         onLoaded(text);
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (!isActive) return;
         console.error("Failed to load document", err);
         setContent(null);
         setLoading(false);
@@ -122,7 +153,9 @@ function DocArticle({
         onLoaded(null);
       });
 
-    return () => controller.abort();
+    return () => {
+      isActive = false;
+    };
   }, [doc.id, doc.publicPath, doc.sourcePath, onLoaded]);
 
   if (loading) return <DocsContentSkeleton />;
@@ -184,6 +217,25 @@ export function Docs() {
       setIsRegistryLoading(false);
     }
   }, [isRegistryLoading, registry.length]);
+
+  useEffect(() => {
+    if (!registry.length) return;
+
+    const timeouts: number[] = [];
+    const cancelIdle = requestIdle(() => {
+      registry
+        .flatMap((category) => category.items)
+        .forEach((doc, index) => {
+          const timeout = window.setTimeout(() => preloadDoc(doc), index * 35);
+          timeouts.push(timeout);
+        });
+    });
+
+    return () => {
+      cancelIdle();
+      timeouts.forEach((timeout) => window.clearTimeout(timeout));
+    };
+  }, [registry]);
 
   const currentPath = location.pathname
     .replace(/^\/docs\/?/, "")
@@ -286,6 +338,8 @@ export function Docs() {
                       >
                         <Link
                           to={`/docs/${item.id}`}
+                          onMouseEnter={() => preloadDoc(item)}
+                          onFocus={() => preloadDoc(item)}
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={`
                             w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group relative overflow-hidden
@@ -296,16 +350,10 @@ export function Docs() {
                             }
                           `}
                         >
-                          {currentPath === item.id && (
-                            <motion.span
-                              layoutId="activeDocPill"
-                              className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-klein"
-                            />
-                          )}
+                          {currentPath === item.id && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-klein" />}
                           <span className="truncate">{item.title}</span>
                           {currentPath === item.id && (
                             <motion.div
-                              layoutId="activeDoc"
                               className="w-1.5 h-1.5 rounded-full bg-klein"
                               animate={{ scale: [1, 1.45, 1], opacity: [1, 0.65, 1] }}
                               transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }}
