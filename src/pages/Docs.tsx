@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Magnetic } from "../components/ui/Magnetic";
 import { Link, useLocation } from "react-router-dom";
-import { motionEase, revealSoft, stagger } from "../lib/motion";
+import { motionEase } from "../lib/motion";
 
 type DocItem = {
   id: string;
@@ -33,19 +33,7 @@ let registryCache: DocCategory[] | null = null;
 let registryPromise: Promise<DocCategory[]> | null = null;
 const docContentCache = new Map<string, string>();
 const pendingDocContent = new Map<string, Promise<string>>();
-
-function requestIdle(callback: () => void) {
-  const idleWindow = window as Window & {
-    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  };
-  if (idleWindow.requestIdleCallback && idleWindow.cancelIdleCallback) {
-    const id = idleWindow.requestIdleCallback(callback, { timeout: 2500 });
-    return () => idleWindow.cancelIdleCallback?.(id);
-  }
-  const id = window.setTimeout(callback, 300);
-  return () => window.clearTimeout(id);
-}
+const markdownDocumentPromise = import("../components/docs/MarkdownDocument");
 
 function loadRegistry() {
   if (registryCache) return Promise.resolve(registryCache);
@@ -95,7 +83,7 @@ function preloadDoc(doc: DocItem) {
   void loadDocContent(doc).catch(() => {});
 }
 
-const MarkdownDocument = lazy(() => import("../components/docs/MarkdownDocument").then((module) => ({ default: module.MarkdownDocument })));
+const MarkdownDocument = lazy(() => markdownDocumentPromise.then((module) => ({ default: module.MarkdownDocument })));
 
 function DocsContentSkeleton() {
   return (
@@ -218,25 +206,6 @@ export function Docs() {
     }
   }, [isRegistryLoading, registry.length]);
 
-  useEffect(() => {
-    if (!registry.length) return;
-
-    const timeouts: number[] = [];
-    const cancelIdle = requestIdle(() => {
-      registry
-        .flatMap((category) => category.items)
-        .forEach((doc, index) => {
-          const timeout = window.setTimeout(() => preloadDoc(doc), index * 35);
-          timeouts.push(timeout);
-        });
-    });
-
-    return () => {
-      cancelIdle();
-      timeouts.forEach((timeout) => window.clearTimeout(timeout));
-    };
-  }, [registry]);
-
   const currentPath = location.pathname
     .replace(/^\/docs\/?/, "")
     .replace(/\/$/, "");
@@ -287,10 +256,7 @@ export function Docs() {
 
       <div className="max-w-7xl mx-auto px-6 flex items-start gap-12 h-full">
         {/* Sidebar Navigation */}
-        <motion.aside
-          initial={{ opacity: 0, x: -18 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.36, ease: motionEase.emphasized }}
+        <aside
           className={`
             fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-border transform transition-transform duration-300 ease-in-out 
             lg:static lg:translate-x-0 lg:w-64 lg:h-full lg:border-none shrink-0 overflow-y-auto
@@ -322,52 +288,40 @@ export function Docs() {
             )}
           </motion.div>
 
-          <motion.nav initial="hidden" animate="visible" variants={stagger} className="space-y-8 pb-12">
+          <nav className="space-y-8 pb-12">
             {filteredDocs.map((category, i) => (
-              <motion.div key={i} variants={revealSoft}>
+              <div key={i}>
                 <h3 className="text-xs font-mono font-bold text-ink/40 uppercase tracking-widest mb-4 px-2">
                   {category.title}
                 </h3>
                 <ul className="space-y-1">
                   {category.items.map((item) => (
                     <li key={item.id}>
-                      <motion.div
-                        whileHover={{ x: 4 }}
-                        whileTap={{ scale: 0.985 }}
-                        transition={{ duration: 0.14 }}
+                      <a
+                        href={`/docs/${item.id}`}
+                        onMouseEnter={() => preloadDoc(item)}
+                        onFocus={() => preloadDoc(item)}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`
+                          w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group relative overflow-hidden
+                          ${
+                            currentPath === item.id
+                              ? "bg-klein/5 text-klein font-medium"
+                              : "text-ink/60 hover:text-ink hover:bg-surface"
+                          }
+                        `}
                       >
-                        <Link
-                          to={`/docs/${item.id}`}
-                          onMouseEnter={() => preloadDoc(item)}
-                          onFocus={() => preloadDoc(item)}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`
-                            w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group relative overflow-hidden
-                            ${
-                              currentPath === item.id
-                                ? "bg-klein/5 text-klein font-medium"
-                                : "text-ink/60 hover:text-ink hover:bg-surface"
-                            }
-                          `}
-                        >
-                          {currentPath === item.id && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-klein" />}
-                          <span className="truncate">{item.title}</span>
-                          {currentPath === item.id && (
-                            <motion.div
-                              className="w-1.5 h-1.5 rounded-full bg-klein"
-                              animate={{ scale: [1, 1.45, 1], opacity: [1, 0.65, 1] }}
-                              transition={{ duration: 1.7, repeat: Infinity, ease: "easeInOut" }}
-                            />
-                          )}
-                        </Link>
-                      </motion.div>
+                        {currentPath === item.id && <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-klein" />}
+                        <span className="truncate">{item.title}</span>
+                        {currentPath === item.id && <span className="w-1.5 h-1.5 rounded-full bg-klein" />}
+                      </a>
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </div>
             ))}
-          </motion.nav>
-        </motion.aside>
+          </nav>
+        </aside>
 
         {/* Main Content */}
         <main className="flex-1 h-full overflow-y-auto py-12 lg:py-8 min-w-0 scroll-smooth relative">

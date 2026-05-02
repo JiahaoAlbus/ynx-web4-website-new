@@ -10,6 +10,7 @@ import { motionDuration, motionEase } from "../../lib/motion";
 export function Layout() {
   const location = useLocation();
   const routeGroup = location.pathname.split("/")[1] || "home";
+  const isDocsRoute = routeGroup === "docs";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -17,8 +18,8 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-white text-ink font-sans selection:bg-klein selection:text-white overflow-x-hidden">
-      <Cursor />
-      <Background />
+      {!isDocsRoute && <Cursor />}
+      {!isDocsRoute && <Background />}
       <Header />
       <AnimatePresence initial={false} mode="sync">
         <motion.main
