@@ -1,0 +1,1689 @@
+## FILE: docs/en/V2_PUBLIC_TESTNET_PLAYBOOK.md
+
+# YNX v2 Public Testnet Playbook (Web4 Track)
+
+Status: Active  
+Last updated: 2026-02-25
+
+## 1. Objective
+
+Bring YNX v2 to public-testnet readiness so external users only need:
+
+- endpoint list,
+- faucet URL,
+- validator onboarding info,
+- explorer link.
+
+## 1.1 Local-Only Completion Mode
+
+Before any server rollout, complete local buildout:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_local_complete.sh all
+```
+
+This ensures code, APIs, smoke tests, and release bundle are complete locally first.
+
+Optional Docker Compose path for the same local stack:
+
+```bash
+cd ~/Desktop/YNX/chain
+./scripts/v2_local_compose.sh up
+```
+
+## 2. Required Components
+
+- `ynxd` node (v2 chain-id)
+- faucet (`/faucet`)
+- indexer (`/health`, `/ynx/overview`, `/blocks`, `/txs`, `/validators`)
+- explorer UI
+- AI gateway (`/ai/*`)
+- Web4 hub (`/web4/*`)
+- x402-style resource endpoint (`/x402/resource`)
+
+## 3. Server Preparation
+
+Minimum recommended for each public node:
+
+- 4 vCPU
+- 8 GB RAM
+- 120 GB SSD
+- Ubuntu 22.04+
+
+Open inbound TCP ports:
+
+- `22` (SSH)
+- `36656` (P2P)
+- `36657` (RPC, public only if needed)
+- `38545` (EVM RPC, public only if needed)
+- `31317` (REST, optional public)
+- `38080` (faucet)
+- `38081` (indexer)
+- `38082` (explorer)
+- `38090` (AI gateway)
+- `38091` (Web4 hub)
+
+## 4. One-Command Remote Deploy
+
+From operator machine:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_public_testnet_deploy.sh ubuntu@<SERVER_IP> /path/to/key.pem --reset
+```
+
+Deploy and run write-path smoke in same command:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_public_testnet_deploy.sh ubuntu@<SERVER_IP> /path/to/key.pem --reset --smoke-write
+```
+
+Deploy with HTTPS subdomain endpoints (recommended for public websites):
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_BASE_DOMAIN=ynxweb4.com \
+./scripts/v2_public_testnet_deploy.sh ubuntu@<SERVER_IP> /path/to/key.pem --reset --smoke-write
+```
+
+Then install HTTPS reverse proxy gateway on the server:
+
+```bash
+cd ~/YNX/chain
+./scripts/install_v2_caddy_subdomain_gateway.sh ynxweb4.com ops@ynxweb4.com
+```
+
+Expected public endpoints after gateway:
+
+- `https://rpc.ynxweb4.com`
+- `https://evm.ynxweb4.com`
+- `https://evm-ws.ynxweb4.com`
+- `https://rest.ynxweb4.com`
+- `https://faucet.ynxweb4.com`
+- `https://indexer.ynxweb4.com`
+- `https://explorer.ynxweb4.com`
+- `https://ai.ynxweb4.com`
+- `https://web4.ynxweb4.com`
+
+What this command does:
+
+- installs required dependencies,
+- pulls latest repo,
+- uploads a prebuilt Linux `ynxd` from the operator machine by default,
+- installs infra dependencies,
+- bootstraps v2 chain home,
+- installs systemd stack services,
+- runs v2 full verification.
+
+Why prebuilt binary is the default:
+
+- it avoids fresh-server Go module resolution failures,
+- it avoids Debian/Ubuntu toolchain drift,
+- it keeps the deployed binary exactly aligned with the operator source tree.
+
+## 5. Post-Deploy Verification
+
+On server:
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=127.0.0.1 ./scripts/v2_public_testnet_verify.sh
+```
+
+From external network:
+
+```bash
+curl -s http://<SERVER_IP>:38081/ynx/overview | jq
+curl -s http://<SERVER_IP>:38090/health | jq
+curl -s http://<SERVER_IP>:38091/web4/overview | jq
+```
+
+Write-path smoke test:
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=<SERVER_IP> ./scripts/v2_public_testnet_smoke.sh
+```
+
+Smoke now validates:
+
+- owner/policy/session delegation model
+- wallet bootstrap + verify flow
+- AI vault creation + reward settlement + direct machine charge
+- x402 payment-required and paid delivery flow
+- AI job lifecycle: create → commit → finalize (with vault payout)
+- Web4 lifecycle: identity + agent + intent → claim → challenge → finalize
+- agent self-update and controlled replication
+
+## 6. Build Validator Bootstrap Bundle
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_testnet_release.sh
+```
+
+Output:
+
+- `ynxd`
+- `genesis.json`
+- `config.toml`
+- `app.toml`
+- `endpoints.json`
+- `network.json`
+- `descriptor.json`
+- `bootstrap/v2_validator_bootstrap.sh`
+- `bootstrap/v2_role_apply.sh`
+- role env profiles
+- checksums and tarball
+
+Company-ready local handoff package:
+
+```bash
+cd ~/Desktop/YNX/chain
+./scripts/v2_company_pack.sh
+```
+
+## 7. Public Announcement Checklist
+
+Before promotion:
+
+- `v2_public_testnet_verify.sh` passes
+- explorer loads and updates blocks
+- faucet sends test tokens
+- `/ynx/overview` shows `track=v2-web4`
+- AI and Web4 APIs are reachable
+- at least 2 validators running in bonded state
+
+## 8. Operator Commands
+
+Service status:
+
+```bash
+sudo systemctl status ynx-v2-node ynx-v2-faucet ynx-v2-indexer ynx-v2-explorer ynx-v2-ai-gateway ynx-v2-web4-hub --no-pager
+```
+
+Service logs:
+
+```bash
+sudo journalctl -u ynx-v2-node -f --no-pager
+sudo journalctl -u ynx-v2-ai-gateway -f --no-pager
+sudo journalctl -u ynx-v2-web4-hub -f --no-pager
+```
+
+Public network descriptor:
+
+```bash
+curl -s http://<SERVER_IP>:38081/ynx/network-descriptor | jq
+```
+
+## 9. Validator Bootstrap (Public Join)
+
+Preferred external validator join via network descriptor:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --descriptor http://<SERVER_IP>:38081/ynx/network-descriptor \
+  --role validator \
+  --home ~/.ynx-v2-validator \
+  --moniker <YOUR_MONIKER> \
+  --reset
+```
+
+Direct RPC fallback:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --rpc http://<RPC_IP>:36657 \
+  --role validator \
+  --home ~/.ynx-v2-validator \
+  --moniker <YOUR_MONIKER> \
+  --seeds '<seed_node_id@seed_ip:36656>' \
+  --reset
+```
+
+## 10. Watchdog Auto-Restart Service
+
+Install watchdog on each validator node:
+
+```bash
+cd ~/YNX/chain
+./scripts/install_v2_watchdog_systemd.sh
+```
+
+Check watchdog:
+
+```bash
+sudo systemctl status ynx-v2-watchdog --no-pager
+sudo journalctl -u ynx-v2-watchdog -f --no-pager
+```
+
+
+
+---
+
+## FILE: docs/en/V2_SECURITY_MODEL.md
+
+# YNX v2 Security Model
+
+Status: Active  
+Last updated: 2026-03-07  
+Canonical language: English
+
+## 1. Security Priority
+
+YNX v2 keeps Web3 sovereignty above Web4 autonomy.
+
+Control order:
+
+1. `owner`
+2. `policy`
+3. `session`
+4. `agent action`
+
+This is the non-negotiable control boundary for public testnet and future mainnet.
+
+## 2. Identity and Key Boundary
+
+- Root owner authority MUST remain external to delegated agent execution.
+- Session credentials MUST be short-lived and bounded.
+- Repository artifacts MUST NOT contain committed secrets, mnemonics, or private keys.
+- Runtime key directories MUST stay outside Git-tracked configuration.
+
+## 3. Policy Enforcement Boundary
+
+Policies are the hard boundary between human/operator intent and autonomous execution.
+
+Each policy may define:
+
+- `max_total_spend`
+- `max_daily_spend`
+- `max_children`
+- `replicate_cooldown_sec`
+- capability allowlists
+
+Owner authority may:
+
+- pause a policy,
+- resume a policy,
+- revoke a policy,
+- invalidate all dependent sessions.
+
+## 4. Session Boundary
+
+Sessions are delegated execution envelopes.
+
+Each session must be bounded by:
+
+- TTL
+- operation count
+- spend ceiling
+- explicit capabilities
+
+If a session exceeds its limits, execution must fail closed.
+
+## 5. Agent Mutation Boundary
+
+Self-update and replication are constrained features, not unrestricted code execution.
+
+- Self-update is limited to allowlisted mutable fields.
+- Replication is rate-limited and child-count-limited.
+- Replication remains attributable to the parent policy and owner.
+- Every mutation is audit-visible.
+
+## 6. Machine Payment Boundary
+
+Machine-payment flows use vaults rather than unlimited hot-wallet authority.
+
+Vault controls:
+
+- current balance
+- max daily spend
+- max per payment
+- policy linkage
+
+x402-style access is valid only after a tracked payment reference is accepted.
+
+## 7. Public Testnet Operator Security
+
+Before server rollout:
+
+- local bootstrap must be reproducible,
+- release bundle must be packable,
+- OpenAPI contracts must exist for public services,
+- watchdog and observability scripts must be present,
+- ports and service topology must be explicit.
+
+## 8. Mainnet Carry-Forward Rules
+
+The public-testnet stack may move to mainnet candidate only if:
+
+- no placeholder secrets remain,
+- policy/session boundaries stay mandatory,
+- release artifacts are reproducible,
+- validator onboarding is deterministic,
+- observability and incident handling are documented.
+
+
+
+---
+
+## FILE: docs/en/V2_SMOKE_AND_VERIFY.md
+
+# YNX v2 Verify + Smoke
+
+Status: Active  
+Last updated: 2026-02-25
+
+## 1. Read-Only Verify
+
+Run core availability and consistency checks:
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=<SERVER_IP> ./scripts/v2_public_testnet_verify.sh
+```
+
+Checks include:
+
+- RPC chain-id and advancing block height
+- EVM chain-id
+- REST chain-id
+- faucet/indexer/explorer availability
+- AI gateway + Web4 hub health and metadata consistency
+
+## 2. Write-Path Smoke
+
+Run end-to-end API write flow:
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=<SERVER_IP> ./scripts/v2_public_testnet_smoke.sh
+```
+
+Smoke flow includes:
+
+- policy/session issuance and owner control (pause/resume)
+- wallet bootstrap and verify
+- AI vault + payment charge + x402 resource paywall
+- AI job lifecycle: create → commit → finalize (with vault payout)
+- Web4 lifecycle: identity + agent + intent → claim → challenge → finalize
+- agent self-update and controlled replication
+
+## 3. Deploy and Verify in One Command
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_public_testnet_deploy.sh ubuntu@<SERVER_IP> /path/to/key.pem --reset --smoke-write
+```
+
+
+
+---
+
+## FILE: docs/en/V2_VALIDATOR_BOOTSTRAP.md
+
+# YNX v2 Validator Bootstrap (Public Testnet)
+
+Status: Active  
+Last updated: 2026-02-25
+
+## 1. Goal
+
+Bring a new validator, full-node, or public-RPC node online against an existing YNX v2 public testnet with one script.
+
+## 2. Prerequisites
+
+- Linux server with `curl`, `jq`
+- `ynxd` binary in `chain/` (script will auto-build when missing)
+- One of:
+  - reachable v2 RPC endpoint,
+  - v2 release bundle,
+  - v2 network descriptor JSON
+
+## 3. Bootstrap from Public Descriptor or Release Bundle
+
+Descriptor-driven bootstrap:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --descriptor https://<INDEXER_HOST>:38081/ynx/network-descriptor \
+  --role validator \
+  --home ~/.ynx-v2-validator \
+  --moniker <YOUR_MONIKER> \
+  --reset
+```
+
+Release-bundle bootstrap:
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --bundle /path/to/ynx_v2_*.tar.gz \
+  --role validator \
+  --home ~/.ynx-v2-validator \
+  --moniker <YOUR_MONIKER> \
+  --reset
+```
+
+## 4. Bootstrap from Direct RPC
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --rpc http://<RPC_IP>:36657 \
+  --role validator \
+  --home ~/.ynx-v2-validator \
+  --moniker <YOUR_MONIKER> \
+  --seeds '<seed_node_id@seed_ip:36656>' \
+  --reset
+```
+
+## 5. Supported Roles
+
+- `validator` — keeps RPC/REST/EVM local-only; exposes P2P
+- `full-node` — local-only service profile without validator intent
+- `public-rpc` — exposes RPC/REST/EVM for public client access
+
+## 6. What Script Configures
+
+- Initializes node home
+- Pulls `genesis.json` from release bundle or RPC
+- Applies seeds / persistent peers from descriptor/bundle/flags
+- Configures state sync (`trust_height`, `trust_hash`) when healthy
+- Falls back to block sync when trust data is not safe to use
+- Applies canonical role profile (`validator`, `full-node`, `public-rpc`)
+- Enables REST/JSON-RPC in app config
+- Prints ready-to-run validator key + `create-validator` commands
+
+## 7. Start Node
+
+```bash
+cd ~/YNX/chain
+./ynxd start --home ~/.ynx-v2-validator --chain-id ynx_9102-1 --minimum-gas-prices 0.000000007anyxt
+```
+
+## 8. Optional Direct Start
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh --rpc http://<RPC_IP>:36657 --start
+```
+
+
+
+---
+
+## FILE: docs/en/V2_WEB4_STATUS_AND_NODE_ONBOARDING.md
+
+# YNX v2 Web4 Status, Positioning, and Node Onboarding
+
+Status: Active  
+Last updated: 2026-03-07  
+Canonical language: English
+
+## 1. What YNX v2 Web4 is
+
+YNX v2 is positioned as an **AI-native Web4 execution chain**:
+
+- EVM-first developer experience for wallets, contracts, tooling, and RPC integrations
+- autonomous agent workflows as first-class product targets
+- machine-payment and settlement primitives exposed as platform APIs
+- Web3 sovereignty preserved above Web4 autonomy
+
+The control model is explicit:
+
+- **owner** is the root authority
+- **policy** defines machine-readable limits
+- **session key** is a temporary execution capability
+
+In short, YNX v2 does **not** treat AI as an unbounded actor.  
+It treats AI as a constrained execution participant inside a user-owned policy boundary.
+
+## 2. What is already built in the current v2 track
+
+The current repository already contains a working v2 Web4 stack with:
+
+- chain bootstrap and local-complete run flow
+- public-testnet deploy / verify / smoke scripts
+- AI settlement gateway
+- Web4 hub for identity, policy, session, agent, and intent lifecycle
+- local multi-validator simulation
+- company-ready packaging and handoff assets
+- OpenAPI contracts for the AI and Web4 surfaces
+- operator release bundle with binary, descriptor, bootstrap scripts, and role profiles
+
+Operationally, the current state is:
+
+- local full-stack v2 development path exists
+- one-command local end-to-end verification path exists
+- primary public-testnet server deployment path exists and has been verified
+- generic node bootstrap now accepts release bundle, descriptor, or direct RPC
+- indexer exposes a machine-readable network descriptor for operator automation
+
+## 3. Main selling points
+
+Users should choose YNX when they need:
+
+### 3.1 AI-native execution
+
+YNX is not only “a fast EVM chain with an AI app on top”.  
+It exposes AI job settlement, vault funding, policy-limited automation, and audit trails as first-class system behavior.
+
+### 3.2 Web3 sovereignty with Web4 autonomy
+
+YNX keeps the user or operator above the agent:
+
+- owner pause / resume / revoke
+- policy-enforced spend and action ceilings
+- short-lived execution sessions
+- audit-first lifecycle records
+
+This is the core difference from unconstrained agent execution.
+
+### 3.3 Familiar developer surface
+
+YNX keeps onboarding close to Ethereum-style workflows:
+
+- EVM RPC
+- contract-friendly environment
+- API-based Web4 integration
+- simple local bootstrap and smoke-testing paths
+
+### 3.4 Operator-focused testnet ergonomics
+
+YNX already includes:
+
+- bootstrap scripts
+- smoke tests
+- watchdog scripts
+- local multi-validator simulation
+- release packaging paths
+
+That makes it easier to iterate quickly before mainnet hardening.
+
+## 4. How AI is integrated
+
+AI is integrated through two service planes.
+
+### 4.1 AI Settlement Gateway
+
+Implemented in `infra/ai-gateway/server.js`.
+
+This service provides:
+
+- AI job lifecycle APIs (`/ai/jobs`)
+- vault creation, deposit, status, and spend accounting (`/ai/vaults*`)
+- programmable machine-payment charging (`/ai/payments/charge`)
+- x402-style payment-gated resource flow (`/x402/resource`)
+- settlement audit logs (`/ai/audit`)
+
+The AI gateway is the economic plane for machine work.
+
+### 4.2 Web4 Hub
+
+Implemented in `infra/web4-hub/server.js`.
+
+This service provides:
+
+- wallet bootstrap and verification (`/web4/wallet/*`)
+- owner-scoped policy creation and lifecycle (`/web4/policies*`)
+- session issuance under policy constraints
+- identity, agent, and intent lifecycle APIs
+- controlled self-update and replication
+- complete Web4 audit log (`/web4/audit`)
+
+The Web4 hub is the control plane for autonomous execution.
+
+### 4.3 Combined model
+
+Together, the two services create this pattern:
+
+1. bootstrap identity  
+2. create owner policy  
+3. issue bounded session  
+4. create agent / intent  
+5. settle machine work through vault-backed payments  
+6. record the full trail for review, challenge, and finalization
+
+This is the practical YNX interpretation of Web4.
+
+## 5. Why node onboarding has felt harder than it should
+
+The difficult part has not been “how blockchains work” in general.  
+The difficult part has been the current maturity level of the v2 operator packaging.
+
+The main reasons are:
+
+### 5.1 Mixed generations during migration
+
+The environment had both older v1 services and newer v2 services, with different ports and runtime assumptions.  
+That created avoidable operator friction.
+
+### 5.2 Bootstrap dependency on live RPC quality
+
+The current bootstrap path relies on a live RPC source for status, trust data, and sometimes genesis retrieval.  
+If the public RPC or `/genesis` path is inconsistent, onboarding becomes fragile.
+
+### 5.3 Exact binary / genesis / app determinism matters
+
+Validators must run the exact compatible binary and the exact compatible genesis.  
+If not, state sync or block replay can fail with app-hash mismatches.
+
+### 5.4 Public networking was not yet standardized enough
+
+Some onboarding attempts depended on temporary tunnels and server-local workarounds.  
+That is acceptable for debugging, but not acceptable as the public operator standard.
+
+## 6. Can onboarding be made generic
+
+Yes. It should be made generic, and the target design is straightforward.
+
+Generic onboarding means a new operator should only need:
+
+- one supported binary version
+- one signed genesis file
+- one chain-id
+- one public seed / peer list
+- one public RPC
+- one bootstrap command
+
+The public operator should **not** need private tunnels, manual genesis copying, or ad hoc port translation.
+
+## 7. What the generic operator package should look like
+
+YNX v2 should converge on this standard package:
+
+### 7.1 Release bundle
+
+A release archive with:
+
+- `ynxd`
+- `genesis.json`
+- checksums
+- chain-id
+- seed / peer registry
+- port map
+- minimum gas price
+- exact startup examples
+
+### 7.2 One public bootstrap script
+
+The bootstrap script should:
+
+- accept a release bundle or stable metadata endpoint
+- initialize node home
+- install canonical config
+- configure state sync only when healthy
+- fall back to block sync safely
+- print validator creation commands
+
+### 7.3 Role-based profiles
+
+Operators should choose one of three modes:
+
+- validator
+- full node
+- public RPC
+
+Each role should have a fixed, documented config profile.
+
+### 7.4 Stable public metadata
+
+YNX should publish a stable machine-readable network descriptor containing:
+
+- chain-id
+- binary version
+- genesis checksum
+- public RPC endpoints
+- public seed / persistent peer list
+- recommended ports
+- minimum gas price
+
+## 8. Is this level of onboarding difficulty unusual
+
+No.  
+Most early-stage chains have operator onboarding friction.
+
+What mature chains do better is not that onboarding is magically simple.  
+They package the complexity better:
+
+- signed releases
+- fixed docs
+- deterministic binary matrix
+- public snapshots / state-sync endpoints
+- stable seeds and peers
+- role-based install guides
+
+So the answer is:
+
+- **yes**, validator onboarding can be made much more generic
+- **yes**, other chains also deal with the same underlying complexity
+- **no**, they do not usually expose as much of that complexity to the operator once they are operationally mature
+
+## 9. Current requirement for YNX v2
+
+To reach public-operator quality, YNX v2 still needs:
+
+- a single canonical public bootstrap profile
+- stable public networking rules
+- signed release bundle distribution
+- deterministic validator onboarding verification
+- removal of migration-era compatibility hacks from the operator path
+
+That is an operator-packaging problem, not a product-definition problem.
+
+
+
+---
+
+## FILE: docs/en/VALIDATOR_GOOGLE_FORM_TEMPLATE.md
+
+# YNX Validator Signup Google Form Template
+
+Status: Active  
+Last updated: 2026-02-17  
+Canonical language: English
+
+## 1. Form Metadata
+
+- Form title: `YNX Public Testnet Validator Signup`
+- Form description:
+  `Apply to join the YNX public testnet validator set. Submit accurate endpoint and security contact information.`
+
+## 2. Questions (Copy to Google Form)
+
+1. Operator name  
+Type: Short answer  
+Required: Yes
+
+2. Moniker  
+Type: Short answer  
+Required: Yes
+
+3. Validator account address (`ynx1...`)  
+Type: Short answer  
+Required: Yes
+
+4. Validator operator address (`ynxvaloper1...`)  
+Type: Short answer  
+Required: Yes
+
+5. Node ID  
+Type: Short answer  
+Required: Yes
+
+6. P2P endpoint (`node_id@public_ip:26656`)  
+Type: Short answer  
+Required: Yes
+
+7. Server region  
+Type: Dropdown  
+Options: `US-East`, `US-West`, `EU`, `APAC`, `Other`  
+Required: Yes
+
+8. Hosting provider  
+Type: Dropdown  
+Options: `AWS`, `GCP`, `Azure`, `Hetzner`, `OVH`, `Bare Metal`, `Other`  
+Required: Yes
+
+9. Server specification  
+Type: Paragraph  
+Placeholder: `CPU / RAM / SSD / Bandwidth`  
+Required: Yes
+
+10. Security contact email  
+Type: Short answer  
+Required: Yes
+
+11. Uptime commitment  
+Type: Multiple choice  
+Options: `>=99.9%`, `99%-99.9%`, `<99%`  
+Required: Yes
+
+12. Monitoring/dashboard URL  
+Type: Short answer  
+Required: No
+
+13. Additional notes  
+Type: Paragraph  
+Required: No
+
+## 3. Confirmation Message
+
+Set form confirmation message to:
+
+`Thanks for applying. The YNX coordinator will review your endpoint reachability and contact you via email if approved.`
+
+## 4. Auto-Review Pipeline
+
+After collecting submissions:
+
+1. Export responses to CSV.
+2. Extract `p2p_endpoint` column into a text file.
+3. Run:
+
+```bash
+cd chain
+./scripts/testnet_candidate_audit.sh --input /path/to/p2p_endpoints.txt
+```
+
+4. Move `approved` rows into onboarding queue.
+
+
+
+---
+
+## FILE: docs/en/VALIDATOR_ONBOARDING_PACKAGE.md
+
+# YNX Validator Onboarding Package
+
+Status: Active  
+Last updated: 2026-02-17  
+Canonical language: English
+
+## 1. Network Parameters
+
+- Chain ID: `ynx_9002-1`
+- EVM Chain ID: `9002`
+- Denom: `anyxt`
+- Seed: `9edf41e71a5ba8bbc0a2b9026630bde1d56559c9@38.98.191.10:26656`
+- RPC: `http://38.98.191.10:26657`
+- JSON-RPC: `http://38.98.191.10:8545`
+- Faucet: `http://38.98.191.10:8080`
+
+Release assets:
+- `https://github.com/JiahaoAlbus/YNX/releases/tag/testnet-ynx_testnet_ynx_9002-1_20260217T070016Z`
+
+## 2. Minimum Host Spec
+
+Full node:
+- 2 vCPU
+- 4 GB RAM
+- 100 GB SSD
+
+Validator:
+- 4 vCPU
+- 8 GB RAM
+- 200 GB SSD
+- Stable public IP and low packet loss
+
+## 3. Open Ports
+
+- `26656/tcp` P2P
+- `26657/tcp` RPC (optional for validator, required for public RPC nodes)
+- `8545/tcp` JSON-RPC (only if this node is a public RPC node)
+
+## 4. Install and Bootstrap Node
+
+```bash
+cd ~
+git clone https://github.com/JiahaoAlbus/YNX.git
+cd YNX/chain
+go build -o ynxd ./cmd/ynxd
+```
+
+```bash
+mkdir -p ~/.ynx-testnet/config
+curl -L -o /tmp/ynx_bundle.tar.gz \
+  https://github.com/JiahaoAlbus/YNX/releases/download/testnet-ynx_testnet_ynx_9002-1_20260217T070016Z/ynx_testnet_ynx_9002-1_20260217T070016Z.tar.gz
+curl -L -o /tmp/ynx_bundle.sha256 \
+  https://github.com/JiahaoAlbus/YNX/releases/download/testnet-ynx_testnet_ynx_9002-1_20260217T070016Z/ynx_testnet_ynx_9002-1_20260217T070016Z.sha256
+shasum -a 256 -c /tmp/ynx_bundle.sha256
+tar -xzf /tmp/ynx_bundle.tar.gz -C /tmp/ynx_bundle
+cp /tmp/ynx_bundle/genesis.json ~/.ynx-testnet/config/genesis.json
+cp /tmp/ynx_bundle/config.toml ~/.ynx-testnet/config/config.toml
+cp /tmp/ynx_bundle/app.toml ~/.ynx-testnet/config/app.toml
+```
+
+Update `~/.ynx-testnet/config/config.toml`:
+- `seeds = "9edf41e71a5ba8bbc0a2b9026630bde1d56559c9@38.98.191.10:26656"`
+- `persistent_peers = "9edf41e71a5ba8bbc0a2b9026630bde1d56559c9@38.98.191.10:26656"`
+
+Start node:
+
+```bash
+cd ~/YNX/chain
+./ynxd start --home ~/.ynx-testnet --minimum-gas-prices 0anyxt
+```
+
+## 5. Validator Registration
+
+Create operator key:
+
+```bash
+cd ~/YNX/chain
+./ynxd keys add validator --keyring-backend os --key-type eth_secp256k1
+```
+
+Get addresses:
+
+```bash
+./ynxd keys show validator --keyring-backend os --bech acc -a
+./ynxd keys show validator --keyring-backend os --bech val -a
+```
+
+Get consensus pubkey:
+
+```bash
+./ynxd comet show-validator --home ~/.ynx-testnet
+```
+
+Create `validator.json` and submit:
+
+```json
+{
+  "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"REPLACE_WITH_OUTPUT_FROM_SHOW_VALIDATOR"},
+  "amount": "1000000000000000000anyxt",
+  "moniker": "ynx-validator",
+  "identity": "",
+  "website": "",
+  "security": "",
+  "details": "",
+  "commission-rate": "0.10",
+  "commission-max-rate": "0.20",
+  "commission-max-change-rate": "0.01",
+  "min-self-delegation": "1"
+}
+```
+
+```bash
+./ynxd tx staking create-validator ./validator.json \
+  --chain-id ynx_9002-1 \
+  --node http://38.98.191.10:26657 \
+  --from validator \
+  --keyring-backend os \
+  --gas auto --gas-adjustment 1.2 --gas-prices 0.00000001anyxt \
+  --yes
+```
+
+## 6. Required Submission to Coordinator
+
+Send all of the following:
+- Node moniker
+- Node ID (`./ynxd comet show-node-id --home ~/.ynx-testnet`)
+- P2P endpoint (`node_id@public_ip:26656`)
+- Validator operator address (`ynxvaloper1...`)
+- Validator account address (`ynx1...`)
+- Country/region + hosting provider
+- Security contact email
+- Uptime commitment
+
+## 7. Post-Join Validation
+
+```bash
+curl -s http://38.98.191.10:26657/status
+./ynxd query staking validators --node http://38.98.191.10:26657
+./ynxd query staking validator "$(./ynxd keys show validator --keyring-backend os --bech val -a)" --node http://38.98.191.10:26657
+```
+
+
+
+---
+
+## FILE: docs/en/VALIDATOR_RECRUITMENT_POST.md
+
+# YNX Public Testnet Validator Recruitment Post (EN + 中文)
+
+Status: Active  
+Last updated: 2026-02-21
+
+## English Version
+
+YNX Public Testnet is open for validator onboarding.
+
+- Chain ID: `ynx_9002-1`
+- RPC: `http://43.134.23.58:26657`
+- EVM RPC: `http://43.134.23.58:8545`
+- Faucet: `http://43.134.23.58:8080`
+- Explorer: `http://43.134.23.58:8082`
+
+How to join:
+
+1. Follow `README.md` Path B to run your node.
+2. Follow `README.md` Path D to prepare validator info.
+3. Run `README.md` Path G (`validator_onboard_safe.sh`) for safe join.
+
+Required submit fields:
+
+- Moniker
+- `node_id@ip:26656`
+- `ynxvaloper...`
+- `ynx1...`
+- Region/provider
+- Security contact
+
+Reference docs:
+
+- `README.md`
+- `docs/en/VALIDATOR_ONBOARDING_PACKAGE.md`
+- `docs/en/VALIDATOR_SIGNUP_REVIEW_TEMPLATE.md`
+
+## 中文版本
+
+YNX 公测网现已开放验证人接入。
+
+- Chain ID：`ynx_9002-1`
+- RPC：`http://43.134.23.58:26657`
+- EVM RPC：`http://43.134.23.58:8545`
+- Faucet：`http://43.134.23.58:8080`
+- Explorer：`http://43.134.23.58:8082`
+
+加入步骤：
+
+1. 按 `README.md` 的 Path B 部署节点。
+2. 按 `README.md` 的 Path D 生成验证人资料。
+3. 按 `README.md` 的 Path G 运行 `validator_onboard_safe.sh` 安全接入。
+
+提交信息：
+
+- Moniker
+- `node_id@ip:26656`
+- `ynxvaloper...`
+- `ynx1...`
+- 地域/云厂商
+- 安全联系人
+
+参考文档：
+
+- `README.md`
+- `docs/en/VALIDATOR_ONBOARDING_PACKAGE.md`
+- `docs/en/VALIDATOR_SIGNUP_REVIEW_TEMPLATE.md`
+
+
+
+---
+
+## FILE: docs/en/VALIDATOR_SIGNUP_REVIEW_TEMPLATE.md
+
+# YNX Validator Signup and Review Template
+
+Status: Active  
+Last updated: 2026-02-17  
+Canonical language: English
+
+## 1. Intake Fields (Required)
+
+- Application ID
+- Submission time (UTC)
+- Operator name
+- Moniker
+- Validator account (`ynx1...`)
+- Validator operator (`ynxvaloper1...`)
+- Node ID
+- P2P endpoint (`node_id@ip:26656`)
+- Server region
+- Hosting provider
+- CPU / RAM / SSD
+- Security contact email
+- Uptime target
+- Public dashboard URL (optional)
+- Explorer profile URL (optional)
+
+## 2. Eligibility Rules
+
+- `node_id@ip:26656` must be reachable from external network.
+- Region/provider concentration should be controlled; avoid single-provider majority.
+- Security contact must be valid and responsive.
+- Operator must run independent infrastructure (no shared key custody).
+
+## 3. Review Status Values
+
+- `pending`
+- `network_check_failed`
+- `security_check_failed`
+- `approved`
+- `rejected`
+- `onboarded`
+
+## 4. Reviewer Checklist
+
+- Node endpoint reachable and stable for 24h.
+- Validator keypair format valid (`ynx1...`, `ynxvaloper1...`).
+- No duplicate IP / duplicate node ID in active set.
+- Region/provider diversity improves current set.
+- Contact channel verified.
+
+## 5. Coordinator Commands
+
+Check connectivity:
+
+```bash
+nc -vz <validator-ip> 26656
+```
+
+Check node reachable on P2P and ID consistency:
+
+```bash
+curl -s http://<validator-ip>:26657/status
+```
+
+List active validators:
+
+```bash
+cd chain
+./ynxd query staking validators --node http://38.98.191.10:26657
+```
+
+## 6. CSV Template
+
+Use this header in your tracker sheet:
+
+```csv
+application_id,submitted_at_utc,operator_name,moniker,account_address,valoper_address,node_id,p2p_endpoint,region,provider,cpu,ram_gb,ssd_gb,security_email,uptime_target,status,reviewer,notes
+```
+
+
+
+---
+
+## FILE: docs/en/WEB4_FOR_YNX.md
+
+# What Web4 Means in YNX v2
+
+Status: Active  
+Last updated: 2026-02-25
+
+## 1. Definition Used by YNX
+
+In YNX v2, **Web4** means:
+
+- AI agents as first-class network participants
+- user intent-driven interaction (not only manual wallet clicks)
+- decentralized settlement and governance for AI-native applications
+- persistent on-chain accountability for autonomous actions
+- sovereignty-preserving autonomy (`owner > policy > session key`)
+
+## 2. Four Core Mechanisms Implemented in v2 Track
+
+1. **Wallet as identity**
+   - `/web4/wallet/bootstrap`
+   - `/web4/wallet/verify`
+   - wallet bootstrap is auditable and linked to policy/session controls
+
+2. **Autonomous continuation with bounded resources**
+   - policy-level spend ceilings (`max_total_spend`, `max_daily_spend`)
+   - session-level operation and spend ceilings (`max_ops`, `max_spend`)
+   - owner pause/resume/revoke for hard stop
+
+3. **Machine payment rails**
+   - vault primitives: `/ai/vaults*`
+   - programmable charge flow: `/ai/payments/charge`
+   - x402-style paywall surface: `/x402/resource`
+
+4. **Controlled self-modification and replication**
+   - self-update: `/web4/agents/:id/self-update` (allowlisted fields)
+   - replication: `/web4/agents/:id/replicate` with policy limits (`max_children`, cooldown)
+   - complete action trail via `/web4/audit`
+
+## 3. Web4 Primitives in YNX
+
+- Identity primitive: agent/operator identity registry
+- Agent primitive: capability-declared AI service endpoints
+- Intent primitive: user/application intent objects
+- Claim primitive: machine-execution claims with hashes/proofs
+- Challenge primitive: dispute period before settlement
+- Finalization primitive: deterministic payout/slash resolution
+
+## 4. Why This Is Different from “Web3 + AI UI”
+
+YNX v2 treats AI coordination and settlement as protocol-level workflows instead of only off-chain app logic.
+
+## 5. Public API Surface
+
+- AI settlement gateway: `/ai/*`
+- Web4 coordination hub: `/web4/*`
+- Chain and governance metadata: `/ynx/overview`
+
+
+
+---
+
+## FILE: docs/en/X_YNX_Module.md
+
+# `x/ynx` Module (v0) — Protocol Splits + Genesis System Contracts
+
+Status: In progress  
+Last updated: 2026-02-12  
+Canonical language: English
+
+## 0. Purpose
+
+`x/ynx` is a chain-specific protocol module that enforces “economic rails” and deploys core EVM governance/treasury contracts deterministically at genesis.
+
+## 1. Responsibilities
+
+`x/ynx` provides:
+
+- Deterministic deployment of v0 EVM “system contracts” during `InitGenesis` (optional).
+- Protocol enforcement of the NYXT transaction fee split.
+- Protocol enforcement of the inflation-to-treasury split.
+- Governance-controlled parameters for the above (Cosmos SDK `authority` = `x/gov`).
+
+## 2. Genesis System Contract Deployment
+
+### 2.1 Enablement
+
+Genesis system deployment is controlled by the `system` section of the `x/ynx` genesis state:
+
+- `system.enabled` — when `true`, `InitGenesis` deploys the system contracts using the EVM keeper and stores the resulting addresses under `system_contracts`.
+
+### 2.2 Inputs
+
+When `system.enabled = true`, the following fields MUST be set:
+
+- `system.deployer_address` — the EVM deployer (bech32 or `0x...`)
+- `system.team_beneficiary_address` — the recipient of the team vesting stream
+- `system.community_recipient_address` — the recipient of the community allocation (optional; defaults to the `deployer_address`)
+
+The remaining fields have v0 defaults (supply, allocation percents, governance thresholds, voting period, timelock delay, vesting schedule).
+
+### 2.3 Determinism and deployer selection
+
+Contract addresses are deterministic under Ethereum CREATE semantics (derived from `deployer_address` and deployer nonce/sequence).
+
+Operational requirement:
+
+- The deployer address SHOULD NOT be the same account used to sign a validator `gentx`, because `InitGenesis` deployment will increment the deployer’s account sequence/nonce.
+- Use a dedicated deployer account for genesis system deployment.
+
+The local devnet helper (`chain/scripts/localnet.sh`) uses a dedicated deployer key by default for this reason.
+
+### 2.4 Exported addresses
+
+`x/ynx` stores the deployed contract addresses in state and exposes them via query:
+
+- `ynxd query ynx system-contracts ...`
+
+Current v0 system contracts include:
+
+- `nyxt` (ERC-20 + Votes)
+- `timelock`
+- `treasury`
+- `governor`
+- `team_vesting`
+- `org_registry`
+- `subject_registry`
+- `arbitration`
+- `domain_inbox` (execution-domain / rollup commitments inbox)
+
+## 3. Protocol Enforcement
+
+### 3.1 Transaction fee split
+
+The module enforces the fee split by moving coins out of the fee collector module account after fee deduction, on every successful DeliverTx.
+
+Default v0 parameters:
+
+- `fee_burn_bps = 4000`
+- `fee_treasury_bps = 1000`
+- `fee_founder_bps = 1000`
+- The remainder is left for validator/delegator distribution.
+
+If `treasury_address` or `founder_address` is unset, the corresponding share defaults to validators.
+
+### 3.2 Inflation-to-treasury split
+
+On each BeginBlock, the module transfers a portion of the current block provision from the fee collector to the treasury address:
+
+- `inflation_treasury_bps = 3000` (v0 default)
+
+This relies on the mint module running before `x/ynx` in BeginBlock ordering.
+
+## 4. Parameters and Governance
+
+`x/ynx` parameters are updated via `MsgUpdateParams` and are restricted to the chain authority (`x/gov`).
+
+In addition, YNX provides an EVM-native governance bridge via a static precompile (`IYNXProtocol` at
+`0x0000000000000000000000000000000000000810`) so the v0 timelock system contract can update protocol params
+on-chain (see `docs/en/Protocol_Precompile_v0.md`).
+
+Core params:
+
+- `founder_address` (bech32; optional but RECOMMENDED for mainnet)
+- `treasury_address` (bech32; if unset and system contracts are enabled, it defaults to the deployed treasury contract address)
+- `fee_burn_bps`, `fee_treasury_bps`, `fee_founder_bps`
+- `inflation_treasury_bps`
+
+## 5. CLI and Queries
+
+Genesis helper:
+
+```bash
+ynxd genesis ynx set --home <home> --ynx.system.enabled --ynx.system.deployer <addr> ...
+```
+
+Queries:
+
+```bash
+ynxd query ynx params
+ynxd query ynx system-contracts
+```
+
+
+
+---
+
+## FILE: docs/en/YNX_POSITIONING.md
+
+# YNX Positioning (EN)
+
+Status: active  
+Last updated: 2026-02-25  
+Canonical language: English
+
+## One-line positioning
+
+YNX is an **AI-native Web4 chain** with **Ethereum-grade developer UX** and **high-performance execution targets**.
+
+## Why users choose YNX
+
+- EVM-native onboarding with low-friction tooling (wallets, contracts, RPC compatibility).
+- AI settlement orientation: job lifecycle and challenge flow are protocol-level roadmap priorities.
+- Governance transparency: operators can inspect governance and economics metadata through API.
+- Fast operator rollout: profile-based runtime scripts for speed/stability tradeoff by topology.
+
+## Against larger chains
+
+YNX does not compete by claiming the largest liquidity today.  
+YNX competes on:
+
+- practical developer velocity,
+- AI/Web4 workload readiness,
+- observability of governance and operations,
+- scalable validator onboarding.
+
+## Machine-readable positioning endpoint
+
+- `GET /ynx/overview`
+
+Includes:
+
+- governance metadata,
+- value proposition flags,
+- positioning statement and reasons.
+
+
+
+---
+
+## FILE: docs/en/YNX_v0_Spec.md
+
+# YNX Protocol Specification (v0)
+
+Status: Draft  
+Version: v0.1  
+Last updated: 2026-02-12  
+Canonical language: English
+
+## 0. Normative Language
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY**, and **OPTIONAL** in this document are to be interpreted as described in RFC 2119.
+
+## 1. Scope
+
+This document defines the v0 goals and protocol-level requirements for YNX:
+
+- Sub-second user experience via **preconfirmations**
+- Fast **finality** (target 5–8 seconds)
+- Permissionless participation (full nodes and validators)
+- EVM compatibility and a gas fee model
+- A scalable architecture that supports layered execution
+
+This v0 spec reflects the current public implementation and avoids placeholders.
+
+## 2. Goals & Non-goals
+
+### 2.1 Goals
+
+- **UX confirmation (preconfirm)** MUST be available within **≤ 1 second** for typical network conditions.
+- **Finality** SHOULD be achieved within **5–8 seconds** for typical network conditions.
+- The network MUST remain permissionless: anyone MAY run a full node; anyone MAY become a validator by meeting protocol-defined requirements.
+- The execution layer MUST be EVM-compatible for developer and infrastructure adoption.
+- The protocol MUST support fully on-chain governance and a treasury.
+
+### 2.2 Non-goals (v0)
+
+- v0 does not require trust-minimized bridges to all external networks.
+- v0 does not require mandatory KYC, blacklisting, or privileged freezing of user assets.
+
+## 3. Confirmation Model: Preconfirm vs Finality
+
+### 3.1 Preconfirmations (UX confirmation)
+
+Preconfirmation is a fast acknowledgment that a transaction (or transaction batch) is expected to be included, providing near-instant UX for payments and interactions.
+
+- Preconfirmations MUST be cryptographically verifiable.
+- Preconfirmations MUST clearly state their security boundary (they are not finality).
+- The protocol SHOULD minimize the probability of preconfirm rollback.
+
+v0 reference implementation:
+
+- Signed preconfirm receipts are exposed via JSON-RPC `ynx_preconfirmTx` (see `docs/en/Preconfirmations_v0.md`).
+
+### 3.2 Finality (hard confirmation)
+
+Finality is the protocol state where a transaction is considered non-reversible except for extreme protocol failures.
+
+- Finality MUST be driven by the consensus protocol.
+- Finality SHOULD be achieved within the target range (5–8 seconds) under typical conditions.
+
+## 4. Execution & Fees
+
+- The execution environment MUST be **EVM-compatible**.
+- Transactions MUST pay fees via an EVM-style **gas** model using EIP‑1559 base fee + priority fee (implemented via `x/feemarket`).
+- Fee handling MUST follow the locked v0 splits defined in `docs/en/NYXT_Tokenomics_v0.md`.
+
+## 5. Consensus Design (v0 Implementation)
+
+YNX v0 uses **CometBFT (Tendermint BFT)**:
+
+- All active validators participate in consensus.
+- Blocks are committed with **≥ 2/3 precommit voting power**.
+- Finality is achieved at **block commit** (no extra finality committee).
+
+The validator set and voting power are managed by the staking module.
+
+## 6. Layered Scaling (Accepted)
+
+YNX explicitly accepts layered scaling:
+
+- The base chain provides final settlement, governance, and “order modules” (identity/treasury/arbitration).
+- High-throughput execution MAY be carried out by execution domains / rollups that post commitments to the base chain.
+
+The base chain MUST define a security boundary for any official scaling layer and SHOULD provide at least one reference implementation (v0 roadmap).
+
+## 7. Differentiation: “Order-State L1”
+
+YNX is not only an execution engine. It aims to standardize protocol-level “order components” (subject registry, treasury/budget, arbitration hooks) so dApps can reuse shared rule infrastructure instead of re-implementing centralized governance and dispute processes.
+
+See `docs/en/Order_Modules_v0.md`.
+
+## 8. Security Considerations (v0)
+
+The design MUST account for:
+
+- Governance capture (whales, collusion) and mitigation via timelocks and veto mechanisms
+- Preconfirmation fraud or equivocation and enforcement via slashing
+- MEV and ordering manipulation: in v0, ordering is proposer‑controlled within CometBFT rules (no protocol‑level MEV mitigation yet)
+- Bridge and cross-domain risk (minimize trust, clear security boundaries)
+- Key management and operational security for validators and system contracts
+
+
+
+---
+
+## FILE: docs/en/YNX_v2_AI_SETTLEMENT_API.md
+
+# YNX v2 AI Settlement API (Draft)
+
+Status: Draft  
+Last updated: 2026-02-25
+
+## 1. Purpose
+
+This document defines the first public API surface for the YNX v2 AI settlement workflow.
+
+The API is designed for:
+
+- AI task publishers
+- AI worker operators
+- verifiers/challengers
+- indexers and explorers
+
+## 2. Job Lifecycle
+
+1. `created`: job posted with reward, deadline, and verification policy.
+2. `committed`: worker submits result hash / attestation pointer.
+3. `revealed`: optional reveal payload submitted.
+4. `challenged`: challenger opens a dispute with stake.
+5. `finalized`: reward payout or slash resolution.
+
+## 3. Canonical Data Model
+
+- `job_id` (string)
+- `creator` (address)
+- `worker` (address, optional before commitment)
+- `vault_id` (string, optional funding source)
+- `reward` (base denom amount)
+- `stake` (base denom amount)
+- `input_uri` (off-chain pointer)
+- `result_hash` (hex)
+- `attestation_uri` (optional)
+- `status` (enum)
+- `created_height` / `finalized_height`
+- `payout_payment_id` (string, set when reward is settled from vault)
+
+## 4. Suggested Endpoints
+
+- `POST /ai/jobs` — create job
+- `GET /ai/jobs/:id` — job detail
+- `POST /ai/jobs/:id/commit` — commit result
+- `POST /ai/jobs/:id/challenge` — open dispute
+- `POST /ai/jobs/:id/finalize` — finalize settlement
+- `GET /ai/stats` — aggregate metrics
+- `POST /ai/vaults` — create machine-payment vault
+- `GET /ai/vaults/:id` — vault detail
+- `POST /ai/vaults/:id/deposit` — increase vault balance
+- `POST /ai/payments/quote` — quote payment amount
+- `POST /ai/payments/charge` — execute charge from vault
+- `GET /x402/resource` — x402-style paywalled resource
+
+## 5. Security Requirements
+
+- Every state transition MUST be authorized by signer address.
+- Challenge windows MUST be explicit and time-bounded.
+- Reward release MUST happen only after finalization.
+- Slash decisions MUST be reproducible from on-chain data.
+- Vault spend MUST be bounded by per-payment and per-day limits.
+- x402-style endpoints MUST return deterministic payment requirements when unpaid.
+- Settlement actions MUST be audit-recorded.
+
+## 6. Rollout Policy
+
+- v2 public testnet uses this API as integration contract.
+- Breaking changes MUST increment version and include migration notes.
+
+
+
+---
+
+## FILE: docs/en/YNX_v2_EXECUTION_PLAN.md
+
+# YNX v2 Execution Plan (Web4 / AI-Native)
+
+Status: Active  
+Last updated: 2026-02-25
+
+## 1. Strategy
+
+YNX v2 is delivered as a separate track from v1:
+
+- New chain-id
+- New genesis
+- New public testnet rollout
+
+This prevents v1 operational risk while enabling fast v2 iteration.
+
+## 2. Workstreams
+
+### WS-A: Protocol and Runtime
+
+- Define v2 parameter profile (latency, mempool, gas policy).
+- Maintain deterministic BFT finality.
+- Introduce execution parallelization roadmap milestones.
+
+### WS-B: AI Settlement Plane
+
+- Job registry and lifecycle (created/committed/finalized/challenged).
+- Result commitment format and verification hooks.
+- Reward/slash economic flow and dispute timing.
+
+### WS-C: Developer Experience
+
+- EVM tooling compatibility baseline (wallet + RPC + deployment).
+- Account abstraction / sponsored transaction feature track.
+- SDK and starter template for AI + Web4 dApps.
+
+### WS-D: Infra and Operations
+
+- RPC, indexer, explorer, faucet for v2 chain-id.
+- Health checks, watchdog, and alerting.
+- Validator onboarding automation and documentation.
+
+### WS-E: Governance and Economics
+
+- v2 parameter registry.
+- Governance timelock and execution controls.
+- Treasury and fee-routing policy for sustainable ecosystem growth.
+
+## 3. Milestones
+
+### M0 (Complete)
+
+- v2 product target and protocol scope frozen.
+- v2 spec + execution plan published.
+
+### M1
+
+- v2 local single-node bootstrap ready.
+- v2 runtime profile script ready.
+- v2 explorer/indexer positioning metadata updated.
+
+### M2
+
+- v2 multi-node testnet in controlled environment.
+- validator onboarding and failover scripts verified.
+
+### M3
+
+- open public testnet for external validators and builders.
+- AI settlement API + docs exposed.
+
+### M4
+
+- governance hardening + economic parameter freeze candidate.
+- mainnet readiness review.
+
+## 4. Non-Negotiable Quality Gates
+
+- No plaintext secrets in repo.
+- Reproducible bootstrap from clean machine.
+- Public observability for chain and validator health.
+- Backward-incompatible changes documented before release.
+
+## 5. What “Complete v2” Means in This Repository
+
+The repository reaches “v2 complete track” when it includes:
+
+- protocol specification (`YNX_v2_WEB4_SPEC.md`)
+- executable bootstrap/profile scripts for v2
+- v2 positioning exposed via machine-readable API
+- operator docs to run and observe the v2 public testnet
+
+Mainnet launch remains a governance and operations decision after public testnet performance validation.
+

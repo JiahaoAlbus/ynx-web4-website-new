@@ -1,0 +1,939 @@
+## FILE: docs/zh/YNX_v2_WEB4_蓝图.md
+
+# YNX v2 Web4 蓝图（中文）
+
+状态：active draft  
+最后更新：2026-02-25
+
+## 1. 定位
+
+YNX v2 的目标不是“普通 EVM 链微调”，而是：
+
+- 维持以太坊开发体验（EVM 工具链兼容）
+- 追求高性能低延迟（接近 Solana 类体感）
+- 面向 AI 与 Web4 场景的去中心化结算层
+
+一句话：**AI-native Web4 链，开发体验像 ETH，性能目标向高性能链看齐。**
+
+## 2. 核心目标
+
+- 体感确认目标：正常网络下 ≤ 1s
+- 最终确认目标：区域内 2–4s，跨洲 ≤ 6s
+- 完全链上治理：参数、资金、升级路径可审计
+- 验证人开放加入：持续去中心化
+- AI 任务可结算：任务登记、结果提交、挑战仲裁、奖惩结算
+
+## 3. 架构方向
+
+### 3.1 执行层
+
+- 保留 EVM 兼容
+- 引入并行执行路线（冲突检测 + 多执行通道）
+
+### 3.2 共识层
+
+- 保留 BFT 快终局
+- 使用可切换参数档位：
+  - 快速档（低延迟区域）
+  - 稳定档（跨洲优先）
+
+### 3.3 费用层
+
+- 支持 base fee + priority fee
+- 引入本地费市场思路，降低全局拥堵耦合
+- 面向开发者支持赞助 Gas / AA 路线
+
+### 3.4 AI 结算层
+
+- 任务创建（需求方）
+- 节点执行与结果承诺（供给方）
+- 挑战窗口与争议处理
+- 奖励与惩罚结算
+
+## 4. 与 v1 的关系
+
+- v2 是新轨道，不直接在 v1 公测网上硬改
+- 使用新 chain-id + 新 genesis
+- 先完成 v2 公测网，再进入主网决策
+
+## 5. 当前仓库交付定义
+
+本仓库内“v2 完整轨道”指：
+
+- 有明确 v2 协议规范
+- 有可执行的 v2 启动与配置脚本
+- 有可观测的 v2 对外元数据接口
+- 有可复制的运营/接入文档
+
+主网上线仍需在公测网通过性能与稳定性验收后推进。
+
+
+
+---
+
+## FILE: docs/zh/YNX_v2_WEB4_API_接口说明.md
+
+# YNX v2 Web4 API 接口说明
+
+状态：active  
+最后更新：2026-03-07
+
+## 1. 权限模型
+
+YNX v2 Web4 API 的执行顺序是：
+
+1. Owner（最高权限）
+2. Policy（边界与预算）
+3. Session（短期授权）
+4. Agent Action（实际动作）
+
+## 2. 请求头
+
+- `content-type: application/json`
+- `x-ynx-owner: <owner secret 或 owner id>`（Owner 级操作）
+- `x-ynx-session: <session token>`（委托操作）
+
+## 3. 钱包自举
+
+- `POST /web4/wallet/bootstrap`
+- `POST /web4/wallet/verify`
+
+## 4. 策略与会话
+
+- `GET /web4/policies`
+- `POST /web4/policies`
+- `GET /web4/policies/:policy_id`
+- `POST /web4/policies/:policy_id/sessions`
+- `POST /web4/policies/:policy_id/pause`
+- `POST /web4/policies/:policy_id/resume`
+- `POST /web4/policies/:policy_id/revoke`
+
+策略支持的关键限制：
+
+- `max_total_spend`
+- `max_daily_spend`
+- `max_children`
+- `replicate_cooldown_sec`
+
+## 5. 身份与 Agent
+
+- `GET /web4/identities`
+- `POST /web4/identities`
+- `GET /web4/agents`
+- `POST /web4/agents`
+- `GET /web4/agents/:agent_id`
+- `POST /web4/agents/:agent_id/self-update`
+- `POST /web4/agents/:agent_id/replicate`
+
+## 6. Intent 生命周期
+
+- `GET /web4/intents`
+- `POST /web4/intents`
+- `GET /web4/intents/:intent_id`
+- `POST /web4/intents/:intent_id/claim`
+- `POST /web4/intents/:intent_id/challenge`
+- `POST /web4/intents/:intent_id/finalize`
+
+## 7. 可观测接口
+
+- `GET /health`
+- `GET /web4/overview`
+- `GET /web4/stats`
+- `GET /web4/audit`
+
+## 8. 常见错误码语义
+
+- `policy_required`
+- `policy_action_denied`
+- `invalid_session`
+- `session_expired`
+- `session_spend_exceeded`
+- `replication_limit_reached`
+- `replication_cooldown`
+
+
+
+---
+
+## FILE: docs/zh/WEB4_在YNX中的定义.md
+
+# WEB4 在 YNX v2 中的定义
+
+状态：active  
+最后更新：2026-02-25
+
+## 1. YNX 对 Web4 的定义
+
+YNX v2 的 Web4 不是“给 Web3 套一个 AI 前端”，而是：
+
+- AI Agent 成为一等网络参与者
+- 用户以“意图”驱动交互，而非只靠手动点交易
+- AI 任务执行、结果、争议、结算在链上有可验证闭环
+- 治理与经济参数持续去中心化可审计
+
+## 2. YNX 的 Web4 六个原语
+
+- 身份原语（Identity）
+- Agent 原语（Agent Registry）
+- 意图原语（Intent）
+- 结果声明原语（Claim）
+- 挑战原语（Challenge）
+- 终局结算原语（Finalize/Slash）
+
+## 3. 对外接口
+
+- AI 结算网关：`/ai/*`
+- Web4 协调中心：`/web4/*`
+- 链定位和治理元数据：`/ynx/overview`
+
+
+
+---
+
+## FILE: docs/zh/V2_公开测试网手册.md
+
+# YNX v2 公开测试网手册（Web4）
+
+状态：active  
+最后更新：2026-02-25
+
+## 1. 目标
+
+把 YNX v2 做到“可公开宣传可外部接入”的程度，外部用户只需要：
+
+- 公测网端点
+- 水龙头地址
+- 浏览器地址
+- 验证人加入说明
+
+## 1.1 先本地完整开发（不迁移服务器）
+
+先在本地把 v2 全流程跑通：
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_local_complete.sh all
+```
+
+确认本地 `verify + smoke + release` 全通过，再迁移到服务器。
+
+## 2. 组成服务
+
+- `ynxd` 节点
+- faucet（38080）
+- indexer（38081）
+- explorer（38082）
+- AI gateway（38090）
+- Web4 hub（38091）
+
+## 3. 一键远程部署
+
+在你的运维机器执行：
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_public_testnet_deploy.sh ubuntu@<服务器IP> /path/to/key.pem --reset
+```
+
+部署同时做写路径烟测：
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_public_testnet_deploy.sh ubuntu@<服务器IP> /path/to/key.pem --reset --smoke-write
+```
+
+该命令会自动完成：
+
+- 依赖安装
+- 拉取最新代码
+- 构建 `ynxd`
+- 引导 v2 链配置
+- 安装 systemd 常驻服务
+- 执行 v2 全量验收脚本
+
+## 4. 本机验收
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=127.0.0.1 ./scripts/v2_public_testnet_verify.sh
+```
+
+## 5. 对外验收
+
+```bash
+curl -s http://<服务器IP>:38081/ynx/overview | jq
+curl -s http://<服务器IP>:38090/health | jq
+curl -s http://<服务器IP>:38091/web4/overview | jq
+```
+
+## 6. 写路径烟测（AI + Web4）
+
+```bash
+cd ~/YNX/chain
+YNX_PUBLIC_HOST=<服务器IP> ./scripts/v2_public_testnet_smoke.sh
+```
+
+该烟测会覆盖：
+
+- owner/policy/session 主权模型
+- 钱包自举与验证接口
+- AI 金库、自动扣费与 x402 付费资源
+- agent 自修改与受控复制
+- intent 全生命周期（claim/challenge/finalize）
+
+## 7. 打包验证人接入文件
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_testnet_release.sh
+```
+
+产物包含 `genesis.json`、`config.toml`、`app.toml`、端点与校验文件。
+
+## 8. 新验证人一键接入
+
+```bash
+cd ~/YNX/chain
+./scripts/v2_validator_bootstrap.sh \
+  --rpc http://<RPC_IP>:36657 \
+  --home ~/.ynx-v2-validator \
+  --moniker <你的节点名> \
+  --seeds '<seed_node_id@seed_ip:36656>' \
+  --reset
+```
+
+## 9. Watchdog 常驻
+
+```bash
+cd ~/YNX/chain
+./scripts/install_v2_watchdog_systemd.sh
+sudo journalctl -u ynx-v2-watchdog -f --no-pager
+```
+
+## 10. 宣发前检查
+
+- v2 验证脚本通过
+- 出块稳定
+- faucet 可发币
+- `/ynx/overview` 显示 `track=v2-web4`
+- AI/Web4 API 可访问
+- 至少 2 个 BONDED 验证人
+
+
+
+---
+
+## FILE: docs/zh/V2_本地完整开发运行手册.md
+
+# YNX v2 本地完整开发运行手册
+
+状态：active  
+最后更新：2026-03-07
+
+本手册只用于本地完整开发，不涉及服务器迁移。
+
+## 1. 一条命令跑完整闭环
+
+```bash
+cd ~/Desktop/YNX/chain
+./scripts/v2_local_complete.sh all
+```
+
+该命令会执行：
+
+1. v2 初始化
+2. 启动全栈服务
+3. verify + smoke 验收
+4. 打包 release 产物
+
+## 2. 日常迭代命令
+
+```bash
+cd ~/Desktop/YNX/chain
+./scripts/v2_local_complete.sh up
+./scripts/v2_local_complete.sh verify-smoke
+./scripts/v2_local_complete.sh pack
+./scripts/v2_local_complete.sh down
+```
+
+## 3. 本机多验证人仿真
+
+```bash
+cd ~/Desktop/YNX/chain
+YNX_VALIDATOR_COUNT=6 ./scripts/v2_local_complete.sh multinode
+```
+
+## 4. 本地完成标准
+
+- `v2_public_testnet_verify.sh` 输出 `PASS`
+- `v2_public_testnet_smoke.sh` 输出 `PASS`
+- `v2_testnet_release.sh` 生成打包与校验文件
+- 多验证人仿真可持续出块
+
+
+
+---
+
+## FILE: docs/zh/V2_全部文件与功能说明.md
+
+# YNX v2 公测网：全部文件与功能说明
+
+状态：active  
+最后更新：2026-03-07
+
+## 1. 链脚本（`/chain/scripts`）
+
+- `v2_testnet_bootstrap.sh`：初始化 v2 链目录与基础配置。
+- `v2_services_start.sh`：启动本地 v2 全栈服务。
+- `v2_services_stop.sh`：停止本地 v2 全栈服务。
+- `v2_public_testnet_verify.sh`：读路径验收（链 + 基础服务）。
+- `v2_public_testnet_smoke.sh`：写路径烟测（Web4 + AI + x402）。
+- `v2_public_testnet_deploy.sh`：后续迁移服务器时的一键部署。
+- `install_v2_stack_systemd.sh`：安装 v2 全部 systemd 服务。
+- `v2_testnet_release.sh`：打包公测引导文件（genesis/config/app/endpoints/checksum）。
+- `v2_validator_bootstrap.sh`：新验证人一键接入脚本。
+- `v2_testnet_watchdog.sh`：v2 看门狗封装。
+- `install_v2_watchdog_systemd.sh`：安装 watchdog 常驻服务。
+- `v2_profile_apply.sh`：快速切换共识参数档位。
+- `v2_testnet_multinode.sh`：本机多验证人仿真入口。
+- `v2_local_complete.sh`：本地“完整开发闭环”统一入口。
+
+## 2. 基础服务（`/infra`）
+
+### AI Gateway（`/infra/ai-gateway/server.js`）
+- AI 任务生命周期
+- 金库预算模型（vault）
+- 自动扣费（machine charge）
+- x402 付费资源接口
+
+### Web4 Hub（`/infra/web4-hub/server.js`）
+- 钱包自举/验证
+- policy/session 授权面
+- identity/agent/intent 原语
+- 受控自修改与受控复制
+- 审计日志
+
+### Indexer（`/infra/indexer/server.js`）
+- 提供 `/ynx/overview` 与能力标志位。
+
+### Faucet（`/infra/faucet/server.js`）
+- 限流发币与 keyring-dir 支持。
+
+### Explorer（`/infra/explorer/public/*`）
+- 实时状态、验证人签名、链定位展示。
+
+## 3. 英文核心文档（`/docs/en`）
+
+- `YNX_v2_WEB4_SPEC.md`
+- `YNX_v2_AI_SETTLEMENT_API.md`
+- `YNX_v2_WEB4_API.md`
+- `V2_PUBLIC_TESTNET_PLAYBOOK.md`
+- `V2_VALIDATOR_BOOTSTRAP.md`
+- `V2_SMOKE_AND_VERIFY.md`
+- `YNX_v2_EXECUTION_PLAN.md`
+- `WEB4_FOR_YNX.md`
+- `V2_ALL_FILES_AND_FUNCTIONS.md`
+
+## 4. 中文文档（`/docs/zh`）
+
+- `V2_公开测试网手册.md`
+- `YNX_v2_WEB4_蓝图.md`
+- `WEB4_在YNX中的定义.md`
+- `YNX_v2_WEB4_API_接口说明.md`
+- `V2_全部文件与功能说明.md`
+
+
+
+---
+
+## FILE: infra/openapi/ynx-v2-ai.yaml
+
+openapi: 3.1.0
+info:
+  title: YNX v2 AI Settlement API
+  version: 2.0.0
+  description: AI jobs, machine-payment vaults, programmable charges, and x402-style protected resources.
+servers:
+  - url: http://127.0.0.1:38090
+paths:
+  /health:
+    get:
+      summary: AI gateway health
+      responses:
+        "200":
+          description: OK
+  /ai/stats:
+    get:
+      summary: AI gateway aggregate stats
+      responses:
+        "200":
+          description: OK
+  /ai/jobs:
+    get:
+      summary: List jobs
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create AI job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJob"
+      responses:
+        "201":
+          description: Created
+  /ai/jobs/{job_id}:
+    get:
+      summary: Get job detail
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/jobs/{job_id}/commit:
+    post:
+      summary: Commit AI job result
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/jobs/{job_id}/challenge:
+    post:
+      summary: Challenge AI job
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/jobs/{job_id}/finalize:
+    post:
+      summary: Finalize AI job
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/vaults:
+    get:
+      summary: List machine-payment vaults
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create machine-payment vault
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVault"
+      responses:
+        "201":
+          description: Created
+  /ai/vaults/{vault_id}:
+    get:
+      summary: Get vault detail
+      parameters:
+        - in: path
+          name: vault_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/vaults/{vault_id}/deposit:
+    post:
+      summary: Deposit to vault
+      parameters:
+        - in: path
+          name: vault_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/payments/quote:
+    post:
+      summary: Quote payment requirement
+      responses:
+        "200":
+          description: OK
+  /ai/payments/charge:
+    post:
+      summary: Charge a vault
+      responses:
+        "200":
+          description: OK
+  /x402/resource:
+    get:
+      summary: Access x402-style protected resource
+      parameters:
+        - in: query
+          name: resource
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: units
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Paid access delivered
+        "402":
+          description: Payment required
+components:
+  schemas:
+    CreateJob:
+      type: object
+      properties:
+        creator:
+          type: string
+        worker:
+          type: string
+        vault_id:
+          type: string
+        reward:
+          type: string
+        stake:
+          type: string
+        input_uri:
+          type: string
+    CreateVault:
+      type: object
+      properties:
+        owner:
+          type: string
+        policy_id:
+          type: string
+        balance:
+          type: number
+        max_daily_spend:
+          type: number
+        max_per_payment:
+          type: number
+
+
+
+---
+
+## FILE: infra/openapi/ynx-v2-web4.yaml
+
+openapi: 3.1.0
+info:
+  title: YNX v2 Web4 API
+  version: 2.0.0
+  description: Wallet bootstrap, sovereignty policies, session delegation, agents, intents, and audit surfaces.
+servers:
+  - url: http://127.0.0.1:38091
+paths:
+  /health:
+    get:
+      summary: Web4 hub health
+      responses:
+        "200":
+          description: OK
+  /web4/overview:
+    get:
+      summary: Web4 overview and positioning
+      responses:
+        "200":
+          description: OK
+  /web4/audit:
+    get:
+      summary: Web4 audit stream
+      responses:
+        "200":
+          description: OK
+  /web4/wallet/bootstrap:
+    post:
+      summary: Start wallet bootstrap
+      responses:
+        "201":
+          description: Created
+  /web4/wallet/verify:
+    post:
+      summary: Complete wallet bootstrap
+      responses:
+        "200":
+          description: OK
+  /web4/policies:
+    get:
+      summary: List policies
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create sovereignty policy
+      parameters:
+        - in: header
+          name: x-ynx-owner
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/policies/{policy_id}:
+    get:
+      summary: Get policy detail
+      parameters:
+        - in: path
+          name: policy_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/policies/{policy_id}/sessions:
+    post:
+      summary: Issue session token
+      parameters:
+        - in: path
+          name: policy_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/policies/{policy_id}/pause:
+    post:
+      summary: Pause policy
+      parameters:
+        - in: path
+          name: policy_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/policies/{policy_id}/resume:
+    post:
+      summary: Resume policy
+      parameters:
+        - in: path
+          name: policy_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/policies/{policy_id}/revoke:
+    post:
+      summary: Revoke policy and sessions
+      parameters:
+        - in: path
+          name: policy_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/identities:
+    get:
+      summary: List identities
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create identity
+      parameters:
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/agents:
+    get:
+      summary: List agents
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create agent
+      parameters:
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/agents/{agent_id}:
+    get:
+      summary: Get agent detail
+      parameters:
+        - in: path
+          name: agent_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/agents/{agent_id}/self-update:
+    post:
+      summary: Update allowlisted agent fields
+      parameters:
+        - in: path
+          name: agent_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/agents/{agent_id}/replicate:
+    post:
+      summary: Replicate child agent under policy constraints
+      parameters:
+        - in: path
+          name: agent_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/intents:
+    get:
+      summary: List intents
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create intent
+      parameters:
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/intents/{intent_id}:
+    get:
+      summary: Get intent detail
+      parameters:
+        - in: path
+          name: intent_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/intents/{intent_id}/claim:
+    post:
+      summary: Claim intent execution
+      parameters:
+        - in: path
+          name: intent_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/intents/{intent_id}/challenge:
+    post:
+      summary: Challenge intent result
+      parameters:
+        - in: path
+          name: intent_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/intents/{intent_id}/finalize:
+    post:
+      summary: Finalize intent
+      parameters:
+        - in: path
+          name: intent_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK

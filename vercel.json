@@ -1,0 +1,22 @@
+{
+  "redirects": [
+    {
+      "source": "/docs/docs-en-v2-public-testnet-join-guide-md",
+      "destination": "/docs/en/public-testnet-join",
+      "permanent": true
+    },
+    {
+      "source": "/docs/docs-zh-v2-公开测试网加入手册-md",
+      "destination": "/docs/zh/public-testnet-join",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/docs/:path*", "destination": "/" },
+    { "source": "/testnet", "destination": "/" },
+    { "source": "/validators", "destination": "/" },
+    { "source": "/builders", "destination": "/" },
+    { "source": "/((?!api/).*)", "destination": "/" }
+  ]
+}
