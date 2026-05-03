@@ -8,9 +8,9 @@ struct WalletView: View {
     var body: some View {
         PageContainer {
             ScreenHeader(
-                eyebrow: "Non-custodial Entry",
+                eyebrow: "Public Testnet Entry",
                 title: "Wallet",
-                subtitle: "Create a local YNX testnet profile, prepare transactions, and connect to Web4 flows."
+                subtitle: "Create a local YNX testnet profile, prepare test transactions, and connect to Web4 flows."
             )
             .staggered(0)
 
@@ -63,7 +63,7 @@ struct WalletView: View {
                 LivePulse(symbol: "wallet.pass", color: YNXTheme.klein)
                 Text("Create your YNX entry wallet")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
-                Text("This creates a local encrypted testnet identity for app flows. Mainnet signing must use audited secp256k1 and bech32 libraries before real funds are enabled.")
+                Text("This creates a local encrypted testnet identity for app flows. Testnet tokens have no mainnet value and are used for trials only.")
                     .font(.callout)
                     .foregroundStyle(YNXTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -179,7 +179,7 @@ struct WalletView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Security boundary")
                     .font(.headline)
-                Text("This app shell stores local testnet identity material in Keychain. Real mainnet funds require audited signing, backup UX, biometric lock, transaction simulation, and external review before release.")
+                Text("This testnet app stores local identity material in Keychain. Before enabling any real-value network, signing, backup, biometric lock, transaction simulation, and external review must be completed.")
                     .font(.callout)
                     .foregroundStyle(YNXTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)

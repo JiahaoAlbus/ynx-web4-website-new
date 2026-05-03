@@ -17,7 +17,7 @@ struct ChainActionsView: View {
             ScreenHeader(
                 eyebrow: "Operate YNX",
                 title: "Actions",
-                subtitle: "Prepare transfers, encrypt messages, and issue policy-bounded Web4 sessions."
+                subtitle: "Prepare testnet transfers, encrypt messages, and issue policy-bounded Web4 sessions."
             )
             .staggered(0)
 
@@ -228,9 +228,9 @@ struct TransactionReviewSheet: View {
                     .frame(maxWidth: .infinity)
 
                 ScreenHeader(
-                    eyebrow: "Review",
-                    title: "Confirm transfer",
-                    subtitle: "A release build must simulate, sign, broadcast, and wait for receipt before showing success."
+                    eyebrow: "Testnet Review",
+                    title: "Confirm test transfer",
+                    subtitle: "A production path must simulate, sign, broadcast, and wait for receipt before showing success."
                 )
 
                 GlassCard {

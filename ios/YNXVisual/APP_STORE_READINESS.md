@@ -1,6 +1,6 @@
 # YNX iOS App Store Readiness
 
-Status: native YNX Web4 entry app prototype, App Store submission package scaffolded.
+Status: native YNX Web4 public-testnet entry app prototype, App Store submission package scaffolded.
 
 ## Current App Identity
 
@@ -9,7 +9,7 @@ Status: native YNX Web4 entry app prototype, App Store submission package scaffo
 - Version: `1.0.0`
 - Build: `1`
 - iPhone only, portrait orientation
-- Public testnet only. Mainnet is not live.
+- Public testnet only. Testnet tokens have no mainnet value. Mainnet is not live.
 
 ## Included For Submission
 
@@ -23,6 +23,8 @@ Status: native YNX Web4 entry app prototype, App Store submission package scaffo
 - DApp permission sheet with account/signature/message/session scopes and revocation UI
 - Transaction review sheet with fee, total, risk, and testnet acknowledgement
 - Security center toggles for biometric signing gate, hidden balances, simulation requirement, and developer testnet mode
+- Brave-style mobile browser layout with compact top trust state, large web content area, bottom address bar, back/forward/reload, connect shield, and quick-open tray
+- YNX Browser HTTPS-only encrypted route mode: typed URLs and navigations are upgraded from HTTP to HTTPS when enabled
 
 ## Required Before Real App Store Submission
 
@@ -35,6 +37,7 @@ Status: native YNX Web4 entry app prototype, App Store submission package scaffo
 - Complete crypto/export compliance answers in App Store Connect.
 - Avoid swap/exchange/ICO/securities-like flows unless licensed and legally reviewed.
 - Run IPv6/NAT64, poor-network, cold-start, memory, and accessibility testing.
+- For encrypted access to HTTP-only sites, build and audit a real YNX Encrypted Relay/proxy; an app alone cannot make an HTTP-only origin end-to-end encrypted.
 - Add App Store screenshots for 6.9-inch and 6.5-inch iPhone sizes.
 - Add a production privacy policy URL on `ynxweb4.com`.
 - Create App Store Connect metadata: subtitle, description, keywords, support URL, marketing URL.
