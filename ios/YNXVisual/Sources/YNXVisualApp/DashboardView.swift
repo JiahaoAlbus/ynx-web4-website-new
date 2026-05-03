@@ -32,7 +32,7 @@ struct DashboardView: View {
                 ActionCard(title: "Request test tokens", detail: "Open the YNX faucet for \(YNX.denom).", symbol: "drop.fill", accent: .cyan) {
                     select(.actions, mode: .faucet)
                 }
-                ActionCard(title: "Send and encrypt", detail: "Prepare transfers and private Web4 messages.", symbol: "lock.doc") {
+                ActionCard(title: "Transfer and broadcast", detail: "Draft transfers, then broadcast signed tx bytes.", symbol: "paperplane") {
                     select(.actions, mode: .transfer)
                 }
                 ActionCard(title: "Open YNX Browser", detail: "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.", symbol: "globe") {

@@ -2,6 +2,7 @@ import SwiftUI
 
 enum ChainActionMode: String, CaseIterable, Identifiable {
     case transfer = "Transfer"
+    case broadcast = "Broadcast"
     case faucet = "Faucet"
     case message = "Message"
     case session = "Session"
@@ -14,6 +15,8 @@ struct ChainActionsView: View {
     @State private var recipient = ""
     @State private var amount = ""
     @State private var memo = ""
+    @State private var signedTxBytes = ""
+    @State private var broadcastMode = BroadcastMode.sync
     @State private var faucetAddress = ""
     @State private var faucetStatus = "Ready to request testnet tokens."
     @State private var isRequestingFaucet = false
@@ -29,7 +32,7 @@ struct ChainActionsView: View {
             ScreenHeader(
                 eyebrow: "Operate YNX",
                 title: "Actions",
-                subtitle: "Prepare testnet transfers, encrypt messages, and issue policy-bounded Web4 sessions."
+                subtitle: "Prepare transfers, broadcast signed transactions, request faucet tokens, and run live Web4 actions."
             )
             .staggered(0)
 
@@ -43,6 +46,8 @@ struct ChainActionsView: View {
 
             if selectedMode == .transfer {
                 transferCard.staggered(2)
+            } else if selectedMode == .broadcast {
+                broadcastCard.staggered(2)
             } else if selectedMode == .faucet {
                 faucetCard.staggered(2)
             } else if selectedMode == .message {
@@ -78,7 +83,7 @@ struct ChainActionsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Send \(YNX.denom)")
                             .font(.headline)
-                        Text(walletStore.wallet == nil ? "Create a wallet first" : walletStore.shortAddress)
+                        Text(walletStore.wallet == nil ? "Create a wallet first" : "\(walletStore.shortAddress) • prepare only")
                             .font(.caption.monospaced())
                             .foregroundStyle(YNXTheme.muted)
                     }
@@ -97,7 +102,7 @@ struct ChainActionsView: View {
                     walletStore.prepareTransfer(to: recipient, amount: amount, memo: memo)
                     showReview = true
                 } label: {
-                    Label("Prepare Transaction", systemImage: "checkmark.seal.fill")
+                    Label("Prepare Transfer Draft", systemImage: "checkmark.seal.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 13)
@@ -112,6 +117,68 @@ struct ChainActionsView: View {
             if let tx = walletStore.lastPreparedTransaction {
                 TransactionReviewSheet(tx: tx)
                     .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    private var broadcastCard: some View {
+        GlassCard(padding: 18, radius: 28) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    LivePulse(symbol: "antenna.radiowaves.left.and.right", color: YNXTheme.klein)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Broadcast signed transaction")
+                            .font(.headline)
+                        Text("Submit base64 tx_bytes to the live YNX REST broadcast endpoint.")
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                    }
+                }
+
+                TextField("Signed tx_bytes base64", text: $signedTxBytes, axis: .vertical)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(4...8)
+                    .ynxNoAutocapitalization()
+
+                Picker("Broadcast mode", selection: $broadcastMode) {
+                    ForEach(BroadcastMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                GlassCard(padding: 12, radius: 18) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: walletStore.broadcastStatus.hasPrefix("Broadcast accepted") ? "checkmark.seal.fill" : "info.circle.fill")
+                            .foregroundStyle(walletStore.broadcastStatus.hasPrefix("Broadcast accepted") ? .green : YNXTheme.klein)
+                        Text(walletStore.broadcastStatus)
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                Button {
+                    Task {
+                        await walletStore.broadcastSignedTransaction(
+                            txBytesBase64: signedTxBytes,
+                            mode: broadcastMode
+                        )
+                    }
+                } label: {
+                    Label(walletStore.isBroadcasting ? "Broadcasting..." : "Broadcast to Testnet", systemImage: "paperplane.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(canBroadcast ? YNXTheme.klein : Color.gray.opacity(0.18), in: Capsule())
+                        .foregroundStyle(canBroadcast ? .white : YNXTheme.muted)
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(!canBroadcast || walletStore.isBroadcasting)
+
+                if let result = walletStore.lastBroadcastResult {
+                    broadcastResult(result)
+                }
             }
         }
     }
@@ -328,8 +395,23 @@ struct ChainActionsView: View {
         }
     }
 
+    private func broadcastResult(_ result: BroadcastResult) -> some View {
+        GlassCard(padding: 12, radius: 18) {
+            VStack(alignment: .leading, spacing: 8) {
+                FactRow(label: "Tx hash", value: result.txhash)
+                FactRow(label: "Code", value: "\(result.code)")
+                FactRow(label: "Height", value: result.height)
+                FactRow(label: "Log", value: result.rawLog.isEmpty ? "Accepted" : result.rawLog)
+            }
+        }
+    }
+
     private var canRequestFaucet: Bool {
         faucetAddress.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("ynx1")
+    }
+
+    private var canBroadcast: Bool {
+        !signedTxBytes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func requestFaucet() async {
@@ -385,8 +467,8 @@ struct TransactionReviewSheet: View {
 
                 ScreenHeader(
                     eyebrow: "Testnet Review",
-                    title: "Confirm test transfer",
-                    subtitle: "This review uses live balance data. Broadcast is disabled until full Cosmos transaction signing is wired."
+                    title: "Review transfer draft",
+                    subtitle: "This draft uses live wallet data. Sign it with a Cosmos signer, then paste signed tx_bytes in Broadcast."
                 )
 
                 GlassCard {

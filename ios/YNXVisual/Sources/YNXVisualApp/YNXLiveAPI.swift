@@ -61,6 +61,16 @@ enum YNXLiveAPI {
         return try JSONDecoder().decode(LiveAIStats.self, from: data)
     }
 
+    static func broadcastSignedTransaction(txBytesBase64: String, mode: BroadcastMode) async throws -> BroadcastResult {
+        let payload: [String: Any] = [
+            "tx_bytes": txBytesBase64,
+            "mode": mode.apiValue
+        ]
+        let data = try await postJSON(url: URL(string: "https://rest.ynxweb4.com/cosmos/tx/v1beta1/txs")!, payload: payload)
+        let decoded = try JSONDecoder().decode(BroadcastResponse.self, from: data)
+        return decoded.txResponse
+    }
+
     private static func postJSON(url: URL, payload: [String: Any], headers: [String: String] = [:]) async throws -> Data {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -77,6 +87,30 @@ enum YNXLiveAPI {
             throw LiveAPIError.server("HTTP \(status): \(body.prefix(140))")
         }
         return data
+    }
+}
+
+enum BroadcastMode: String, CaseIterable, Identifiable {
+    case sync
+    case async
+    case block
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .sync: "SYNC"
+        case .async: "ASYNC"
+        case .block: "BLOCK"
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .sync: "BROADCAST_MODE_SYNC"
+        case .async: "BROADCAST_MODE_ASYNC"
+        case .block: "BROADCAST_MODE_BLOCK"
+        }
     }
 }
 
@@ -172,5 +206,27 @@ struct LiveAIStats: Decodable, Equatable {
         case totalJobs = "total_jobs"
         case totalVaults = "total_vaults"
         case totalPayments = "total_payments"
+    }
+}
+
+private struct BroadcastResponse: Decodable {
+    let txResponse: BroadcastResult
+
+    enum CodingKeys: String, CodingKey {
+        case txResponse = "tx_response"
+    }
+}
+
+struct BroadcastResult: Decodable, Equatable {
+    let height: String
+    let txhash: String
+    let code: Int
+    let rawLog: String
+
+    enum CodingKeys: String, CodingKey {
+        case height
+        case txhash
+        case code
+        case rawLog = "raw_log"
     }
 }

@@ -22,6 +22,9 @@ final class WalletStore: ObservableObject {
     @Published var sessionPolicies: [Web4SessionPolicy] = []
     @Published var liveActionStatus = "Ready for live testnet actions."
     @Published var isRunningLiveAction = false
+    @Published var broadcastStatus = "Ready to broadcast a signed testnet transaction."
+    @Published var isBroadcasting = false
+    @Published var lastBroadcastResult: BroadcastResult?
 
     private let seedKey = "com.ynxweb4.ynx.wallet.seed"
 
@@ -66,6 +69,8 @@ final class WalletStore: ObservableObject {
         dappPermissions = []
         sessionPolicies = []
         liveActionStatus = "Ready for live testnet actions."
+        broadcastStatus = "Ready to broadcast a signed testnet transaction."
+        lastBroadcastResult = nil
     }
 
     func prepareTransfer(to recipient: String, amount: String, memo: String) {
@@ -188,6 +193,30 @@ final class WalletStore: ObservableObject {
             liveActionStatus = "Live AI job created: \(short(job.jobID))."
         } catch {
             liveActionStatus = "AI job failed: \(error.localizedDescription)"
+        }
+    }
+
+    func broadcastSignedTransaction(txBytesBase64: String, mode: BroadcastMode) async {
+        let txBytes = txBytesBase64.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !txBytes.isEmpty else {
+            broadcastStatus = "Paste signed tx_bytes before broadcasting."
+            return
+        }
+
+        isBroadcasting = true
+        defer { isBroadcasting = false }
+
+        do {
+            let result = try await YNXLiveAPI.broadcastSignedTransaction(txBytesBase64: txBytes, mode: mode)
+            lastBroadcastResult = result
+            if result.code == 0 {
+                broadcastStatus = "Broadcast accepted by YNX REST: \(short(result.txhash))."
+                await refreshBalance()
+            } else {
+                broadcastStatus = "Broadcast returned code \(result.code): \(result.rawLog)"
+            }
+        } catch {
+            broadcastStatus = "Broadcast failed: \(error.localizedDescription)"
         }
     }
 
