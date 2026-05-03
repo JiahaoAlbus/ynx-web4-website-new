@@ -15,20 +15,20 @@ enum YNXTheme {
 
 enum YNXTab: String, CaseIterable, Identifiable {
     case home = "Home"
-    case network = "Network"
-    case validators = "Validators"
-    case ai = "AI"
-    case docs = "Docs"
+    case wallet = "Wallet"
+    case actions = "Actions"
+    case browser = "Browser"
+    case monitor = "Monitor"
 
     var id: String { rawValue }
 
     var symbol: String {
         switch self {
         case .home: "sparkles"
-        case .network: "point.3.connected.trianglepath.dotted"
-        case .validators: "shield.lefthalf.filled"
-        case .ai: "cpu"
-        case .docs: "doc.text.magnifyingglass"
+        case .wallet: "wallet.pass"
+        case .actions: "arrow.left.arrow.right"
+        case .browser: "globe"
+        case .monitor: "waveform.path.ecg"
         }
     }
 }
@@ -270,5 +270,45 @@ struct StaggeredAppear: ViewModifier {
 extension View {
     func staggered(_ index: Int) -> some View {
         modifier(StaggeredAppear(index: index))
+    }
+
+    @ViewBuilder
+    func ynxNoAutocapitalization() -> some View {
+        #if os(iOS)
+        self.textInputAutocapitalization(.never)
+        #else
+        self
+        #endif
+    }
+}
+
+struct ActionCard: View {
+    let title: String
+    let detail: String
+    let symbol: String
+    var accent: Color = YNXTheme.klein
+    var body: some View {
+        GlassCard(padding: 14, radius: 22) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .frame(width: 42, height: 42)
+                    .background(accent.opacity(0.1), in: Circle())
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(YNXTheme.ink)
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(YNXTheme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(accent.opacity(0.75))
+            }
+        }
     }
 }

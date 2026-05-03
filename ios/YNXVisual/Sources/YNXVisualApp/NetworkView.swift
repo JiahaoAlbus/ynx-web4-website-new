@@ -50,6 +50,9 @@ struct NetworkView: View {
                 }
             }
             .staggered(2)
+
+            ValidatorsViewContent()
+                .staggered(3)
         }
     }
 }

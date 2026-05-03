@@ -51,14 +51,14 @@ struct RootView: View {
         switch selectedTab {
         case .home:
             DashboardView()
-        case .network:
+        case .wallet:
+            WalletView()
+        case .actions:
+            ChainActionsView()
+        case .browser:
+            YNXBrowserView()
+        case .monitor:
             NetworkView()
-        case .validators:
-            ValidatorsView()
-        case .ai:
-            AISettlementView()
-        case .docs:
-            DocsView()
         }
     }
 

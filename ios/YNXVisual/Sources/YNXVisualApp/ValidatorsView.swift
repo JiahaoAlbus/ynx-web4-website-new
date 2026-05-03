@@ -1,16 +1,23 @@
 import SwiftUI
 
 struct ValidatorsView: View {
+    var body: some View {
+        PageContainer {
+            ValidatorsViewContent()
+        }
+    }
+}
+
+struct ValidatorsViewContent: View {
     @EnvironmentObject private var viewModel: YNXNetworkViewModel
 
     var body: some View {
-        PageContainer {
+        VStack(alignment: .leading, spacing: 18) {
             ScreenHeader(
                 eyebrow: "Consensus",
                 title: "Validator field",
                 subtitle: "Track bonded validators and the remaining gates before mainnet readiness."
             )
-            .staggered(0)
 
             GlassCard {
                 HStack(spacing: 14) {
@@ -24,12 +31,10 @@ struct ValidatorsView: View {
                     }
                 }
             }
-            .staggered(1)
 
             VStack(spacing: 11) {
-                ForEach(Array(viewModel.validators.enumerated()), id: \.element.id) { index, validator in
+                ForEach(viewModel.validators) { validator in
                     ValidatorCard(validator: validator)
-                        .staggered(index + 2)
                 }
             }
 
@@ -44,7 +49,6 @@ struct ValidatorsView: View {
                     GateRow(text: "External security review")
                 }
             }
-            .staggered(7)
         }
     }
 }

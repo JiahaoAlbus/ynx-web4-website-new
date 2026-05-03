@@ -7,14 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02D6D608515B02742141AAAF /* ChainActionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7068A772B4CF75954339E8CE /* ChainActionsView.swift */; };
 		10B4DE3A32F453B00BB87E55 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D290177E3E9433819EB83A /* DashboardView.swift */; };
 		1EBEBEB5E3E612E0E19B45F8 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501CB62818630CB4A7FD10A5 /* Models.swift */; };
 		2F7383BD6867482783ACE1A1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D1AF947B50D126E6DD28AA /* DesignSystem.swift */; };
 		3ABB40DFFEB5209C439CC567 /* NetworkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249CE824ACF0A283354DAC38 /* NetworkClient.swift */; };
+		3BB9F3251730694169A63A9B /* WalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A23BD1DFF8349D026E4D81 /* WalletView.swift */; };
+		3CC998F3D72F4A392364B56E /* YNXBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CACB63F099F200ABEB3DC0A /* YNXBrowserView.swift */; };
 		47107EEC82AB8D0F301A8EE7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5E907E4550CFC1C00EA228FC /* PrivacyInfo.xcprivacy */; };
+		4EDC5A2235D78FDF9292358A /* WalletStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844B8D11972CE16997669D62 /* WalletStore.swift */; };
 		5A3F5043BFD261C3ADFFEEB9 /* ValidatorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7C04F388E3489F9EF69C4B /* ValidatorsView.swift */; };
 		5B426064D97BB1DC1D4E7E54 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E30359BD031C124FA53F68 /* RootView.swift */; };
 		815B54B14821985CD0D760BF /* DocsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87BE06C6641F8EAB5358AFDE /* DocsView.swift */; };
+		D8C19E091589CEB684DF3D10 /* SecurityCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD2CBE2C1109C80541D2A43 /* SecurityCenterView.swift */; };
 		DBA9CEF1E31E335B870803EF /* NetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8023D5656861A9003DD26E6 /* NetworkView.swift */; };
 		E773FC320A445E5D0E44B59F /* AISettlementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22BB5606B655090B3CA26E90 /* AISettlementView.swift */; };
 		F7BA85110CA4FE21C07FA1C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5035C425E3D81AE5BFA33954 /* Assets.xcassets */; };
@@ -26,11 +31,16 @@
 		22BB5606B655090B3CA26E90 /* AISettlementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettlementView.swift; sourceTree = "<group>"; };
 		249CE824ACF0A283354DAC38 /* NetworkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkClient.swift; sourceTree = "<group>"; };
 		40D290177E3E9433819EB83A /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		4CACB63F099F200ABEB3DC0A /* YNXBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YNXBrowserView.swift; sourceTree = "<group>"; };
+		4FD2CBE2C1109C80541D2A43 /* SecurityCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityCenterView.swift; sourceTree = "<group>"; };
 		501CB62818630CB4A7FD10A5 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		5035C425E3D81AE5BFA33954 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5E907E4550CFC1C00EA228FC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		60E30359BD031C124FA53F68 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7068A772B4CF75954339E8CE /* ChainActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChainActionsView.swift; sourceTree = "<group>"; };
 		7326C40D8F10FE49C029C2E0 /* YNXVisual.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = YNXVisual.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		844B8D11972CE16997669D62 /* WalletStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletStore.swift; sourceTree = "<group>"; };
+		85A23BD1DFF8349D026E4D81 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		87BE06C6641F8EAB5358AFDE /* DocsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocsView.swift; sourceTree = "<group>"; };
 		A8023D5656861A9003DD26E6 /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
 		B9D1AF947B50D126E6DD28AA /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
@@ -68,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				22BB5606B655090B3CA26E90 /* AISettlementView.swift */,
+				7068A772B4CF75954339E8CE /* ChainActionsView.swift */,
 				40D290177E3E9433819EB83A /* DashboardView.swift */,
 				B9D1AF947B50D126E6DD28AA /* DesignSystem.swift */,
 				87BE06C6641F8EAB5358AFDE /* DocsView.swift */,
@@ -75,7 +86,11 @@
 				249CE824ACF0A283354DAC38 /* NetworkClient.swift */,
 				A8023D5656861A9003DD26E6 /* NetworkView.swift */,
 				60E30359BD031C124FA53F68 /* RootView.swift */,
+				4FD2CBE2C1109C80541D2A43 /* SecurityCenterView.swift */,
 				FF7C04F388E3489F9EF69C4B /* ValidatorsView.swift */,
+				844B8D11972CE16997669D62 /* WalletStore.swift */,
+				85A23BD1DFF8349D026E4D81 /* WalletView.swift */,
+				4CACB63F099F200ABEB3DC0A /* YNXBrowserView.swift */,
 				10770241BA843214D21196DA /* YNXVisualApp.swift */,
 			);
 			path = YNXVisualApp;
@@ -158,6 +173,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E773FC320A445E5D0E44B59F /* AISettlementView.swift in Sources */,
+				02D6D608515B02742141AAAF /* ChainActionsView.swift in Sources */,
 				10B4DE3A32F453B00BB87E55 /* DashboardView.swift in Sources */,
 				2F7383BD6867482783ACE1A1 /* DesignSystem.swift in Sources */,
 				815B54B14821985CD0D760BF /* DocsView.swift in Sources */,
@@ -165,7 +181,11 @@
 				3ABB40DFFEB5209C439CC567 /* NetworkClient.swift in Sources */,
 				DBA9CEF1E31E335B870803EF /* NetworkView.swift in Sources */,
 				5B426064D97BB1DC1D4E7E54 /* RootView.swift in Sources */,
+				D8C19E091589CEB684DF3D10 /* SecurityCenterView.swift in Sources */,
 				5A3F5043BFD261C3ADFFEEB9 /* ValidatorsView.swift in Sources */,
+				4EDC5A2235D78FDF9292358A /* WalletStore.swift in Sources */,
+				3BB9F3251730694169A63A9B /* WalletView.swift in Sources */,
+				3CC998F3D72F4A392364B56E /* YNXBrowserView.swift in Sources */,
 				FA53B58B966206DA751D3F2C /* YNXVisualApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

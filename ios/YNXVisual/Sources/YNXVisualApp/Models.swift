@@ -30,8 +30,8 @@ enum EndpointKind: String, CaseIterable, Identifiable {
         case .faucet: URL(string: "https://faucet.ynxweb4.com")!
         case .indexer: URL(string: "https://indexer.ynxweb4.com/health")!
         case .explorer: URL(string: "https://explorer.ynxweb4.com")!
-        case .aiGateway: URL(string: "https://ai.ynxweb4.com")!
-        case .web4Hub: URL(string: "https://web4.ynxweb4.com/healthz")!
+        case .aiGateway: URL(string: "https://ai.ynxweb4.com/ready")!
+        case .web4Hub: URL(string: "https://web4.ynxweb4.com/ready")!
         }
     }
 

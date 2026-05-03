@@ -2,27 +2,36 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject private var viewModel: YNXNetworkViewModel
+    @EnvironmentObject private var walletStore: WalletStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var selectedStep = 0
     @State private var heroLift = false
 
     var body: some View {
         PageContainer {
             hero.staggered(0)
 
+            walletStrip.staggered(1)
+
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MetricTile(title: "Chain", value: YNX.chainID, footnote: "Public testnet", symbol: "network")
-                    .staggered(1)
-                MetricTile(title: "EVM", value: YNX.evmChainID, footnote: "Denom \(YNX.denom)", symbol: "hexagon")
+                MetricTile(title: "Network", value: "\(viewModel.onlineCount)/\(viewModel.endpoints.count)", footnote: "Reachable services", symbol: "waveform.path.ecg", accent: .green)
                     .staggered(2)
-                MetricTile(title: "Endpoints", value: "\(viewModel.onlineCount)/\(viewModel.endpoints.count)", footnote: "Live checks", symbol: "dot.radiowaves.left.and.right", accent: .green)
-                    .staggered(3)
                 MetricTile(title: "Validators", value: "\(viewModel.bondedValidators)", footnote: "Active bonded", symbol: "shield.checkered", accent: .indigo)
+                    .staggered(3)
+                MetricTile(title: "Chain", value: YNX.chainID, footnote: "Public testnet", symbol: "network")
                     .staggered(4)
+                MetricTile(title: "EVM", value: "9102", footnote: "0x238e", symbol: "hexagon")
+                    .staggered(5)
             }
 
-            settlementPreview.staggered(5)
-            blockCard.staggered(6)
+            VStack(spacing: 11) {
+                ActionCard(title: "Create or import wallet", detail: "Non-custodial YNX entry profile.", symbol: "wallet.pass")
+                ActionCard(title: "Send and encrypt", detail: "Prepare transfers and private Web4 messages.", symbol: "lock.doc")
+                ActionCard(title: "Open YNX Browser", detail: "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.", symbol: "globe")
+                ActionCard(title: "AI agent sessions", detail: "Issue bounded policies for machine actions.", symbol: "key.radiowaves.forward")
+            }
+            .staggered(6)
+
+            blockCard.staggered(7)
         }
     }
 
@@ -30,28 +39,27 @@ struct DashboardView: View {
         GlassCard(padding: 18, radius: 30) {
             VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("YNX")
+                            .font(.system(size: 48, weight: .black, design: .rounded))
+                            .foregroundStyle(YNXTheme.ink)
+                            .lineLimit(1)
+                        Text("Your Web4 command app")
+                            .font(.system(size: 23, weight: .bold, design: .rounded))
+                            .foregroundStyle(YNXTheme.klein)
+                    }
                     Spacer()
-                    StatusPill(label: "TESTNET LIVE", color: .green, systemImage: "bolt.circle.fill")
+                    StatusPill(label: "TESTNET", color: .orange, systemImage: "testtube.2")
                 }
 
-                VStack(alignment: .leading, spacing: 9) {
-                    Text("YNX")
-                        .font(.system(size: 48, weight: .black, design: .rounded))
-                        .foregroundStyle(YNXTheme.ink)
-                        .lineLimit(1)
-                    Text("AI-native sovereign execution layer")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(YNXTheme.klein)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Monitor the public testnet, inspect validators, and follow policy-bounded AI settlement from your phone.")
-                        .font(.callout)
-                        .foregroundStyle(YNXTheme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text("Wallet, transaction, encrypted messaging, dApp browser, AI/Web4 sessions, and chain monitoring in one native entry point.")
+                    .font(.callout)
+                    .foregroundStyle(YNXTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: 8) {
                     StatusPill(label: "No mainnet value", color: .orange, systemImage: "exclamationmark.triangle.fill")
-                    StatusPill(label: "4 bonded", color: YNXTheme.klein, systemImage: "checkmark.seal.fill")
+                    StatusPill(label: "\(YNX.denom)", color: YNXTheme.klein, systemImage: "diamond.fill")
                 }
             }
         }
@@ -64,41 +72,18 @@ struct DashboardView: View {
         }
     }
 
-    private var settlementPreview: some View {
+    private var walletStrip: some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("AI/Web4 Settlement")
-                            .font(.headline)
-                        Text("Owner > Policy > Session > Action")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                    Spacer()
-                    Text("\(selectedStep + 1)/\(settlementSteps.count)")
-                        .font(.caption.monospaced().weight(.bold))
-                        .foregroundStyle(YNXTheme.klein)
-                }
-
-                SettlementRibbon(selectedStep: $selectedStep)
-
+            HStack(spacing: 14) {
+                LivePulse(symbol: walletStore.wallet == nil ? "wallet.pass" : "checkmark.seal.fill", color: walletStore.wallet == nil ? YNXTheme.klein : .green)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(settlementSteps[selectedStep].title)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                    Text(settlementSteps[selectedStep].detail)
-                        .font(.callout)
+                    Text(walletStore.wallet == nil ? "No wallet yet" : "Wallet ready")
+                        .font(.headline)
+                    Text(walletStore.wallet == nil ? "Open Wallet to create your YNX testnet profile." : walletStore.shortAddress)
+                        .font(.caption.monospaced())
                         .foregroundStyle(YNXTheme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
-            }
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            Timer.scheduledTimer(withTimeInterval: 2.2, repeats: true) { _ in
-                withAnimation(YNXTheme.standard) {
-                    selectedStep = (selectedStep + 1) % settlementSteps.count
-                }
+                Spacer()
             }
         }
     }
@@ -125,36 +110,6 @@ struct DashboardView: View {
                         .frame(width: 44, height: 44)
                         .background(YNXTheme.klein, in: Circle())
                         .foregroundStyle(.white)
-                }
-                .buttonStyle(PressableButtonStyle())
-            }
-        }
-    }
-}
-
-struct SettlementRibbon: View {
-    @Binding var selectedStep: Int
-
-    var body: some View {
-        HStack(spacing: 7) {
-            ForEach(Array(settlementSteps.enumerated()), id: \.element.id) { index, step in
-                Button {
-                    withAnimation(YNXTheme.quick) {
-                        selectedStep = index
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        Image(systemName: step.symbol)
-                            .font(.system(size: selectedStep == index ? 17 : 14, weight: .semibold))
-                            .frame(height: 18)
-                        Capsule()
-                            .fill(selectedStep == index ? YNXTheme.klein : YNXTheme.klein.opacity(0.14))
-                            .frame(height: selectedStep == index ? 5 : 3)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-                    .foregroundStyle(selectedStep == index ? YNXTheme.klein : YNXTheme.muted)
-                    .background(selectedStep == index ? YNXTheme.klein.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
                 }
                 .buttonStyle(PressableButtonStyle())
             }
