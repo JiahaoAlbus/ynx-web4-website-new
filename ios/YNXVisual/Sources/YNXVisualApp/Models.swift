@@ -25,13 +25,13 @@ enum EndpointKind: String, CaseIterable, Identifiable {
     var url: URL {
         switch self {
         case .rpc: URL(string: "https://rpc.ynxweb4.com/status")!
-        case .rest: URL(string: "https://rest.ynxweb4.com/cosmos/base/tendermint/v1beta1/node_info")!
-        case .evm: URL(string: "https://evm.ynxweb4.com")!
+        case .rest: URL(string: "https://rest.ynxweb4.com/cosmos/base/tendermint/v1beta1/blocks/latest")!
+        case .evm: URL(string: "https://evm.ynxweb4.com/health")!
         case .faucet: URL(string: "https://faucet.ynxweb4.com")!
-        case .indexer: URL(string: "https://indexer.ynxweb4.com")!
+        case .indexer: URL(string: "https://indexer.ynxweb4.com/health")!
         case .explorer: URL(string: "https://explorer.ynxweb4.com")!
         case .aiGateway: URL(string: "https://ai.ynxweb4.com")!
-        case .web4Hub: URL(string: "https://web4.ynxweb4.com")!
+        case .web4Hub: URL(string: "https://web4.ynxweb4.com/healthz")!
         }
     }
 
@@ -52,14 +52,18 @@ enum EndpointKind: String, CaseIterable, Identifiable {
 enum EndpointHealth: Equatable {
     case checking
     case online(Int)
-    case warning(String)
+    case slow(Int)
+    case reachable(Int)
+    case timeout
     case offline(String)
 
     var label: String {
         switch self {
         case .checking: "Checking"
         case .online(let latency): "\(latency) ms"
-        case .warning: "Stale"
+        case .slow(let latency): "Slow \(latency) ms"
+        case .reachable(let latency): "OK \(latency) ms"
+        case .timeout: "Timeout"
         case .offline: "Offline"
         }
     }
@@ -68,7 +72,9 @@ enum EndpointHealth: Equatable {
         switch self {
         case .checking: .secondary
         case .online: .green
-        case .warning: .orange
+        case .slow: .orange
+        case .reachable: .green
+        case .timeout: .orange
         case .offline: .red
         }
     }

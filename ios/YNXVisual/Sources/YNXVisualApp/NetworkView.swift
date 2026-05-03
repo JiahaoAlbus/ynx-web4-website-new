@@ -4,85 +4,100 @@ struct NetworkView: View {
     @EnvironmentObject private var viewModel: YNXNetworkViewModel
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AnimatedBackdrop()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        SectionHeader(
-                            eyebrow: "Live Mesh",
-                            title: "Network health",
-                            subtitle: "Public endpoint monitor for the YNX Web4 testnet mesh."
-                        )
-
-                        GlassCard {
-                            VStack(spacing: 14) {
-                                ForEach(viewModel.endpoints) { endpoint in
-                                    EndpointRow(endpoint: endpoint)
-                                    if endpoint.id != viewModel.endpoints.last?.id {
-                                        Divider().opacity(0.5)
-                                    }
-                                }
-                            }
-                        }
-
-                        GlassCard {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Canonical network facts")
-                                    .font(.headline)
-                                FactRow(label: "Cosmos Chain ID", value: YNX.chainID)
-                                FactRow(label: "EVM Chain ID", value: YNX.evmChainID)
-                                FactRow(label: "Denom", value: YNX.denom)
-                                FactRow(label: "Token status", value: "Testnet only, no mainnet value")
-                            }
-                        }
-                    }
-                    .padding(20)
+        PageContainer {
+            HStack(alignment: .top) {
+                ScreenHeader(
+                    eyebrow: "Live Mesh",
+                    title: "Network health",
+                    subtitle: "Endpoint checks for the YNX Web4 public testnet."
+                )
+                Spacer()
+                Button {
+                    Task { await viewModel.refresh() }
+                } label: {
+                    Image(systemName: viewModel.isRefreshing ? "arrow.triangle.2.circlepath" : "arrow.clockwise")
+                        .font(.headline)
+                        .frame(width: 44, height: 44)
+                        .background(.ultraThinMaterial, in: Circle())
                 }
+                .buttonStyle(PressableButtonStyle())
+                .foregroundStyle(YNXTheme.klein)
             }
-            .navigationTitle("Network")
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    Button {
-                        Task { await viewModel.refresh() }
-                    } label: {
-                        Image(systemName: viewModel.isRefreshing ? "arrow.triangle.2.circlepath" : "arrow.clockwise")
+            .staggered(0)
+
+            GlassCard {
+                VStack(spacing: 13) {
+                    ForEach(Array(viewModel.endpoints.enumerated()), id: \.element.id) { index, endpoint in
+                        EndpointRow(endpoint: endpoint)
+                            .staggered(index + 1)
+                        if endpoint.id != viewModel.endpoints.last?.id {
+                            Divider().opacity(0.42)
+                        }
                     }
                 }
             }
+            .staggered(1)
+
+            GlassCard {
+                VStack(alignment: .leading, spacing: 13) {
+                    Text("Canonical facts")
+                        .font(.headline)
+                    FactRow(label: "Cosmos Chain ID", value: YNX.chainID)
+                    FactRow(label: "EVM Chain ID", value: YNX.evmChainID)
+                    FactRow(label: "Denom", value: YNX.denom)
+                    FactRow(label: "Token status", value: "Testnet only")
+                    FactRow(label: "Mainnet", value: "Not live")
+                }
+            }
+            .staggered(2)
         }
     }
 }
 
 struct EndpointRow: View {
     let endpoint: EndpointStatus
+    @State private var pressed = false
 
     var body: some View {
-        HStack(spacing: 14) {
-            Circle()
-                .fill(endpoint.health.tint)
-                .frame(width: 10, height: 10)
-                .shadow(color: endpoint.health.tint.opacity(0.7), radius: 8)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(endpoint.kind.rawValue)
-                    .font(.headline)
-                Text(endpoint.kind.displayURL)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        Button {
+            withAnimation(YNXTheme.quick) {
+                pressed.toggle()
             }
+        } label: {
+            HStack(spacing: 13) {
+                ZStack {
+                    Circle()
+                        .fill(endpoint.health.tint.opacity(0.12))
+                    Circle()
+                        .fill(endpoint.health.tint)
+                        .frame(width: 9, height: 9)
+                        .shadow(color: endpoint.health.tint.opacity(0.55), radius: 8)
+                }
+                .frame(width: 34, height: 34)
 
-            Spacer()
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(endpoint.kind.rawValue)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(YNXTheme.ink)
+                    Text(endpoint.kind.displayURL)
+                        .font(.caption)
+                        .foregroundStyle(YNXTheme.muted)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
 
-            Text(endpoint.health.label)
-                .font(.caption.monospaced().weight(.bold))
-                .foregroundStyle(endpoint.health.tint)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(endpoint.health.tint.opacity(0.1), in: Capsule())
+                Spacer()
+
+                Text(endpoint.health.label)
+                    .font(.caption.monospaced().weight(.bold))
+                    .foregroundStyle(endpoint.health.tint)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .background(endpoint.health.tint.opacity(0.1), in: Capsule())
+            }
+            .contentShape(Rectangle())
         }
-        .contentShape(Rectangle())
+        .buttonStyle(PressableButtonStyle())
     }
 }
 
@@ -91,14 +106,16 @@ struct FactRow: View {
     let value: String
 
     var body: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
             Text(label)
-                .foregroundStyle(.secondary)
-            Spacer()
+                .font(.callout)
+                .foregroundStyle(YNXTheme.muted)
+            Spacer(minLength: 12)
             Text(value)
                 .font(.callout.monospaced().weight(.semibold))
                 .foregroundStyle(YNXTheme.ink)
                 .multilineTextAlignment(.trailing)
+                .minimumScaleFactor(0.72)
         }
     }
 }

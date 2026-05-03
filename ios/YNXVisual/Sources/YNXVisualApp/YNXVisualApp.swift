@@ -8,6 +8,12 @@ struct YNXVisualApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(viewModel)
+                #if os(macOS)
+                .frame(width: 393, height: 852)
+                #endif
         }
+        #if os(macOS)
+        .windowResizability(.contentSize)
+        #endif
     }
 }

@@ -13,8 +13,12 @@ final class YNXNetworkViewModel: ObservableObject {
 
     var onlineCount: Int {
         endpoints.filter {
-            if case .online = $0.health { return true }
-            return false
+            switch $0.health {
+            case .online, .slow, .reachable:
+                return true
+            case .checking, .timeout, .offline:
+                return false
+            }
         }.count
     }
 
@@ -63,7 +67,9 @@ struct YNXNetworkClient {
         guard let url = URL(string: "https://rpc.ynxweb4.com/status") else { return nil }
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 3.5
+            let (data, response) = try await URLSession.shared.data(for: request)
             guard (response as? HTTPURLResponse)?.statusCode ?? 0 < 500 else { return nil }
             let status = try JSONDecoder().decode(TendermintStatusResponse.self, from: data)
             return status.result.syncInfo.latestBlockHeight
@@ -78,7 +84,9 @@ struct YNXNetworkClient {
         }
 
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 3.5
+            let (data, _) = try await URLSession.shared.data(for: request)
             let response = try JSONDecoder().decode(ValidatorsResponse.self, from: data)
             let validators = response.validators.prefix(8).map { validator in
                 ValidatorInfo(
@@ -100,7 +108,7 @@ struct YNXNetworkClient {
 
         do {
             var request = URLRequest(url: kind.url)
-            request.timeoutInterval = 4
+            request.timeoutInterval = 3.5
 
             if kind == .evm {
                 request.httpMethod = "POST"
@@ -112,12 +120,17 @@ struct YNXNetworkClient {
             let latency = start.duration(to: .now).milliseconds
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
-            if (200..<500).contains(statusCode) {
-                return EndpointStatus(kind: kind, health: .online(Int(latency)))
+            if (200..<400).contains(statusCode) {
+                let ms = Int(latency)
+                return EndpointStatus(kind: kind, health: ms > 2_500 ? .slow(ms) : .online(ms))
+            }
+
+            if statusCode == 404 && (kind == .aiGateway || kind == .web4Hub) {
+                return EndpointStatus(kind: kind, health: .reachable(Int(latency)))
             }
             return EndpointStatus(kind: kind, health: .offline("HTTP \(statusCode)"))
         } catch {
-            return EndpointStatus(kind: kind, health: .warning("Unavailable"))
+            return EndpointStatus(kind: kind, health: .timeout)
         }
     }
 
