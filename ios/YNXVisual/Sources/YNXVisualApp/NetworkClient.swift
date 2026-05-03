@@ -6,7 +6,7 @@ final class YNXNetworkViewModel: ObservableObject {
     @Published var endpoints: [EndpointStatus] = EndpointKind.allCases.map { EndpointStatus(kind: $0, health: .checking) }
     @Published var validators: [ValidatorInfo] = []
     @Published var latestBlockHeight: String = "Syncing"
-    @Published var bondedValidators: Int = YNX.validatorTarget
+    @Published var bondedValidators: Int = 0
     @Published var lastRefresh: Date?
     @Published var isRefreshing = false
 
@@ -45,14 +45,14 @@ final class YNXNetworkViewModel: ObservableObject {
         let fetchedValidators = await validatorList
         withAnimation(YNXTheme.standard) {
             validators = fetchedValidators
-            if !fetchedValidators.isEmpty {
-                bondedValidators = fetchedValidators.count
-            }
+            bondedValidators = fetchedValidators.count
         }
     }
 }
 
 struct YNXNetworkClient {
+    private let timeout: TimeInterval = 12
+
     func checkEndpoints() async -> [EndpointStatus] {
         await withTaskGroup(of: EndpointStatus.self) { group in
             for kind in EndpointKind.allCases {
@@ -75,7 +75,7 @@ struct YNXNetworkClient {
 
         do {
             var request = URLRequest(url: url)
-            request.timeoutInterval = 3.5
+            request.timeoutInterval = timeout
             let (data, response) = try await URLSession.shared.data(for: request)
             guard (response as? HTTPURLResponse)?.statusCode ?? 0 < 500 else { return nil }
             let status = try JSONDecoder().decode(TendermintStatusResponse.self, from: data)
@@ -87,15 +87,16 @@ struct YNXNetworkClient {
 
     func fetchValidators() async -> [ValidatorInfo] {
         guard let url = URL(string: "https://rest.ynxweb4.com/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED") else {
-            return fallbackValidators
+            return []
         }
 
         do {
             var request = URLRequest(url: url)
-            request.timeoutInterval = 3.5
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(ValidatorsResponse.self, from: data)
-            let validators = response.validators.prefix(8).map { validator in
+            request.timeoutInterval = timeout
+            let (data, urlResponse) = try await URLSession.shared.data(for: request)
+            guard ((urlResponse as? HTTPURLResponse)?.statusCode ?? 0) < 400 else { return [] }
+            let decoded = try JSONDecoder().decode(ValidatorsResponse.self, from: data)
+            return decoded.validators.prefix(8).map { validator in
                 ValidatorInfo(
                     id: validator.operatorAddress,
                     moniker: validator.description.moniker.isEmpty ? shortAddress(validator.operatorAddress) : validator.description.moniker,
@@ -104,9 +105,8 @@ struct YNXNetworkClient {
                     status: "Bonded"
                 )
             }
-            return validators.isEmpty ? fallbackValidators : validators
         } catch {
-            return fallbackValidators
+            return []
         }
     }
 
@@ -115,7 +115,7 @@ struct YNXNetworkClient {
 
         do {
             var request = URLRequest(url: kind.url)
-            request.timeoutInterval = 3.5
+            request.timeoutInterval = timeout
 
             if kind == .evm {
                 request.httpMethod = "POST"
@@ -123,13 +123,18 @@ struct YNXNetworkClient {
                 request.httpBody = #"{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}"#.data(using: .utf8)
             }
 
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
             let latency = start.duration(to: .now).milliseconds
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
             if (200..<400).contains(statusCode) {
+                if kind == .evm,
+                   let decoded = try? JSONDecoder().decode(EVMChainIDResponse.self, from: data),
+                   decoded.result != "0x238e" {
+                    return EndpointStatus(kind: kind, health: .offline("Wrong chain"))
+                }
                 let ms = Int(latency)
-                return EndpointStatus(kind: kind, health: ms > 5_500 ? .slow(ms) : .online(ms))
+                return EndpointStatus(kind: kind, health: ms > 8_000 ? .slow(ms) : .online(ms))
             }
 
             if statusCode == 404 && (kind == .aiGateway || kind == .web4Hub) {
@@ -140,15 +145,10 @@ struct YNXNetworkClient {
             return EndpointStatus(kind: kind, health: .timeout)
         }
     }
+}
 
-    private var fallbackValidators: [ValidatorInfo] {
-        [
-            ValidatorInfo(id: "validator-1", moniker: "YNX Genesis 01", votingPower: "Live", commission: "Testnet", status: "Bonded"),
-            ValidatorInfo(id: "validator-2", moniker: "YNX Genesis 02", votingPower: "Live", commission: "Testnet", status: "Bonded"),
-            ValidatorInfo(id: "validator-3", moniker: "YNX Genesis 03", votingPower: "Live", commission: "Testnet", status: "Bonded"),
-            ValidatorInfo(id: "validator-4", moniker: "YNX Genesis 04", votingPower: "Live", commission: "Testnet", status: "Bonded")
-        ]
-    }
+private struct EVMChainIDResponse: Decodable {
+    let result: String
 }
 
 private extension Duration {

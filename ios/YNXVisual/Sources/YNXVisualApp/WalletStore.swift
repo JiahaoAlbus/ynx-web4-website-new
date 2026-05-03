@@ -17,8 +17,11 @@ final class WalletStore: ObservableObject {
     @Published var isRefreshingBalance = false
     @Published var lastPreparedTransaction: PreparedTransaction?
     @Published var lastEncryptedMessage: EncryptedMessage?
+    @Published var lastAIJob: LiveAIJob?
     @Published var dappPermissions: [DAppPermission] = []
     @Published var sessionPolicies: [Web4SessionPolicy] = []
+    @Published var liveActionStatus = "Ready for live testnet actions."
+    @Published var isRunningLiveAction = false
 
     private let seedKey = "com.ynxweb4.ynx.wallet.seed"
 
@@ -59,8 +62,10 @@ final class WalletStore: ObservableObject {
         balanceStatus = "Open Wallet to refresh balance."
         lastPreparedTransaction = nil
         lastEncryptedMessage = nil
+        lastAIJob = nil
         dappPermissions = []
         sessionPolicies = []
+        liveActionStatus = "Ready for live testnet actions."
     }
 
     func prepareTransfer(to recipient: String, amount: String, memo: String) {
@@ -116,6 +121,76 @@ final class WalletStore: ObservableObject {
         sessionPolicies.insert(policy, at: 0)
     }
 
+    func issueLiveSessionPolicy(spendLimit: String, actions: [String]) async {
+        guard let address = wallet?.address else {
+            liveActionStatus = "Create a wallet before issuing a Web4 policy."
+            return
+        }
+
+        isRunningLiveAction = true
+        defer { isRunningLiveAction = false }
+
+        do {
+            let policyResult = try await YNXLiveAPI.createPolicy(owner: address, spendLimit: spendLimit, actions: actions)
+            let sessionResult = try await YNXLiveAPI.issueSession(policyID: policyResult.policy.policyID, ownerSecret: policyResult.ownerSecret)
+            let policy = Web4SessionPolicy(
+                id: policyResult.policy.policyID,
+                spendLimit: spendLimit,
+                duration: sessionResult.session.expiresAt,
+                actions: actions,
+                status: "Live \(sessionResult.session.status)",
+                sessionID: sessionResult.session.sessionID,
+                sessionToken: sessionResult.token,
+                ownerSecret: policyResult.ownerSecret
+            )
+            sessionPolicies.insert(policy, at: 0)
+            liveActionStatus = "Live Web4 policy and session issued: \(short(policy.id))."
+        } catch {
+            liveActionStatus = "Web4 session failed: \(error.localizedDescription)"
+        }
+    }
+
+    func createLiveAIJob() async {
+        guard let address = wallet?.address else {
+            liveActionStatus = "Create a wallet before creating an AI job."
+            return
+        }
+
+        isRunningLiveAction = true
+        defer { isRunningLiveAction = false }
+
+        do {
+            let sessionPolicy: Web4SessionPolicy
+            if let existing = sessionPolicies.first(where: { $0.sessionToken != nil && $0.actions.contains("ai.job.create") }) {
+                sessionPolicy = existing
+            } else {
+                let policyResult = try await YNXLiveAPI.createPolicy(owner: address, spendLimit: "10", actions: ["ai.job.create"])
+                let sessionResult = try await YNXLiveAPI.issueSession(policyID: policyResult.policy.policyID, ownerSecret: policyResult.ownerSecret)
+                sessionPolicy = Web4SessionPolicy(
+                    id: policyResult.policy.policyID,
+                    spendLimit: "10",
+                    duration: sessionResult.session.expiresAt,
+                    actions: ["ai.job.create"],
+                    status: "Live \(sessionResult.session.status)",
+                    sessionID: sessionResult.session.sessionID,
+                    sessionToken: sessionResult.token,
+                    ownerSecret: policyResult.ownerSecret
+                )
+                sessionPolicies.insert(sessionPolicy, at: 0)
+            }
+
+            guard let token = sessionPolicy.sessionToken else {
+                liveActionStatus = "No live session token available for AI job."
+                return
+            }
+            let job = try await YNXLiveAPI.createAIJob(creator: address, policyID: sessionPolicy.id, sessionToken: token)
+            lastAIJob = job
+            liveActionStatus = "Live AI job created: \(short(job.jobID))."
+        } catch {
+            liveActionStatus = "AI job failed: \(error.localizedDescription)"
+        }
+    }
+
     func refreshBalance() async {
         guard let address = wallet?.address,
               let url = URL(string: "https://rest.ynxweb4.com/cosmos/bank/v1beta1/balances/\(address)")
@@ -164,6 +239,11 @@ final class WalletStore: ObservableObject {
             isTestnetProfile: true
         )
     }
+
+    private func short(_ value: String) -> String {
+        guard value.count > 16 else { return value }
+        return "\(value.prefix(8))...\(value.suffix(6))"
+    }
 }
 
 private struct BankBalancesResponse: Decodable {
@@ -177,10 +257,12 @@ private struct BankBalancesResponse: Decodable {
 
 private func formatBalance(_ amount: String) -> String {
     guard let decimal = Decimal(string: amount) else { return amount }
+    let displayAmount = decimal / Decimal(1_000_000_000_000_000_000)
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
-    formatter.maximumFractionDigits = 0
-    return formatter.string(from: decimal as NSDecimalNumber) ?? amount
+    formatter.maximumFractionDigits = 6
+    formatter.minimumFractionDigits = 0
+    return formatter.string(from: displayAmount as NSDecimalNumber) ?? amount
 }
 
 enum Bech32 {
@@ -285,6 +367,29 @@ struct Web4SessionPolicy: Identifiable, Equatable {
     let duration: String
     let actions: [String]
     let status: String
+    let sessionID: String?
+    let sessionToken: String?
+    let ownerSecret: String?
+
+    init(
+        id: String,
+        spendLimit: String,
+        duration: String,
+        actions: [String],
+        status: String,
+        sessionID: String? = nil,
+        sessionToken: String? = nil,
+        ownerSecret: String? = nil
+    ) {
+        self.id = id
+        self.spendLimit = spendLimit
+        self.duration = duration
+        self.actions = actions
+        self.status = status
+        self.sessionID = sessionID
+        self.sessionToken = sessionToken
+        self.ownerSecret = ownerSecret
+    }
 }
 
 enum KeychainStore {

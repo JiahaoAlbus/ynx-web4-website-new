@@ -4,6 +4,8 @@ struct AISettlementView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var activeStep = 0
     @State private var orbit = false
+    @State private var stats: LiveAIStats?
+    @State private var statsStatus = "Loading live AI Gateway stats..."
 
     var body: some View {
         PageContainer {
@@ -72,24 +74,50 @@ struct AISettlementView: View {
             GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Official demo")
+                        Text("Live AI Gateway")
                             .font(.headline)
                         Spacer()
-                        StatusPill(label: "CLI", color: YNXTheme.klein, systemImage: "terminal.fill")
+                        StatusPill(label: stats?.ok == true ? "LIVE" : "SYNC", color: stats?.ok == true ? .green : YNXTheme.klein, systemImage: "cpu.fill")
                     }
-                    Text("./scripts/ai_web4_settlement_demo.sh")
-                        .font(.callout.monospaced().weight(.semibold))
-                        .foregroundStyle(YNXTheme.klein)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(YNXTheme.klein.opacity(0.08), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-                    Text("Policy creation, session issuance, vault funding, job execution, result commit, finalization, and settlement.")
-                        .font(.callout)
-                        .foregroundStyle(YNXTheme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if let stats {
+                        FactRow(label: "Chain", value: stats.chainID)
+                        FactRow(label: "Jobs", value: "\(stats.totalJobs)")
+                        FactRow(label: "Vaults", value: "\(stats.totalVaults)")
+                        FactRow(label: "Payments", value: "\(stats.totalPayments)")
+                        FactRow(label: "Policy", value: stats.enforcePolicy ? "Enforced" : "Open")
+                    } else {
+                        Text(statsStatus)
+                            .font(.callout)
+                            .foregroundStyle(YNXTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Button {
+                        Task { await loadStats() }
+                    } label: {
+                        Label("Refresh Stats", systemImage: "arrow.clockwise")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(YNXTheme.klein, in: Capsule())
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
             }
             .staggered(2)
+        }
+        .task {
+            await loadStats()
+        }
+    }
+
+    private func loadStats() async {
+        do {
+            stats = try await YNXLiveAPI.fetchAIStats()
+            statsStatus = "Updated from ai.ynxweb4.com."
+        } catch {
+            stats = nil
+            statsStatus = "AI Gateway stats failed: \(error.localizedDescription)"
         }
     }
 

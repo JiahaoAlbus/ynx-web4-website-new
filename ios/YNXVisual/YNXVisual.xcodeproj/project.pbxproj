@@ -16,6 +16,7 @@
 		3CC998F3D72F4A392364B56E /* YNXBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CACB63F099F200ABEB3DC0A /* YNXBrowserView.swift */; };
 		47107EEC82AB8D0F301A8EE7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5E907E4550CFC1C00EA228FC /* PrivacyInfo.xcprivacy */; };
 		4EDC5A2235D78FDF9292358A /* WalletStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 844B8D11972CE16997669D62 /* WalletStore.swift */; };
+		58B9C8B8D32F4B069DF9E2D1 /* YNXLiveAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4C754DA9E84F8FA61B2A67 /* YNXLiveAPI.swift */; };
 		5A3F5043BFD261C3ADFFEEB9 /* ValidatorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7C04F388E3489F9EF69C4B /* ValidatorsView.swift */; };
 		5B426064D97BB1DC1D4E7E54 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E30359BD031C124FA53F68 /* RootView.swift */; };
 		815B54B14821985CD0D760BF /* DocsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87BE06C6641F8EAB5358AFDE /* DocsView.swift */; };
@@ -42,6 +43,7 @@
 		844B8D11972CE16997669D62 /* WalletStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletStore.swift; sourceTree = "<group>"; };
 		85A23BD1DFF8349D026E4D81 /* WalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletView.swift; sourceTree = "<group>"; };
 		87BE06C6641F8EAB5358AFDE /* DocsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocsView.swift; sourceTree = "<group>"; };
+		9E4C754DA9E84F8FA61B2A67 /* YNXLiveAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YNXLiveAPI.swift; sourceTree = "<group>"; };
 		A8023D5656861A9003DD26E6 /* NetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkView.swift; sourceTree = "<group>"; };
 		B9D1AF947B50D126E6DD28AA /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		FF7C04F388E3489F9EF69C4B /* ValidatorsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidatorsView.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 				FF7C04F388E3489F9EF69C4B /* ValidatorsView.swift */,
 				844B8D11972CE16997669D62 /* WalletStore.swift */,
 				85A23BD1DFF8349D026E4D81 /* WalletView.swift */,
+				9E4C754DA9E84F8FA61B2A67 /* YNXLiveAPI.swift */,
 				4CACB63F099F200ABEB3DC0A /* YNXBrowserView.swift */,
 				10770241BA843214D21196DA /* YNXVisualApp.swift */,
 			);
@@ -185,6 +188,7 @@
 				5A3F5043BFD261C3ADFFEEB9 /* ValidatorsView.swift in Sources */,
 				4EDC5A2235D78FDF9292358A /* WalletStore.swift in Sources */,
 				3BB9F3251730694169A63A9B /* WalletView.swift in Sources */,
+				58B9C8B8D32F4B069DF9E2D1 /* YNXLiveAPI.swift in Sources */,
 				3CC998F3D72F4A392364B56E /* YNXBrowserView.swift in Sources */,
 				FA53B58B966206DA751D3F2C /* YNXVisualApp.swift in Sources */,
 			);

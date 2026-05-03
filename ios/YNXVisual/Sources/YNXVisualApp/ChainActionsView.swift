@@ -58,6 +58,10 @@ struct ChainActionsView: View {
             if let encrypted = walletStore.lastEncryptedMessage {
                 encryptedMessage(encrypted).staggered(4)
             }
+
+            if let job = walletStore.lastAIJob {
+                liveAIJob(job).staggered(5)
+            }
         }
         .onAppear {
             if faucetAddress.isEmpty, let address = walletStore.wallet?.address {
@@ -180,7 +184,7 @@ struct ChainActionsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Encrypted Web4 message")
                             .font(.headline)
-                        Text("Local encryption preview for policy messages.")
+                        Text("Local CryptoKit envelope for Web4 policy messages.")
                             .font(.caption)
                             .foregroundStyle(YNXTheme.muted)
                     }
@@ -239,21 +243,47 @@ struct ChainActionsView: View {
                         }
                     }
                 }
+                GlassCard(padding: 12, radius: 18) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: walletStore.liveActionStatus.hasPrefix("Live") ? "checkmark.seal.fill" : "info.circle.fill")
+                            .foregroundStyle(walletStore.liveActionStatus.hasPrefix("Live") ? .green : YNXTheme.klein)
+                        Text(walletStore.liveActionStatus)
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                 Button {
-                    walletStore.issueLocalSessionPolicy(
-                        spendLimit: spendLimit,
-                        duration: sessionDuration,
-                        actions: ["agent.job", "vault.spend", "settlement.finalize"]
-                    )
+                    Task {
+                        await walletStore.issueLiveSessionPolicy(
+                            spendLimit: spendLimit,
+                            actions: ["ai.job.create", "ai.job.commit", "ai.job.finalize", "ai.payment.charge"]
+                        )
+                    }
                 } label: {
-                    Label("Draft Session Policy", systemImage: "key.fill")
+                    Label(walletStore.isRunningLiveAction ? "Issuing..." : "Issue Live Session", systemImage: "key.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 13)
-                        .background(.green, in: Capsule())
+                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : .green, in: Capsule())
+                        .foregroundStyle(walletStore.wallet == nil ? YNXTheme.muted : .white)
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
+
+                Button {
+                    Task { await walletStore.createLiveAIJob() }
+                } label: {
+                    Label(walletStore.isRunningLiveAction ? "Creating..." : "Create Live AI Job", systemImage: "cpu.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : YNXTheme.klein, in: Capsule())
                         .foregroundStyle(.white)
                 }
                 .buttonStyle(PressableButtonStyle())
+                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
             }
         }
     }
@@ -282,6 +312,18 @@ struct ChainActionsView: View {
                 FactRow(label: "Recipient", value: short(encrypted.recipient))
                 FactRow(label: "Cipher preview", value: encrypted.preview)
                 FactRow(label: "Status", value: encrypted.status)
+            }
+        }
+    }
+
+    private func liveAIJob(_ job: LiveAIJob) -> some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Live AI job")
+                    .font(.headline)
+                FactRow(label: "Job", value: job.jobID)
+                FactRow(label: "Status", value: job.status)
+                FactRow(label: "Gateway", value: "ai.ynxweb4.com")
             }
         }
     }
@@ -344,7 +386,7 @@ struct TransactionReviewSheet: View {
                 ScreenHeader(
                     eyebrow: "Testnet Review",
                     title: "Confirm test transfer",
-                    subtitle: "A production path must simulate, sign, broadcast, and wait for receipt before showing success."
+                    subtitle: "This review uses live balance data. Broadcast is disabled until full Cosmos transaction signing is wired."
                 )
 
                 GlassCard {
