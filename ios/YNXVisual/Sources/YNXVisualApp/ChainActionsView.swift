@@ -1,15 +1,27 @@
 import SwiftUI
 
+enum ChainActionMode: String, CaseIterable, Identifiable {
+    case transfer = "Transfer"
+    case faucet = "Faucet"
+    case message = "Message"
+    case session = "Session"
+
+    var id: String { rawValue }
+}
+
 struct ChainActionsView: View {
     @EnvironmentObject private var walletStore: WalletStore
     @State private var recipient = ""
     @State private var amount = ""
     @State private var memo = ""
+    @State private var faucetAddress = ""
+    @State private var faucetStatus = "Ready to request testnet tokens."
+    @State private var isRequestingFaucet = false
     @State private var messageRecipient = ""
     @State private var message = ""
     @State private var spendLimit = "10"
     @State private var sessionDuration = "1 hour"
-    @State private var selectedMode = 0
+    @Binding var selectedMode: ChainActionMode
     @State private var showReview = false
 
     var body: some View {
@@ -22,16 +34,18 @@ struct ChainActionsView: View {
             .staggered(0)
 
             Picker("Mode", selection: $selectedMode) {
-                Text("Transfer").tag(0)
-                Text("Message").tag(1)
-                Text("Session").tag(2)
+                ForEach(ChainActionMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
             }
             .pickerStyle(.segmented)
             .staggered(1)
 
-            if selectedMode == 0 {
+            if selectedMode == .transfer {
                 transferCard.staggered(2)
-            } else if selectedMode == 1 {
+            } else if selectedMode == .faucet {
+                faucetCard.staggered(2)
+            } else if selectedMode == .message {
                 messageCard.staggered(2)
             } else {
                 sessionCard.staggered(2)
@@ -43,6 +57,11 @@ struct ChainActionsView: View {
 
             if let encrypted = walletStore.lastEncryptedMessage {
                 encryptedMessage(encrypted).staggered(4)
+            }
+        }
+        .onAppear {
+            if faucetAddress.isEmpty, let address = walletStore.wallet?.address {
+                faucetAddress = address
             }
         }
     }
@@ -89,6 +108,66 @@ struct ChainActionsView: View {
             if let tx = walletStore.lastPreparedTransaction {
                 TransactionReviewSheet(tx: tx)
                     .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    private var faucetCard: some View {
+        GlassCard(padding: 18, radius: 28) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    LivePulse(symbol: "drop.fill", color: .cyan)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Testnet faucet")
+                            .font(.headline)
+                        Text("Request \(YNX.denom) for transfers, AI jobs, and validator test flows.")
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                    }
+                }
+
+                HStack(spacing: 10) {
+                    TextField("Recipient ynx1...", text: $faucetAddress)
+                        .textFieldStyle(.roundedBorder)
+                        .ynxNoAutocapitalization()
+                    Button {
+                        if let address = walletStore.wallet?.address {
+                            faucetAddress = address
+                        }
+                    } label: {
+                        Image(systemName: "wallet.pass")
+                            .font(.headline)
+                            .frame(width: 42, height: 38)
+                            .background(YNXTheme.klein.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .foregroundStyle(YNXTheme.klein)
+                    .disabled(walletStore.wallet == nil)
+                }
+
+                Button {
+                    Task { await requestFaucet() }
+                } label: {
+                    Label(isRequestingFaucet ? "Requesting..." : "Request Test Tokens", systemImage: isRequestingFaucet ? "arrow.triangle.2.circlepath" : "drop.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(canRequestFaucet ? YNXTheme.klein : Color.gray.opacity(0.18), in: Capsule())
+                        .foregroundStyle(canRequestFaucet ? .white : YNXTheme.muted)
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(!canRequestFaucet || isRequestingFaucet)
+
+                GlassCard(padding: 12, radius: 18) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: faucetStatus.hasPrefix("Success") ? "checkmark.seal.fill" : "info.circle.fill")
+                            .foregroundStyle(faucetStatus.hasPrefix("Success") ? .green : YNXTheme.klein)
+                        Text(faucetStatus)
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
         }
     }
@@ -204,6 +283,41 @@ struct ChainActionsView: View {
                 FactRow(label: "Cipher preview", value: encrypted.preview)
                 FactRow(label: "Status", value: encrypted.status)
             }
+        }
+    }
+
+    private var canRequestFaucet: Bool {
+        faucetAddress.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("ynx1")
+    }
+
+    private func requestFaucet() async {
+        let address = faucetAddress.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let encoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://faucet.ynxweb4.com/faucet?address=\(encoded)")
+        else {
+            faucetStatus = "Enter a valid ynx1 testnet address."
+            return
+        }
+
+        isRequestingFaucet = true
+        defer { isRequestingFaucet = false }
+
+        do {
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 10
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let body = String(data: data, encoding: .utf8) ?? "No response body"
+            if (200..<300).contains(statusCode) {
+                faucetStatus = "Success. Faucet accepted the request for \(short(address))."
+                await walletStore.refreshBalance()
+            } else if statusCode == 429 {
+                faucetStatus = "Rate limited. This IP has already requested faucet tokens recently. Wait for the faucet window to reset, then try again or refresh balance."
+            } else {
+                faucetStatus = "Faucet returned HTTP \(statusCode): \(body.prefix(120))"
+            }
+        } catch {
+            faucetStatus = "Faucet request failed: \(error.localizedDescription)"
         }
     }
 

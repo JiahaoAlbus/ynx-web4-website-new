@@ -5,6 +5,7 @@ struct DashboardView: View {
     @EnvironmentObject private var walletStore: WalletStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var selectedTab: YNXTab
+    @Binding var selectedActionMode: ChainActionMode
     @State private var heroLift = false
 
     var body: some View {
@@ -28,14 +29,17 @@ struct DashboardView: View {
                 ActionCard(title: "Create or import wallet", detail: "Non-custodial YNX entry profile.", symbol: "wallet.pass") {
                     select(.wallet)
                 }
+                ActionCard(title: "Request test tokens", detail: "Open the YNX faucet for \(YNX.denom).", symbol: "drop.fill", accent: .cyan) {
+                    select(.actions, mode: .faucet)
+                }
                 ActionCard(title: "Send and encrypt", detail: "Prepare transfers and private Web4 messages.", symbol: "lock.doc") {
-                    select(.actions)
+                    select(.actions, mode: .transfer)
                 }
                 ActionCard(title: "Open YNX Browser", detail: "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.", symbol: "globe") {
                     select(.browser)
                 }
                 ActionCard(title: "AI agent sessions", detail: "Issue bounded policies for machine actions.", symbol: "key.radiowaves.forward") {
-                    select(.actions)
+                    select(.actions, mode: .session)
                 }
             }
             .staggered(6)
@@ -44,8 +48,11 @@ struct DashboardView: View {
         }
     }
 
-    private func select(_ tab: YNXTab) {
+    private func select(_ tab: YNXTab, mode: ChainActionMode? = nil) {
         withAnimation(YNXTheme.standard) {
+            if let mode {
+                selectedActionMode = mode
+            }
             selectedTab = tab
         }
     }
@@ -94,7 +101,7 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(walletStore.wallet == nil ? "No wallet yet" : "Wallet ready")
                         .font(.headline)
-                    Text(walletStore.wallet == nil ? "Open Wallet to create your YNX testnet profile." : walletStore.shortAddress)
+                    Text(walletStore.wallet == nil ? "Open Wallet to create your YNX testnet profile." : "\(walletStore.shortAddress) • \(walletStore.balanceText) \(YNX.denom)")
                         .font(.caption.monospaced())
                         .foregroundStyle(YNXTheme.muted)
                 }

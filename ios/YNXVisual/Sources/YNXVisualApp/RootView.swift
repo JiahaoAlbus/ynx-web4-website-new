@@ -5,6 +5,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedTab: YNXTab = .home
+    @State private var selectedActionMode: ChainActionMode = .transfer
     @State private var showLaunch = true
     @Namespace private var tabNamespace
 
@@ -50,11 +51,11 @@ struct RootView: View {
     private var currentScreen: some View {
         switch selectedTab {
         case .home:
-            DashboardView(selectedTab: $selectedTab)
+            DashboardView(selectedTab: $selectedTab, selectedActionMode: $selectedActionMode)
         case .wallet:
             WalletView()
         case .actions:
-            ChainActionsView()
+            ChainActionsView(selectedMode: $selectedActionMode)
         case .browser:
             YNXBrowserView()
         case .monitor:

@@ -50,8 +50,27 @@ struct WalletView: View {
                     .lineLimit(2)
                     .textSelection(.enabled)
                 HStack {
-                    WalletStat(label: "Balance", value: "Connect RPC")
+                    WalletStat(label: "Balance", value: walletStore.balanceText)
                     WalletStat(label: "Denom", value: YNX.denom)
+                }
+                HStack(spacing: 10) {
+                    Text(walletStore.balanceStatus)
+                        .font(.caption)
+                        .foregroundStyle(YNXTheme.muted)
+                        .lineLimit(2)
+                    Spacer()
+                    Button {
+                        Task { await walletStore.refreshBalance() }
+                    } label: {
+                        Label(walletStore.isRefreshingBalance ? "Refreshing" : "Refresh", systemImage: "arrow.clockwise")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(YNXTheme.klein.opacity(0.1), in: Capsule())
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .foregroundStyle(YNXTheme.klein)
+                    .disabled(walletStore.isRefreshingBalance)
                 }
             }
         }

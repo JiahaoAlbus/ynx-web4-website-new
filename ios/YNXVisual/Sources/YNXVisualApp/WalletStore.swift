@@ -12,6 +12,9 @@ struct YNXWallet: Equatable {
 @MainActor
 final class WalletStore: ObservableObject {
     @Published private(set) var wallet: YNXWallet?
+    @Published var balanceText = "Not loaded"
+    @Published var balanceStatus = "Open Wallet to refresh balance."
+    @Published var isRefreshingBalance = false
     @Published var lastPreparedTransaction: PreparedTransaction?
     @Published var lastEncryptedMessage: EncryptedMessage?
     @Published var dappPermissions: [DAppPermission] = []
@@ -35,6 +38,7 @@ final class WalletStore: ObservableObject {
         let seed = Data(bytes)
         KeychainStore.save(seed, key: seedKey)
         wallet = makeWallet(seed: seed)
+        Task { await refreshBalance() }
     }
 
     func importWallet(seedPhrase: String) {
@@ -45,11 +49,14 @@ final class WalletStore: ObservableObject {
         let seed = Data(SHA256.hash(data: Data(normalized.utf8)))
         KeychainStore.save(seed, key: seedKey)
         wallet = makeWallet(seed: seed)
+        Task { await refreshBalance() }
     }
 
     func forgetWallet() {
         KeychainStore.delete(key: seedKey)
         wallet = nil
+        balanceText = "Not loaded"
+        balanceStatus = "Open Wallet to refresh balance."
         lastPreparedTransaction = nil
         lastEncryptedMessage = nil
         dappPermissions = []
@@ -109,20 +116,140 @@ final class WalletStore: ObservableObject {
         sessionPolicies.insert(policy, at: 0)
     }
 
+    func refreshBalance() async {
+        guard let address = wallet?.address,
+              let url = URL(string: "https://rest.ynxweb4.com/cosmos/bank/v1beta1/balances/\(address)")
+        else {
+            balanceText = "No wallet"
+            balanceStatus = "Create a wallet before checking balance."
+            return
+        }
+
+        isRefreshingBalance = true
+        defer { isRefreshingBalance = false }
+
+        do {
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 8
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard (200..<300).contains(statusCode) else {
+                balanceText = "Unavailable"
+                balanceStatus = "Balance endpoint returned HTTP \(statusCode)."
+                return
+            }
+            let decoded = try JSONDecoder().decode(BankBalancesResponse.self, from: data)
+            let amount = decoded.balances.first { $0.denom == YNX.denom }?.amount ?? "0"
+            balanceText = formatBalance(amount)
+            balanceStatus = "Updated from YNX REST."
+        } catch {
+            balanceText = "Unavailable"
+            balanceStatus = "Balance refresh failed: \(error.localizedDescription)"
+        }
+    }
+
     private func loadWallet() {
         guard let seed = KeychainStore.load(key: seedKey) else { return }
         wallet = makeWallet(seed: seed)
+        Task { await refreshBalance() }
     }
 
     private func makeWallet(seed: Data) -> YNXWallet {
         let digest = SHA256.hash(data: seed)
-        let hex = digest.map { String(format: "%02x", $0) }.joined()
+        let addressBytes = Array(digest.prefix(20))
         return YNXWallet(
             name: "YNX Testnet Wallet",
-            address: "ynx1\(hex.prefix(38))",
+            address: Bech32.encode(hrp: "ynx", bytes: addressBytes) ?? "ynx1address_unavailable",
             createdAt: Date(),
             isTestnetProfile: true
         )
+    }
+}
+
+private struct BankBalancesResponse: Decodable {
+    let balances: [Coin]
+
+    struct Coin: Decodable {
+        let denom: String
+        let amount: String
+    }
+}
+
+private func formatBalance(_ amount: String) -> String {
+    guard let decimal = Decimal(string: amount) else { return amount }
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.maximumFractionDigits = 0
+    return formatter.string(from: decimal as NSDecimalNumber) ?? amount
+}
+
+enum Bech32 {
+    private static let charset = Array("qpzry9x8gf2tvdw0s3jn54khce6mua7l")
+
+    static func encode(hrp: String, bytes: [UInt8]) -> String? {
+        guard let data = convertBits(bytes, from: 8, to: 5, pad: true) else { return nil }
+        let checksum = createChecksum(hrp: hrp, data: data)
+        let combined = data + checksum
+        let payload = combined.compactMap { value -> Character? in
+            guard Int(value) < charset.count else { return nil }
+            return charset[Int(value)]
+        }
+        guard payload.count == combined.count else { return nil }
+        return "\(hrp)1\(String(payload))"
+    }
+
+    private static func createChecksum(hrp: String, data: [UInt8]) -> [UInt8] {
+        let values = hrpExpand(hrp) + data + Array(repeating: 0, count: 6)
+        let polymod = polymod(values) ^ 1
+        return (0..<6).map { index in
+            UInt8((polymod >> (5 * (5 - index))) & 31)
+        }
+    }
+
+    private static func hrpExpand(_ hrp: String) -> [UInt8] {
+        let scalars = hrp.unicodeScalars.map { UInt8($0.value) }
+        return scalars.map { $0 >> 5 } + [0] + scalars.map { $0 & 31 }
+    }
+
+    private static func polymod(_ values: [UInt8]) -> Int {
+        let generators = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+        var checksum = 1
+        for value in values {
+            let top = checksum >> 25
+            checksum = ((checksum & 0x1ffffff) << 5) ^ Int(value)
+            for index in 0..<5 where ((top >> index) & 1) == 1 {
+                checksum ^= generators[index]
+            }
+        }
+        return checksum
+    }
+
+    private static func convertBits(_ data: [UInt8], from: Int, to: Int, pad: Bool) -> [UInt8]? {
+        var accumulator = 0
+        var bits = 0
+        let maxValue = (1 << to) - 1
+        let maxAccumulator = (1 << (from + to - 1)) - 1
+        var result: [UInt8] = []
+
+        for value in data {
+            guard (Int(value) >> from) == 0 else { return nil }
+            accumulator = ((accumulator << from) | Int(value)) & maxAccumulator
+            bits += from
+            while bits >= to {
+                bits -= to
+                result.append(UInt8((accumulator >> bits) & maxValue))
+            }
+        }
+
+        if pad {
+            if bits > 0 {
+                result.append(UInt8((accumulator << (to - bits)) & maxValue))
+            }
+        } else if bits >= from || ((accumulator << (to - bits)) & maxValue) != 0 {
+            return nil
+        }
+
+        return result
     }
 }
 
