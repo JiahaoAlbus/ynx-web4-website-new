@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ArrowRight, Shield, Zap, Globe, Code, Copy, Check, ExternalLink, Terminal, Cpu, Lock, Coins } from "lucide-react";
+import { ArrowRight, Shield, Zap, Globe, Code, Copy, Check, ExternalLink, Terminal, Cpu, Lock, Coins, Download } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -99,6 +99,12 @@ function Hero() {
                 {t("hero.cta.join")}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
+            </Button>
+            <Button size="xl" variant="outline" className="group relative overflow-hidden bg-white/80" asChild>
+              <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download>
+                Download iOS Preview
+                <Download className="ml-2 w-5 h-5 opacity-50 group-hover:opacity-100 transition-all" />
+              </a>
             </Button>
           </motion.div>
 
@@ -608,6 +614,9 @@ function FinalCTA() {
           <Link to="/docs" className="px-10 py-5 bg-white text-klein rounded-2xl hover:scale-105 hover:bg-surface transition-all shadow-xl shadow-black/20">
             Read Docs
           </Link>
+          <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download className="px-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl hover:scale-105 hover:bg-white/15 transition-all inline-flex items-center gap-3">
+            Download iOS Preview <Download size={20} />
+          </a>
           <a href={NETWORK.socials.github} target="_blank" rel="noreferrer" className="px-10 py-5 bg-black text-white rounded-2xl hover:scale-105 hover:bg-ink transition-all inline-flex items-center gap-3">
              View on GitHub <ExternalLink size={20} />
           </a>

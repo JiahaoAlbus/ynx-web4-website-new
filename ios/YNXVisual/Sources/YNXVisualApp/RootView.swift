@@ -50,7 +50,7 @@ struct RootView: View {
     private var currentScreen: some View {
         switch selectedTab {
         case .home:
-            DashboardView()
+            DashboardView(selectedTab: $selectedTab)
         case .wallet:
             WalletView()
         case .actions:

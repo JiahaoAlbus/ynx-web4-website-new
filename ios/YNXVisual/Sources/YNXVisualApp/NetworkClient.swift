@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 @MainActor
 final class YNXNetworkViewModel: ObservableObject {
@@ -34,13 +35,19 @@ final class YNXNetworkViewModel: ObservableObject {
         async let block = client.fetchLatestBlockHeight()
         async let validatorList = client.fetchValidators()
 
-        endpoints = await endpointResults
-        latestBlockHeight = await block ?? "Unavailable"
+        let resolvedEndpoints = await endpointResults
+        let resolvedBlock = await block ?? "Unavailable"
+        withAnimation(YNXTheme.standard) {
+            endpoints = resolvedEndpoints
+            latestBlockHeight = resolvedBlock
+        }
 
         let fetchedValidators = await validatorList
-        validators = fetchedValidators
-        if !fetchedValidators.isEmpty {
-            bondedValidators = fetchedValidators.count
+        withAnimation(YNXTheme.standard) {
+            validators = fetchedValidators
+            if !fetchedValidators.isEmpty {
+                bondedValidators = fetchedValidators.count
+            }
         }
     }
 }
@@ -122,7 +129,7 @@ struct YNXNetworkClient {
 
             if (200..<400).contains(statusCode) {
                 let ms = Int(latency)
-                return EndpointStatus(kind: kind, health: ms > 2_500 ? .slow(ms) : .online(ms))
+                return EndpointStatus(kind: kind, health: ms > 5_500 ? .slow(ms) : .online(ms))
             }
 
             if statusCode == 404 && (kind == .aiGateway || kind == .web4Hub) {

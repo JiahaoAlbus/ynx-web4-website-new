@@ -4,6 +4,7 @@ struct DashboardView: View {
     @EnvironmentObject private var viewModel: YNXNetworkViewModel
     @EnvironmentObject private var walletStore: WalletStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var selectedTab: YNXTab
     @State private var heroLift = false
 
     var body: some View {
@@ -24,14 +25,28 @@ struct DashboardView: View {
             }
 
             VStack(spacing: 11) {
-                ActionCard(title: "Create or import wallet", detail: "Non-custodial YNX entry profile.", symbol: "wallet.pass")
-                ActionCard(title: "Send and encrypt", detail: "Prepare transfers and private Web4 messages.", symbol: "lock.doc")
-                ActionCard(title: "Open YNX Browser", detail: "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.", symbol: "globe")
-                ActionCard(title: "AI agent sessions", detail: "Issue bounded policies for machine actions.", symbol: "key.radiowaves.forward")
+                ActionCard(title: "Create or import wallet", detail: "Non-custodial YNX entry profile.", symbol: "wallet.pass") {
+                    select(.wallet)
+                }
+                ActionCard(title: "Send and encrypt", detail: "Prepare transfers and private Web4 messages.", symbol: "lock.doc") {
+                    select(.actions)
+                }
+                ActionCard(title: "Open YNX Browser", detail: "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.", symbol: "globe") {
+                    select(.browser)
+                }
+                ActionCard(title: "AI agent sessions", detail: "Issue bounded policies for machine actions.", symbol: "key.radiowaves.forward") {
+                    select(.actions)
+                }
             }
             .staggered(6)
 
             blockCard.staggered(7)
+        }
+    }
+
+    private func select(_ tab: YNXTab) {
+        withAnimation(YNXTheme.standard) {
+            selectedTab = tab
         }
     }
 

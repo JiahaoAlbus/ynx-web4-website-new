@@ -26,8 +26,8 @@ enum EndpointKind: String, CaseIterable, Identifiable {
         switch self {
         case .rpc: URL(string: "https://rpc.ynxweb4.com/status")!
         case .rest: URL(string: "https://rest.ynxweb4.com/cosmos/base/tendermint/v1beta1/blocks/latest")!
-        case .evm: URL(string: "https://evm.ynxweb4.com/health")!
-        case .faucet: URL(string: "https://faucet.ynxweb4.com")!
+        case .evm: URL(string: "https://evm.ynxweb4.com")!
+        case .faucet: URL(string: "https://faucet.ynxweb4.com/health")!
         case .indexer: URL(string: "https://indexer.ynxweb4.com/health")!
         case .explorer: URL(string: "https://explorer.ynxweb4.com")!
         case .aiGateway: URL(string: "https://ai.ynxweb4.com/ready")!
@@ -60,7 +60,7 @@ enum EndpointHealth: Equatable {
     var label: String {
         switch self {
         case .checking: "Checking"
-        case .online(let latency): "\(latency) ms"
+        case .online(let latency): "Live \(latency) ms"
         case .slow(let latency): "Slow \(latency) ms"
         case .reachable(let latency): "OK \(latency) ms"
         case .timeout: "Timeout"

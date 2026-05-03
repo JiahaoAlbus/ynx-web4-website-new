@@ -253,14 +253,14 @@ struct StaggeredAppear: ViewModifier {
     func body(content: Content) -> some View {
         content
             .opacity(visible ? 1 : 0)
-            .offset(y: visible ? 0 : 16)
-            .scaleEffect(visible ? 1 : 0.985)
+            .offset(y: visible ? 0 : 12)
+            .scaleEffect(visible ? 1 : 0.992)
             .onAppear {
                 guard !reduceMotion else {
                     visible = true
                     return
                 }
-                withAnimation(YNXTheme.standard.delay(Double(index) * 0.045)) {
+                withAnimation(YNXTheme.standard.delay(Double(index) * 0.032)) {
                     visible = true
                 }
             }
@@ -287,7 +287,21 @@ struct ActionCard: View {
     let detail: String
     let symbol: String
     var accent: Color = YNXTheme.klein
+    var action: (() -> Void)? = nil
+
     var body: some View {
+        if let action {
+            Button(action: action) {
+                content
+            }
+            .buttonStyle(PressableButtonStyle())
+            .accessibilityHint("Opens \(title)")
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         GlassCard(padding: 14, radius: 22) {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
@@ -305,9 +319,11 @@ struct ActionCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(accent.opacity(0.75))
+                if action != nil {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(accent.opacity(0.75))
+                }
             }
         }
     }
