@@ -41,6 +41,9 @@ struct DashboardView: View {
                 ActionCard(title: "AI agent sessions", detail: "Issue bounded policies for machine actions.", symbol: "key.radiowaves.forward") {
                     select(.actions, mode: .session)
                 }
+                ActionCard(title: "Test any third-party API", detail: "Authorize and execute arbitrary endpoints under policy guard.", symbol: "network", accent: .teal) {
+                    select(.actions, mode: .thirdParty)
+                }
             }
             .staggered(6)
 
@@ -63,11 +66,11 @@ struct DashboardView: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 7) {
                         Text("YNX")
-                            .font(.system(size: 48, weight: .black, design: .rounded))
+                            .font(.system(size: 40, weight: .black, design: .rounded))
                             .foregroundStyle(YNXTheme.ink)
                             .lineLimit(1)
                         Text("Your Web4 command app")
-                            .font(.system(size: 23, weight: .bold, design: .rounded))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundStyle(YNXTheme.klein)
                     }
                     Spacer()

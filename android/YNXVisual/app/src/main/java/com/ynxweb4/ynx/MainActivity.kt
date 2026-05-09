@@ -44,6 +44,7 @@ class MainActivity : Activity() {
     private var lastBroadcast = ""
     private var lastAI = ""
     private var lastThirdParty = ""
+    private var actionMode = "Faucet"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,9 +108,9 @@ class MainActivity : Activity() {
 
     private fun homeScreen(): View = scroll(page().apply {
         addView(card().apply {
-            addView(text("YNX", 48f, Color.rgb(5, 10, 25), true))
-            addView(text("Your Web4 command app", 30f, klein, true))
-            addView(text("Wallet, transaction, encrypted messaging, dApp browser, AI/Web4 sessions, and chain monitoring in one native entry point.", 18f, muted, false))
+            addView(text("YNX", 40f, Color.rgb(5, 10, 25), true))
+            addView(text("Your Web4 command app", 22f, klein, true))
+            addView(text("Wallet, transaction, encrypted messaging, dApp browser, AI/Web4 sessions, and chain monitoring in one native entry point.", 16f, muted, false))
             addView(row {
                 addView(pill("TESTNET", orange))
                 addView(pill("anyxt", klein))
@@ -128,6 +129,7 @@ class MainActivity : Activity() {
             "Create or import wallet" to "Non-custodial YNX entry profile.",
             "Request test tokens" to "Open the YNX faucet for anyxt.",
             "Transfer and broadcast" to "Draft transfers, then broadcast signed tx bytes.",
+            "Test third-party API" to "Authorize any API call with policy and session guard.",
             "Open YNX Browser" to "Use dApps, faucet, explorer, AI Gateway and Web4 Hub.",
             "AI agent sessions" to "Issue bounded policies for machine actions."
         ).forEach { item ->
@@ -137,6 +139,10 @@ class MainActivity : Activity() {
                     item.first.startsWith("Open") -> "Browser"
                     else -> "Actions"
                 }
+                if (item.first.startsWith("Request")) actionMode = "Faucet"
+                if (item.first.startsWith("Transfer")) actionMode = "Broadcast"
+                if (item.first.startsWith("AI agent")) actionMode = "Session"
+                if (item.first.startsWith("Test third")) actionMode = "Third-party"
                 render()
             })
         }
@@ -169,13 +175,34 @@ class MainActivity : Activity() {
     })
 
     private fun actionsScreen(): View = scroll(page().apply {
-        addView(header("Actions", "Faucet, signed tx broadcast, encrypted messages, live Web4 sessions, and AI jobs."))
-        addView(faucetCard())
-        addView(broadcastCard())
-        addView(messageCard())
-        addView(web4Card())
-        addView(thirdPartyCard())
+        addView(header("Actions", "Focused operation workspace for testnet actions and third-party integrations."))
+        addView(actionModeBar())
+        when (actionMode) {
+            "Broadcast" -> addView(broadcastCard())
+            "Message" -> addView(messageCard())
+            "Session" -> addView(web4Card())
+            "Third-party" -> addView(thirdPartyCard())
+            else -> addView(faucetCard())
+        }
     })
+
+    private fun actionModeBar(): View = HorizontalScrollView(this).apply {
+        addView(LinearLayout(this@MainActivity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            listOf("Faucet", "Broadcast", "Message", "Session", "Third-party").forEach { mode ->
+                addView(Button(this@MainActivity).apply {
+                    text = mode
+                    textSize = 12f
+                    setTextColor(if (actionMode == mode) Color.WHITE else ink)
+                    setBackgroundColor(if (actionMode == mode) klein else Color.argb(30, 11, 59, 187))
+                    setOnClickListener {
+                        actionMode = mode
+                        render()
+                    }
+                }, LinearLayout.LayoutParams(-2, dp(40)).apply { setMargins(dp(4), 0, dp(4), 0) })
+            }
+        })
+    }
 
     private fun monitorScreen(): View = scroll(page().apply {
         addView(header("Network", "Live YNX public-testnet status. Latest block: $latestBlock"))
@@ -339,11 +366,18 @@ class MainActivity : Activity() {
             } else {
                 val arr = JSONObject(body).optJSONArray("balances") ?: JSONArray()
                 var raw = "0"
+                var denom = "anyxt"
                 for (i in 0 until arr.length()) {
                     val coin = arr.getJSONObject(i)
-                    if (coin.optString("denom") == "anyxt") raw = coin.optString("amount")
+                    val coinDenom = coin.optString("denom").lowercase()
+                    val preferred = coinDenom == "anyxt" || coinDenom == "uanyxt" || coinDenom == "aanyxt"
+                    if (preferred) {
+                        raw = coin.optString("amount")
+                        denom = coinDenom
+                        break
+                    }
                 }
-                balanceText = formatAnyxt(raw)
+                balanceText = formatAnyxt(raw, denom)
             }
             render()
         }
@@ -615,8 +649,13 @@ class MainActivity : Activity() {
 
     private fun short(value: String): String = if (value.length > 16) "${value.take(9)}...${value.takeLast(6)}" else value
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-    private fun formatAnyxt(raw: String): String = try {
-        BigDecimal(raw).divide(BigDecimal("1000000000000000000")).stripTrailingZeros().toPlainString()
+    private fun formatAnyxt(raw: String, denom: String): String = try {
+        val scale = when {
+            denom.startsWith("u") -> BigDecimal("1000000")
+            denom.startsWith("a") -> BigDecimal("1000000000000000000")
+            else -> BigDecimal.ONE
+        }
+        BigDecimal(raw).divide(scale).stripTrailingZeros().toPlainString()
     } catch (_: Exception) { raw }
 
     companion object {

@@ -412,6 +412,19 @@ struct ChainActionsView: View {
                         .foregroundStyle(YNXTheme.muted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if !walletStore.thirdPartyAuditTrail.isEmpty {
+                    GlassCard(padding: 12, radius: 18) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Latest audit trail")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(YNXTheme.ink)
+                            Text(walletStore.thirdPartyAuditTrail)
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(YNXTheme.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
             }
         }
     }

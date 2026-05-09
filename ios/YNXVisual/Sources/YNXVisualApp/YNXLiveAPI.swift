@@ -74,7 +74,7 @@ enum YNXLiveAPI {
         return decoded.txResponse
     }
 
-    static func authorizeThirdParty(policyID: String, sessionToken: String, action: String, serviceURL: String, amount: String) async throws -> ThirdPartyAuthorization {
+    static func authorizeThirdParty(policyID: String, sessionToken: String, action: String, serviceURL: String, amount: String, consume: Bool = true) async throws -> ThirdPartyAuthorization {
         guard let url = URL(string: serviceURL), let host = url.host else {
             throw LiveAPIError.server("invalid_service_url")
         }
@@ -83,7 +83,8 @@ enum YNXLiveAPI {
             "action": action,
             "amount": Decimal(string: amount).map(NSDecimalNumber.init(decimal:)) ?? 1,
             "resource_host": host.lowercased(),
-            "resource": serviceURL
+            "resource": serviceURL,
+            "consume": consume
         ]
         let data = try await postJSON(
             url: URL(string: "https://web4.ynxweb4.com/web4/authorize")!,
@@ -110,6 +111,20 @@ enum YNXLiveAPI {
         }
         let text = String(data: data, encoding: .utf8) ?? "<binary response>"
         return String(text.prefix(280))
+    }
+
+    static func fetchWeb4Audit(limit: Int = 3) async throws -> [Web4AuditItem] {
+        var components = URLComponents(string: "https://web4.ynxweb4.com/web4/audit")!
+        components.queryItems = [URLQueryItem(name: "limit", value: String(max(1, min(20, limit))))]
+        var request = URLRequest(url: components.url!)
+        request.timeoutInterval = 12
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            throw LiveAPIError.server("HTTP \(status)")
+        }
+        let decoded = try JSONDecoder().decode(Web4AuditResponse.self, from: data)
+        return decoded.items
     }
 
     private static func postJSON(url: URL, payload: [String: Any], headers: [String: String] = [:]) async throws -> Data {
@@ -270,6 +285,23 @@ struct ThirdPartyAuthorization: Decodable, Equatable {
         case remainingSpend = "remaining_spend"
         case sessionExpiresAt = "session_expires_at"
     }
+}
+
+struct Web4AuditItem: Decodable, Equatable {
+    let auditID: String
+    let event: String
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case auditID = "audit_id"
+        case event
+        case createdAt = "created_at"
+    }
+}
+
+private struct Web4AuditResponse: Decodable {
+    let ok: Bool
+    let items: [Web4AuditItem]
 }
 
 private struct BroadcastResponse: Decodable {

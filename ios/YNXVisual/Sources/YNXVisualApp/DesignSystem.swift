@@ -172,7 +172,7 @@ struct ScreenHeader: View {
                 .tracking(1.1)
                 .foregroundStyle(YNXTheme.klein)
             Text(title)
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(YNXTheme.ink)
                 .lineLimit(2)
                 .minimumScaleFactor(0.76)

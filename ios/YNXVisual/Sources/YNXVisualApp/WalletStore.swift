@@ -26,6 +26,7 @@ final class WalletStore: ObservableObject {
     @Published var isBroadcasting = false
     @Published var lastBroadcastResult: BroadcastResult?
     @Published var thirdPartyStatus = "Ready to test any third-party API."
+    @Published var thirdPartyAuditTrail = ""
 
     private let seedKey = "com.ynxweb4.ynx.wallet.seed"
 
@@ -244,8 +245,8 @@ final class WalletStore: ObservableObject {
                 return
             }
             let decoded = try JSONDecoder().decode(BankBalancesResponse.self, from: data)
-            let amount = decoded.balances.first { $0.denom == YNX.denom }?.amount ?? "0"
-            balanceText = formatBalance(amount)
+            let coin = preferredCoin(from: decoded.balances)
+            balanceText = formatBalance(coin?.amount ?? "0", denom: coin?.denom ?? YNX.denom)
             balanceStatus = "Updated from YNX REST."
         } catch {
             balanceText = "Unavailable"
@@ -307,12 +308,24 @@ final class WalletStore: ObservableObject {
                 sessionToken: token,
                 action: effectiveAction,
                 serviceURL: serviceURL,
-                amount: amount
+                amount: amount,
+                consume: false
+            )
+            let consumedAuthorization = try await YNXLiveAPI.authorizeThirdParty(
+                policyID: sessionPolicy.id,
+                sessionToken: token,
+                action: effectiveAction,
+                serviceURL: serviceURL,
+                amount: amount,
+                consume: true
             )
             let preview = try await YNXLiveAPI.fetchThirdPartyPreview(serviceURL: serviceURL)
-            thirdPartyStatus = "Authorized \(authorization.action) for \(host). Remaining ops: \(authorization.remainingOps ?? 0). Preview: \(preview)"
+            let audits = try await YNXLiveAPI.fetchWeb4Audit(limit: 3)
+            thirdPartyAuditTrail = audits.map { "\($0.event) @ \($0.createdAt)" }.joined(separator: "\n")
+            thirdPartyStatus = "Dry-run + consumed authorization passed for \(authorization.action) on \(host). Remaining ops: \(consumedAuthorization.remainingOps ?? 0). Preview: \(preview)"
         } catch {
             thirdPartyStatus = "Third-party test failed: \(error.localizedDescription)"
+            thirdPartyAuditTrail = ""
         }
     }
 
@@ -348,9 +361,28 @@ private struct BankBalancesResponse: Decodable {
     }
 }
 
-private func formatBalance(_ amount: String) -> String {
+private func preferredCoin(from balances: [BankBalancesResponse.Coin]) -> BankBalancesResponse.Coin? {
+    let preferred = [YNX.denom, "u\(YNX.denom)", "a\(YNX.denom)"]
+    for denom in preferred {
+        if let coin = balances.first(where: { $0.denom.lowercased() == denom.lowercased() }) {
+            return coin
+        }
+    }
+    return balances.first
+}
+
+private func formatBalance(_ amount: String, denom: String) -> String {
     guard let decimal = Decimal(string: amount) else { return amount }
-    let displayAmount = decimal / Decimal(1_000_000_000_000_000_000)
+    let normalizedDenom = denom.lowercased()
+    let scale: Decimal
+    if normalizedDenom.hasPrefix("u") {
+        scale = Decimal(1_000_000)
+    } else if normalizedDenom.hasPrefix("a") {
+        scale = Decimal(1_000_000_000_000_000_000)
+    } else {
+        scale = Decimal(1)
+    }
+    let displayAmount = decimal / scale
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
     formatter.maximumFractionDigits = 6
