@@ -1,8 +1,8 @@
 import Foundation
 
 enum YNXLiveAPI {
-    static func createPolicy(owner: String, spendLimit: String, actions: [String]) async throws -> LivePolicyResult {
-        let payload: [String: Any] = [
+    static func createPolicy(owner: String, spendLimit: String, actions: [String], serviceHosts: [String] = []) async throws -> LivePolicyResult {
+        var payload: [String: Any] = [
             "owner": owner,
             "name": "ynx-ios-\(Int(Date().timeIntervalSince1970))",
             "allowed_actions": actions,
@@ -10,6 +10,9 @@ enum YNXLiveAPI {
             "max_daily_spend": Decimal(string: spendLimit).map(NSDecimalNumber.init(decimal:)) ?? 10,
             "session_ttl_sec": 900
         ]
+        if !serviceHosts.isEmpty {
+            payload["allowed_service_hosts"] = serviceHosts
+        }
         let data = try await postJSON(url: URL(string: "https://web4.ynxweb4.com/web4/policies")!, payload: payload)
         let decoded = try JSONDecoder().decode(LivePolicyResponse.self, from: data)
         guard decoded.ok, let policy = decoded.policy, let ownerSecret = decoded.ownerSecret else {
@@ -69,6 +72,44 @@ enum YNXLiveAPI {
         let data = try await postJSON(url: URL(string: "https://rest.ynxweb4.com/cosmos/tx/v1beta1/txs")!, payload: payload)
         let decoded = try JSONDecoder().decode(BroadcastResponse.self, from: data)
         return decoded.txResponse
+    }
+
+    static func authorizeThirdParty(policyID: String, sessionToken: String, action: String, serviceURL: String, amount: String) async throws -> ThirdPartyAuthorization {
+        guard let url = URL(string: serviceURL), let host = url.host else {
+            throw LiveAPIError.server("invalid_service_url")
+        }
+        let payload: [String: Any] = [
+            "policy_id": policyID,
+            "action": action,
+            "amount": Decimal(string: amount).map(NSDecimalNumber.init(decimal:)) ?? 1,
+            "resource_host": host.lowercased(),
+            "resource": serviceURL
+        ]
+        let data = try await postJSON(
+            url: URL(string: "https://web4.ynxweb4.com/web4/authorize")!,
+            payload: payload,
+            headers: ["x-ynx-session": sessionToken]
+        )
+        let decoded = try JSONDecoder().decode(ThirdPartyAuthorization.self, from: data)
+        guard decoded.ok else {
+            throw LiveAPIError.server("third_party_authorization_failed")
+        }
+        return decoded
+    }
+
+    static func fetchThirdPartyPreview(serviceURL: String) async throws -> String {
+        guard let url = URL(string: serviceURL) else {
+            throw LiveAPIError.server("invalid_service_url")
+        }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 12
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<500).contains(status) else {
+            throw LiveAPIError.server("HTTP \(status)")
+        }
+        let text = String(data: data, encoding: .utf8) ?? "<binary response>"
+        return String(text.prefix(280))
     }
 
     private static func postJSON(url: URL, payload: [String: Any], headers: [String: String] = [:]) async throws -> Data {
@@ -206,6 +247,28 @@ struct LiveAIStats: Decodable, Equatable {
         case totalJobs = "total_jobs"
         case totalVaults = "total_vaults"
         case totalPayments = "total_payments"
+    }
+}
+
+struct ThirdPartyAuthorization: Decodable, Equatable {
+    let ok: Bool
+    let policyID: String
+    let sessionID: String
+    let action: String
+    let consumed: Bool
+    let remainingOps: Int?
+    let remainingSpend: Double?
+    let sessionExpiresAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case policyID = "policy_id"
+        case sessionID = "session_id"
+        case action
+        case consumed
+        case remainingOps = "remaining_ops"
+        case remainingSpend = "remaining_spend"
+        case sessionExpiresAt = "session_expires_at"
     }
 }
 

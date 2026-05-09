@@ -25,6 +25,7 @@ final class WalletStore: ObservableObject {
     @Published var broadcastStatus = "Ready to broadcast a signed testnet transaction."
     @Published var isBroadcasting = false
     @Published var lastBroadcastResult: BroadcastResult?
+    @Published var thirdPartyStatus = "Ready to test any third-party API."
 
     private let seedKey = "com.ynxweb4.ynx.wallet.seed"
 
@@ -249,6 +250,69 @@ final class WalletStore: ObservableObject {
         } catch {
             balanceText = "Unavailable"
             balanceStatus = "Balance refresh failed: \(error.localizedDescription)"
+        }
+    }
+
+    func testThirdPartyAPI(serviceURL: String, action: String, amount: String) async {
+        guard let address = wallet?.address else {
+            thirdPartyStatus = "Create a wallet before testing third-party APIs."
+            return
+        }
+
+        guard let host = URL(string: serviceURL)?.host?.lowercased(), !host.isEmpty else {
+            thirdPartyStatus = "Enter a valid service URL."
+            return
+        }
+
+        isRunningLiveAction = true
+        defer { isRunningLiveAction = false }
+
+        do {
+            let trimmedAction = action.trimmingCharacters(in: .whitespacesAndNewlines)
+            let effectiveAction = trimmedAction.isEmpty ? "service.invoke" : trimmedAction
+
+            let sessionPolicy: Web4SessionPolicy
+            if let existing = sessionPolicies.first(where: {
+                ($0.sessionToken != nil) && $0.actions.contains(effectiveAction)
+            }) {
+                sessionPolicy = existing
+            } else {
+                let policyResult = try await YNXLiveAPI.createPolicy(
+                    owner: address,
+                    spendLimit: "100",
+                    actions: [effectiveAction],
+                    serviceHosts: [host]
+                )
+                let sessionResult = try await YNXLiveAPI.issueSession(policyID: policyResult.policy.policyID, ownerSecret: policyResult.ownerSecret)
+                sessionPolicy = Web4SessionPolicy(
+                    id: policyResult.policy.policyID,
+                    spendLimit: "100",
+                    duration: sessionResult.session.expiresAt,
+                    actions: [effectiveAction],
+                    status: "Live \(sessionResult.session.status)",
+                    sessionID: sessionResult.session.sessionID,
+                    sessionToken: sessionResult.token,
+                    ownerSecret: policyResult.ownerSecret
+                )
+                sessionPolicies.insert(sessionPolicy, at: 0)
+            }
+
+            guard let token = sessionPolicy.sessionToken else {
+                thirdPartyStatus = "No live session token available."
+                return
+            }
+
+            let authorization = try await YNXLiveAPI.authorizeThirdParty(
+                policyID: sessionPolicy.id,
+                sessionToken: token,
+                action: effectiveAction,
+                serviceURL: serviceURL,
+                amount: amount
+            )
+            let preview = try await YNXLiveAPI.fetchThirdPartyPreview(serviceURL: serviceURL)
+            thirdPartyStatus = "Authorized \(authorization.action) for \(host). Remaining ops: \(authorization.remainingOps ?? 0). Preview: \(preview)"
+        } catch {
+            thirdPartyStatus = "Third-party test failed: \(error.localizedDescription)"
         }
     }
 

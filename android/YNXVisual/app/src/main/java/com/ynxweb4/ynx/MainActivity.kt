@@ -43,6 +43,7 @@ class MainActivity : Activity() {
     private var status = "Ready."
     private var lastBroadcast = ""
     private var lastAI = ""
+    private var lastThirdParty = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -173,6 +174,7 @@ class MainActivity : Activity() {
         addView(broadcastCard())
         addView(messageCard())
         addView(web4Card())
+        addView(thirdPartyCard())
     })
 
     private fun monitorScreen(): View = scroll(page().apply {
@@ -290,6 +292,33 @@ class MainActivity : Activity() {
             setOnClickListener { issueLiveSession(true) }
         })
         if (lastAI.isNotEmpty()) addView(text(lastAI, 13f, muted, false))
+    }
+
+    private fun thirdPartyCard(): View {
+        val apiUrl = EditText(this).apply {
+            hint = "Service URL"
+            setText("https://httpbin.org/get")
+        }
+        val action = EditText(this).apply {
+            hint = "Action"
+            setText("service.invoke")
+        }
+        val amount = EditText(this).apply {
+            hint = "Amount"
+            setText("1")
+        }
+        return card().apply {
+            addView(text("Any third-party API", 20f, ink, true))
+            addView(text("Issue policy/session, run /web4/authorize, then call the real API endpoint.", 14f, muted, false))
+            addView(apiUrl)
+            addView(action)
+            addView(amount)
+            addView(Button(this@MainActivity).apply {
+                text = "Authorize and Test API"
+                setOnClickListener { testThirdPartyApi(apiUrl.text.toString(), action.text.toString(), amount.text.toString()) }
+            })
+            addView(text(if (lastThirdParty.isBlank()) "Ready." else lastThirdParty, 13f, muted, false))
+        }
     }
 
     private fun createWallet() {
@@ -427,6 +456,78 @@ class MainActivity : Activity() {
                     lastAI = if (jobErr == null) "Live AI job: ${JSONObject(jobBody).getJSONObject("job").getString("job_id")}" else "AI job failed: $jobErr"
                     render()
                 }
+            })
+        }
+    }
+
+    private fun testThirdPartyApi(serviceUrl: String, actionName: String, amountText: String) {
+        val owner = address ?: run {
+            lastThirdParty = "Create wallet first."
+            render()
+            return
+        }
+        val trimmedUrl = serviceUrl.trim()
+        val host = try {
+            URL(trimmedUrl).host?.lowercase(Locale.getDefault()) ?: ""
+        } catch (_: Exception) {
+            ""
+        }
+        if (host.isBlank()) {
+            lastThirdParty = "Invalid service URL."
+            render()
+            return
+        }
+        val action = actionName.trim().ifBlank { "service.invoke" }
+        val amount = amountText.trim().toDoubleOrNull() ?: 1.0
+
+        val policy = JSONObject()
+            .put("owner", owner)
+            .put("name", "ynx-android-third-party-${System.currentTimeMillis() / 1000}")
+            .put("allowed_actions", JSONArray(listOf(action)))
+            .put("allowed_service_hosts", JSONArray(listOf(host)))
+            .put("max_total_spend", 100)
+            .put("max_daily_spend", 100)
+            .put("session_ttl_sec", 900)
+
+        post("https://web4.ynxweb4.com/web4/policies", policy) { body, err ->
+            if (err != null) {
+                lastThirdParty = "Policy failed: $err"
+                render()
+                return@post
+            }
+            val obj = JSONObject(body)
+            val policyId = obj.getJSONObject("policy").getString("policy_id")
+            val ownerSecret = obj.getString("owner_secret")
+            val sessionPayload = JSONObject().put("capabilities", JSONArray(listOf(action))).put("max_ops", 5).put("max_spend", 100)
+            post("https://web4.ynxweb4.com/web4/policies/$policyId/sessions", sessionPayload, mapOf("x-ynx-owner" to ownerSecret), sessionDone@{ sessionBody, sessionErr ->
+                if (sessionErr != null) {
+                    lastThirdParty = "Session failed: $sessionErr"
+                    render()
+                    return@sessionDone
+                }
+                val token = JSONObject(sessionBody).getString("token")
+                val authorize = JSONObject()
+                    .put("policy_id", policyId)
+                    .put("action", action)
+                    .put("amount", amount)
+                    .put("resource_host", host)
+                    .put("resource", trimmedUrl)
+                post("https://web4.ynxweb4.com/web4/authorize", authorize, mapOf("x-ynx-session" to token), authDone@{ _, authErr ->
+                    if (authErr != null) {
+                        lastThirdParty = "Authorize failed: $authErr"
+                        render()
+                        return@authDone
+                    }
+                    get(trimmedUrl) { apiBody, apiErr ->
+                        lastThirdParty = if (apiErr == null) {
+                            val preview = apiBody.replace("\n", " ").take(180)
+                            "Authorized for $host. API preview: $preview"
+                        } else {
+                            "Authorized for $host, API call failed: $apiErr"
+                        }
+                        render()
+                    }
+                })
             })
         }
     }

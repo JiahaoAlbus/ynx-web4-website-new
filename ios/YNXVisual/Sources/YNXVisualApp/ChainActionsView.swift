@@ -6,6 +6,7 @@ enum ChainActionMode: String, CaseIterable, Identifiable {
     case faucet = "Faucet"
     case message = "Message"
     case session = "Session"
+    case thirdParty = "Third-party"
 
     var id: String { rawValue }
 }
@@ -24,6 +25,9 @@ struct ChainActionsView: View {
     @State private var message = ""
     @State private var spendLimit = "10"
     @State private var sessionDuration = "1 hour"
+    @State private var thirdPartyURL = "https://httpbin.org/get"
+    @State private var thirdPartyAction = "service.invoke"
+    @State private var thirdPartyAmount = "1"
     @Binding var selectedMode: ChainActionMode
     @State private var showReview = false
 
@@ -52,6 +56,8 @@ struct ChainActionsView: View {
                 faucetCard.staggered(2)
             } else if selectedMode == .message {
                 messageCard.staggered(2)
+            } else if selectedMode == .thirdParty {
+                thirdPartyCard.staggered(2)
             } else {
                 sessionCard.staggered(2)
             }
@@ -351,6 +357,61 @@ struct ChainActionsView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
+            }
+        }
+    }
+
+    private var thirdPartyCard: some View {
+        GlassCard(padding: 18, radius: 28) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    LivePulse(symbol: "network", color: .teal)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Any third-party API")
+                            .font(.headline)
+                        Text("Authorize first via Web4 policy/session, then call the real endpoint.")
+                            .font(.caption)
+                            .foregroundStyle(YNXTheme.muted)
+                    }
+                }
+
+                TextField("Service URL", text: $thirdPartyURL)
+                    .textFieldStyle(.roundedBorder)
+                    .ynxNoAutocapitalization()
+                TextField("Action", text: $thirdPartyAction)
+                    .textFieldStyle(.roundedBorder)
+                    .ynxNoAutocapitalization()
+                TextField("Amount", text: $thirdPartyAmount)
+                    .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
+                    .keyboardType(.decimalPad)
+                    #endif
+
+                Button {
+                    Task {
+                        await walletStore.testThirdPartyAPI(
+                            serviceURL: thirdPartyURL,
+                            action: thirdPartyAction,
+                            amount: thirdPartyAmount
+                        )
+                    }
+                } label: {
+                    Label(walletStore.isRunningLiveAction ? "Testing..." : "Authorize and Test API", systemImage: "bolt.shield.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : .teal, in: Capsule())
+                        .foregroundStyle(walletStore.wallet == nil ? YNXTheme.muted : .white)
+                }
+                .buttonStyle(PressableButtonStyle())
+                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
+
+                GlassCard(padding: 12, radius: 18) {
+                    Text(walletStore.thirdPartyStatus)
+                        .font(.caption)
+                        .foregroundStyle(YNXTheme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
