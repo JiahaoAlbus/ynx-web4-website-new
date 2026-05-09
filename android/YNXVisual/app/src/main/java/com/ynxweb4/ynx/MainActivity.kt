@@ -1,8 +1,10 @@
 package com.ynxweb4.ynx
 
 import android.app.Activity
+import android.animation.LayoutTransition
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -51,11 +53,20 @@ class MainActivity : Activity() {
         address = getPreferences(MODE_PRIVATE).getString("address", null)
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.rgb(238, 244, 255))
+            background = appBackground()
+            layoutTransition = LayoutTransition().apply {
+                setDuration(180)
+            }
         }
-        content = FrameLayout(this)
-        root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
-        root.addView(navBar())
+        content = FrameLayout(this).apply {
+            setPadding(dp(8), dp(6), dp(8), 0)
+        }
+        root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f).apply {
+            setMargins(dp(6), dp(6), dp(6), 0)
+        })
+        root.addView(navBar(), LinearLayout.LayoutParams(-1, -2).apply {
+            setMargins(dp(10), 0, dp(10), dp(12))
+        })
         setContentView(root)
         refreshNetwork()
         refreshBalance()
@@ -66,41 +77,55 @@ class MainActivity : Activity() {
         val bar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(dp(10), dp(8), dp(10), dp(10))
-            setBackgroundColor(Color.argb(238, 255, 255, 255))
+            setPadding(dp(6), dp(6), dp(6), dp(6))
+            background = glassPanel(radiusDp = 26, fillAlpha = 188, strokeAlpha = 140)
+            elevation = dp(8).toFloat()
         }
         listOf("Home", "Wallet", "Actions", "Browser", "Monitor").forEach { name ->
             bar.addView(Button(this).apply {
                 text = name
                 textSize = 12f
+                isAllCaps = false
                 setTextColor(if (tab == name) Color.WHITE else ink)
-                setBackgroundColor(if (tab == name) klein else Color.TRANSPARENT)
+                background = pillPanel(
+                    selected = tab == name,
+                    radiusDp = 18,
+                    selectedColor = klein,
+                    normalColor = Color.argb(120, 255, 255, 255)
+                )
                 setOnClickListener {
                     tab = name
                     render()
                 }
-            }, LinearLayout.LayoutParams(0, dp(54), 1f))
+            }, LinearLayout.LayoutParams(0, dp(48), 1f).apply {
+                setMargins(dp(2), 0, dp(2), 0)
+            })
         }
         return bar
     }
 
     private fun render() {
         root.removeViewAt(1)
-        root.addView(navBar())
+        root.addView(navBar(), LinearLayout.LayoutParams(-1, -2).apply {
+            setMargins(dp(10), 0, dp(10), dp(12))
+        })
         content.removeAllViews()
-        content.addView(when (tab) {
+        val screen = when (tab) {
             "Wallet" -> walletScreen()
             "Actions" -> actionsScreen()
             "Browser" -> browserScreen()
             "Monitor" -> monitorScreen()
             else -> homeScreen()
-        })
+        }
+        screen.alpha = 0f
+        content.addView(screen)
+        screen.animate().alpha(1f).setDuration(220).start()
     }
 
     private fun page(): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(26), dp(18), dp(18))
+            setPadding(dp(14), dp(20), dp(14), dp(18))
         }
     }
 
@@ -154,10 +179,12 @@ class MainActivity : Activity() {
         addView(row {
             addView(Button(this@MainActivity).apply {
                 text = "Create Wallet"
+                applyButtonStyle(primary = true)
                 setOnClickListener { createWallet() }
             })
             addView(Button(this@MainActivity).apply {
                 text = "Refresh Balance"
+                applyButtonStyle(primary = false)
                 setOnClickListener { refreshBalance() }
             })
         })
@@ -187,19 +214,26 @@ class MainActivity : Activity() {
     })
 
     private fun actionModeBar(): View = HorizontalScrollView(this).apply {
+        isHorizontalScrollBarEnabled = false
         addView(LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             listOf("Faucet", "Broadcast", "Message", "Session", "Third-party").forEach { mode ->
                 addView(Button(this@MainActivity).apply {
                     text = mode
                     textSize = 12f
+                    isAllCaps = false
                     setTextColor(if (actionMode == mode) Color.WHITE else ink)
-                    setBackgroundColor(if (actionMode == mode) klein else Color.argb(30, 11, 59, 187))
+                    background = pillPanel(
+                        selected = actionMode == mode,
+                        radiusDp = 16,
+                        selectedColor = klein,
+                        normalColor = Color.argb(120, 255, 255, 255)
+                    )
                     setOnClickListener {
                         actionMode = mode
                         render()
                     }
-                }, LinearLayout.LayoutParams(-2, dp(40)).apply { setMargins(dp(4), 0, dp(4), 0) })
+                }, LinearLayout.LayoutParams(-2, dp(38)).apply { setMargins(dp(4), 0, dp(4), 0) })
             }
         })
     }
@@ -208,6 +242,7 @@ class MainActivity : Activity() {
         addView(header("Network", "Live YNX public-testnet status. Latest block: $latestBlock"))
         addView(Button(this@MainActivity).apply {
             text = "Refresh"
+            applyButtonStyle(primary = false)
             setOnClickListener { refreshNetwork() }
         })
         endpoints.forEach { (name, value) -> addView(action(name, value) {}) }
@@ -239,6 +274,7 @@ class MainActivity : Activity() {
                 ).forEach { (label, url) ->
                     addView(Button(this@MainActivity).apply {
                         text = label
+                        applyButtonStyle(primary = false, compact = true)
                         setOnClickListener { web.loadUrl(url) }
                     })
                 }
@@ -254,6 +290,7 @@ class MainActivity : Activity() {
             hint = "Recipient ynx1..."
             setText(address ?: "")
             setSingleLine(false)
+            applyInputStyle()
         }
         return card().apply {
             addView(text("Testnet faucet", 20f, ink, true))
@@ -261,6 +298,7 @@ class MainActivity : Activity() {
             addView(input)
             addView(Button(this@MainActivity).apply {
                 text = "Request Test Tokens"
+                applyButtonStyle(primary = true)
                 setOnClickListener { requestFaucet(input.text.toString()) }
             })
         }
@@ -270,6 +308,7 @@ class MainActivity : Activity() {
         val txBytes = EditText(this).apply {
             hint = "Signed tx_bytes base64"
             minLines = 3
+            applyInputStyle()
         }
         return card().apply {
             addView(text("Broadcast signed transaction", 20f, ink, true))
@@ -279,6 +318,7 @@ class MainActivity : Activity() {
                 listOf("SYNC", "ASYNC", "BLOCK").forEach { mode ->
                     addView(Button(this@MainActivity).apply {
                         text = mode
+                        applyButtonStyle(primary = mode == "SYNC", compact = true)
                         setOnClickListener { broadcast(txBytes.text.toString(), mode) }
                     }, LinearLayout.LayoutParams(0, dp(48), 1f))
                 }
@@ -288,8 +328,15 @@ class MainActivity : Activity() {
     }
 
     private fun messageCard(): View {
-        val recipient = EditText(this).apply { hint = "Recipient identity" }
-        val body = EditText(this).apply { hint = "Message"; minLines = 2 }
+        val recipient = EditText(this).apply {
+            hint = "Recipient identity"
+            applyInputStyle()
+        }
+        val body = EditText(this).apply {
+            hint = "Message"
+            minLines = 2
+            applyInputStyle()
+        }
         return card().apply {
             addView(text("Encrypted Web4 message", 20f, ink, true))
             addView(text("Local SHA-256 envelope preview for policy messages.", 14f, muted, false))
@@ -297,6 +344,7 @@ class MainActivity : Activity() {
             addView(body)
             addView(Button(this@MainActivity).apply {
                 text = "Encrypt Message"
+                applyButtonStyle(primary = true)
                 setOnClickListener {
                     val digest = sha256Hex("${recipient.text}|${body.text}".toByteArray()).take(48)
                     status = "Encrypted locally: $digest"
@@ -312,10 +360,12 @@ class MainActivity : Activity() {
         addView(text("Creates live policy/session on web4.ynxweb4.com and live AI job on ai.ynxweb4.com.", 14f, muted, false))
         addView(Button(this@MainActivity).apply {
             text = "Issue Live Session"
+            applyButtonStyle(primary = false)
             setOnClickListener { issueLiveSession(false) }
         })
         addView(Button(this@MainActivity).apply {
             text = "Create Live AI Job"
+            applyButtonStyle(primary = true)
             setOnClickListener { issueLiveSession(true) }
         })
         if (lastAI.isNotEmpty()) addView(text(lastAI, 13f, muted, false))
@@ -325,14 +375,17 @@ class MainActivity : Activity() {
         val apiUrl = EditText(this).apply {
             hint = "Service URL"
             setText("https://httpbin.org/get")
+            applyInputStyle()
         }
         val action = EditText(this).apply {
             hint = "Action"
             setText("service.invoke")
+            applyInputStyle()
         }
         val amount = EditText(this).apply {
             hint = "Amount"
             setText("1")
+            applyInputStyle()
         }
         return card().apply {
             addView(text("Any third-party API", 20f, ink, true))
@@ -342,6 +395,7 @@ class MainActivity : Activity() {
             addView(amount)
             addView(Button(this@MainActivity).apply {
                 text = "Authorize and Test API"
+                applyButtonStyle(primary = true)
                 setOnClickListener { testThirdPartyApi(apiUrl.text.toString(), action.text.toString(), amount.text.toString()) }
             })
             addView(text(if (lastThirdParty.isBlank()) "Ready." else lastThirdParty, 13f, muted, false))
@@ -606,20 +660,23 @@ class MainActivity : Activity() {
 
     private fun metric(title: String, value: String, foot: String): View = card().apply {
         layoutParams = LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(4), dp(6), dp(4), dp(6)) }
-        addView(text(value, 30f, ink, true))
-        addView(text(title, 18f, ink, true))
+        addView(text(value, 28f, ink, true))
+        addView(text(title, 16f, ink, true))
         addView(text(foot, 14f, muted, false))
     }
 
     private fun action(title: String, detail: String, click: () -> Unit): View = card().apply {
         setOnClickListener { click() }
+        isClickable = true
+        isFocusable = true
         addView(text(title, 20f, ink, true))
         addView(text(detail, 14f, muted, false))
     }
 
     private fun header(title: String, subtitle: String): View = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        addView(text(title, 32f, ink, true))
+        setPadding(dp(4), 0, dp(4), dp(2))
+        addView(text(title, 28f, ink, true))
         addView(text(subtitle, 15f, muted, false))
     }
 
@@ -630,9 +687,10 @@ class MainActivity : Activity() {
 
     private fun card(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(18), dp(16), dp(18), dp(16))
-        setBackgroundColor(Color.argb(235, 255, 255, 255))
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, dp(8), 0, dp(8)) }
+        setPadding(dp(16), dp(14), dp(16), dp(14))
+        background = glassPanel(radiusDp = 22, fillAlpha = 176, strokeAlpha = 138)
+        elevation = dp(7).toFloat()
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, dp(7), 0, dp(7)) }
     }
 
     private fun text(value: String, size: Float, color: Int, bold: Boolean): TextView = TextView(this).apply {
@@ -640,11 +698,72 @@ class MainActivity : Activity() {
         textSize = size
         setTextColor(color)
         if (bold) typeface = Typeface.DEFAULT_BOLD
+        letterSpacing = 0f
         setPadding(0, dp(4), 0, dp(4))
     }
 
     private fun pill(value: String, color: Int): TextView = text(value, 14f, color, true).apply {
-        setPadding(dp(12), dp(8), dp(12), dp(8))
+        setPadding(dp(12), dp(7), dp(12), dp(7))
+        background = pillPanel(
+            selected = false,
+            radiusDp = 14,
+            selectedColor = color,
+            normalColor = Color.argb(125, 255, 255, 255)
+        )
+    }
+
+    private fun Button.applyButtonStyle(primary: Boolean, compact: Boolean = false) {
+        isAllCaps = false
+        textSize = if (compact) 12f else 13f
+        setTextColor(if (primary) Color.WHITE else ink)
+        background = pillPanel(
+            selected = primary,
+            radiusDp = if (compact) 14 else 16,
+            selectedColor = klein,
+            normalColor = Color.argb(148, 255, 255, 255)
+        )
+        setPadding(dp(14), dp(8), dp(14), dp(8))
+    }
+
+    private fun EditText.applyInputStyle() {
+        textSize = 15f
+        setTextColor(ink)
+        setHintTextColor(muted)
+        background = glassPanel(radiusDp = 16, fillAlpha = 160, strokeAlpha = 120)
+        setPadding(dp(14), dp(12), dp(14), dp(12))
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
+            setMargins(0, dp(4), 0, dp(6))
+        }
+    }
+
+    private fun appBackground(): GradientDrawable = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(
+            Color.rgb(236, 243, 255),
+            Color.rgb(228, 238, 255),
+            Color.rgb(244, 248, 255)
+        )
+    ).apply {
+        cornerRadius = 0f
+    }
+
+    private fun glassPanel(radiusDp: Int, fillAlpha: Int, strokeAlpha: Int): GradientDrawable = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(
+            Color.argb(fillAlpha, 255, 255, 255),
+            Color.argb((fillAlpha - 18).coerceAtLeast(110), 246, 251, 255)
+        )
+    ).apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = dp(radiusDp).toFloat()
+        setStroke(dp(1), Color.argb(strokeAlpha, 255, 255, 255))
+    }
+
+    private fun pillPanel(selected: Boolean, radiusDp: Int, selectedColor: Int, normalColor: Int): GradientDrawable = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = dp(radiusDp).toFloat()
+        setColor(if (selected) selectedColor else normalColor)
+        setStroke(dp(1), if (selected) Color.argb(165, 183, 214, 255) else Color.argb(145, 255, 255, 255))
     }
 
     private fun short(value: String): String = if (value.length > 16) "${value.take(9)}...${value.takeLast(6)}" else value
