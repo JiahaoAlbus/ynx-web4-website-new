@@ -50,9 +50,10 @@ export function Header() {
         style={{ scaleX: scrollYProgress }}
       />
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="font-display font-bold text-2xl tracking-tighter text-ink hover:text-klein transition-colors">
-            YNX
+        <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2 text-ink hover:text-klein transition-colors">
+            <img src="/brand/ynx-logo.png" alt="YNX logo" className="w-9 h-9 object-contain" />
+            <span className="font-display font-bold text-2xl tracking-tighter">YNX</span>
           </Link>
           <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-dark/50 border border-border/50 text-ink text-[10px] font-mono font-medium uppercase tracking-widest backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

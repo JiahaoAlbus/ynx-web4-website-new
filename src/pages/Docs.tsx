@@ -263,6 +263,18 @@ export function Docs() {
             ${isMobileMenuOpen ? "translate-x-0 pt-24 px-6 shadow-2xl" : "-translate-x-full lg:pt-8 lg:px-0 lg:shadow-none"}
           `}
         >
+          <Link
+            to="/"
+            className="mb-6 p-3 rounded-xl border border-border bg-surface/60 flex items-center gap-3 hover:border-klein/30 transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <img src="/brand/ynx-logo.png" alt="YNX logo" className="w-9 h-9 object-contain" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink leading-tight">YNX Web4</p>
+              <p className="text-[11px] text-ink/50 font-mono uppercase tracking-wider">Docs</p>
+            </div>
+          </Link>
+
           <motion.div
             className="mb-8 relative"
             whileHover={{ scale: 1.01 }}
@@ -339,14 +351,6 @@ export function Docs() {
             >
               <Download size={15} />
               iOS Simulator Preview
-            </a>
-            <a
-              href="/downloads/YNX-Android-Preview.apk"
-              download
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-klein border border-klein/20 hover:bg-klein/5 transition-colors text-sm font-semibold"
-            >
-              <Download size={15} />
-              Android APK
             </a>
           </motion.div>
 
