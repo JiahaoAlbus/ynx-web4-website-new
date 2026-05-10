@@ -102,7 +102,7 @@ function Hero() {
             </Button>
             <Button size="xl" variant="outline" className="group relative overflow-hidden bg-white/80" asChild>
               <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download>
-                Download iOS Preview
+                Download iOS Simulator Preview
                 <Download className="ml-2 w-5 h-5 opacity-50 group-hover:opacity-100 transition-all" />
               </a>
             </Button>
@@ -125,6 +125,7 @@ function Hero() {
               { label: "Execution Layer", value: t("hero.stats.chain") },
               { label: "Consensus Hub", value: t("hero.stats.nodes") },
               { label: "Protocol Track", value: "v2-web4-stable" },
+              { label: "iOS Build", value: "Updated May 10, 2026" },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -621,7 +622,7 @@ function FinalCTA() {
             Read Docs
           </Link>
           <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download className="px-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl hover:scale-105 hover:bg-white/15 transition-all inline-flex items-center gap-3">
-            Download iOS Preview <Download size={20} />
+            Download iOS Simulator Preview <Download size={20} />
           </a>
           <a href="/downloads/YNX-Android-Preview.apk" download className="px-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl hover:scale-105 hover:bg-white/15 transition-all inline-flex items-center gap-3">
             Download Android APK <Download size={20} />
