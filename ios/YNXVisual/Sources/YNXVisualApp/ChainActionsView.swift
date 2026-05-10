@@ -9,10 +9,39 @@ enum ChainActionMode: String, CaseIterable, Identifiable {
     case thirdParty = "Third-party"
 
     var id: String { rawValue }
+
+    var symbol: String {
+        switch self {
+        case .transfer: "arrow.left.arrow.right"
+        case .broadcast: "antenna.radiowaves.left.and.right"
+        case .faucet: "drop.fill"
+        case .message: "lock.doc.fill"
+        case .session: "key.radiowaves.forward"
+        case .thirdParty: "bolt.shield.fill"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .transfer:
+            "Prepare a transfer draft with fee/risk preview."
+        case .broadcast:
+            "Submit signed tx bytes to the live REST endpoint."
+        case .faucet:
+            "Request test tokens for all testnet flows."
+        case .message:
+            "Create encrypted message envelopes locally."
+        case .session:
+            "Issue bounded policy + session credentials."
+        case .thirdParty:
+            "Authorize and test arbitrary third-party APIs."
+        }
+    }
 }
 
 struct ChainActionsView: View {
     @EnvironmentObject private var walletStore: WalletStore
+    @Environment(\.openURL) private var openURL
     @State private var recipient = ""
     @State private var amount = ""
     @State private var memo = ""
@@ -35,43 +64,30 @@ struct ChainActionsView: View {
         PageContainer {
             ScreenHeader(
                 eyebrow: "Operate YNX",
-                title: "Actions",
-                subtitle: "Prepare transfers, broadcast signed transactions, request faucet tokens, and run live Web4 actions."
+                title: "Action Flows",
+                subtitle: "Structured transaction, faucet, messaging, policy, and third-party service operations."
             )
             .staggered(0)
 
-            Picker("Mode", selection: $selectedMode) {
-                ForEach(ChainActionMode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .staggered(1)
+            modeStrip
+                .staggered(1)
 
-            if selectedMode == .transfer {
-                transferCard.staggered(2)
-            } else if selectedMode == .broadcast {
-                broadcastCard.staggered(2)
-            } else if selectedMode == .faucet {
-                faucetCard.staggered(2)
-            } else if selectedMode == .message {
-                messageCard.staggered(2)
-            } else if selectedMode == .thirdParty {
-                thirdPartyCard.staggered(2)
-            } else {
-                sessionCard.staggered(2)
-            }
+            activeCard
+                .staggered(2)
 
             if let tx = walletStore.lastPreparedTransaction {
-                preparedTransaction(tx).staggered(3)
+                preparedTransaction(tx)
+                    .staggered(3)
             }
 
             if let encrypted = walletStore.lastEncryptedMessage {
-                encryptedMessage(encrypted).staggered(4)
+                encryptedMessage(encrypted)
+                    .staggered(4)
             }
 
             if let job = walletStore.lastAIJob {
-                liveAIJob(job).staggered(5)
+                liveAIJob(job)
+                    .staggered(5)
             }
         }
         .onAppear {
@@ -81,42 +97,80 @@ struct ChainActionsView: View {
         }
     }
 
-    private var transferCard: some View {
-        GlassCard(padding: 18, radius: 28) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "arrow.left.arrow.right", color: YNXTheme.klein)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Send \(YNX.denom)")
-                            .font(.headline)
-                        Text(walletStore.wallet == nil ? "Create a wallet first" : "\(walletStore.shortAddress) • prepare only")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(YNXTheme.muted)
+    private var modeStrip: some View {
+        GlassCard(padding: 12, radius: 20) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(ChainActionMode.allCases) { mode in
+                        ModeChip(
+                            title: mode.rawValue,
+                            symbol: mode.symbol,
+                            selected: selectedMode == mode
+                        ) {
+                            withAnimation(YNXTheme.standard) {
+                                selectedMode = mode
+                            }
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var activeCard: some View {
+        switch selectedMode {
+        case .transfer:
+            transferCard
+        case .broadcast:
+            broadcastCard
+        case .faucet:
+            faucetCard
+        case .message:
+            messageCard
+        case .session:
+            sessionCard
+        case .thirdParty:
+            thirdPartyCard
+        }
+    }
+
+    private var transferCard: some View {
+        GlassCard(padding: 18, radius: 24) {
+            VStack(alignment: .leading, spacing: 14) {
+                SectionHeading(
+                    title: selectedMode.rawValue,
+                    subtitle: selectedMode.subtitle,
+                    trailing: AnyView(
+                        StatusPill(
+                            label: walletStore.wallet == nil ? "No Wallet" : "Wallet Ready",
+                            color: walletStore.wallet == nil ? .orange : .green,
+                            systemImage: walletStore.wallet == nil ? "exclamationmark.triangle.fill" : "checkmark.seal.fill"
+                        )
+                    )
+                )
+
                 TextField("Recipient ynx1...", text: $recipient)
-                    .textFieldStyle(.roundedBorder)
                     .ynxNoAutocapitalization()
+                    .ynxFieldChrome()
                 TextField("Amount", text: $amount)
-                    .textFieldStyle(.roundedBorder)
+                    .ynxFieldChrome()
                     #if os(iOS)
                     .keyboardType(.decimalPad)
                     #endif
-                TextField("Memo", text: $memo)
-                    .textFieldStyle(.roundedBorder)
-                Button {
+                TextField("Memo", text: $memo, axis: .vertical)
+                    .lineLimit(1...3)
+                    .ynxFieldChrome()
+
+                FilledActionButton(
+                    title: "Prepare Transfer Draft",
+                    symbol: "checkmark.seal.fill",
+                    color: YNXTheme.klein,
+                    disabled: walletStore.wallet == nil
+                ) {
                     walletStore.prepareTransfer(to: recipient, amount: amount, memo: memo)
                     showReview = true
-                } label: {
-                    Label("Prepare Transfer Draft", systemImage: "checkmark.seal.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : YNXTheme.klein, in: Capsule())
-                        .foregroundStyle(walletStore.wallet == nil ? YNXTheme.muted : .white)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(walletStore.wallet == nil)
             }
         }
         .sheet(isPresented: $showReview) {
@@ -128,23 +182,14 @@ struct ChainActionsView: View {
     }
 
     private var broadcastCard: some View {
-        GlassCard(padding: 18, radius: 28) {
+        GlassCard(padding: 18, radius: 24) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "antenna.radiowaves.left.and.right", color: YNXTheme.klein)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Broadcast signed transaction")
-                            .font(.headline)
-                        Text("Submit base64 tx_bytes to the live YNX REST broadcast endpoint.")
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                }
+                SectionHeading(title: selectedMode.rawValue, subtitle: selectedMode.subtitle)
 
                 TextField("Signed tx_bytes base64", text: $signedTxBytes, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
                     .lineLimit(4...8)
                     .ynxNoAutocapitalization()
+                    .ynxFieldChrome()
 
                 Picker("Broadcast mode", selection: $broadcastMode) {
                     ForEach(BroadcastMode.allCases) { mode in
@@ -153,34 +198,24 @@ struct ChainActionsView: View {
                 }
                 .pickerStyle(.segmented)
 
-                GlassCard(padding: 12, radius: 18) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: walletStore.broadcastStatus.hasPrefix("Broadcast accepted") ? "checkmark.seal.fill" : "info.circle.fill")
-                            .foregroundStyle(walletStore.broadcastStatus.hasPrefix("Broadcast accepted") ? .green : YNXTheme.klein)
-                        Text(walletStore.broadcastStatus)
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+                statusMessageCard(
+                    walletStore.broadcastStatus,
+                    ok: walletStore.broadcastStatus.hasPrefix("Broadcast accepted")
+                )
 
-                Button {
+                FilledActionButton(
+                    title: walletStore.isBroadcasting ? "Broadcasting..." : "Broadcast to Testnet",
+                    symbol: "paperplane.fill",
+                    color: YNXTheme.klein,
+                    disabled: !canBroadcast || walletStore.isBroadcasting
+                ) {
                     Task {
                         await walletStore.broadcastSignedTransaction(
                             txBytesBase64: signedTxBytes,
                             mode: broadcastMode
                         )
                     }
-                } label: {
-                    Label(walletStore.isBroadcasting ? "Broadcasting..." : "Broadcast to Testnet", systemImage: "paperplane.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(canBroadcast ? YNXTheme.klein : Color.gray.opacity(0.18), in: Capsule())
-                        .foregroundStyle(canBroadcast ? .white : YNXTheme.muted)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(!canBroadcast || walletStore.isBroadcasting)
 
                 if let result = walletStore.lastBroadcastResult {
                     broadcastResult(result)
@@ -190,122 +225,90 @@ struct ChainActionsView: View {
     }
 
     private var faucetCard: some View {
-        GlassCard(padding: 18, radius: 28) {
+        GlassCard(padding: 18, radius: 24) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "drop.fill", color: .cyan)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Testnet faucet")
-                            .font(.headline)
-                        Text("Request \(YNX.denom) for transfers, AI jobs, and validator test flows.")
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                }
+                SectionHeading(title: selectedMode.rawValue, subtitle: selectedMode.subtitle)
 
                 HStack(spacing: 10) {
                     TextField("Recipient ynx1...", text: $faucetAddress)
-                        .textFieldStyle(.roundedBorder)
                         .ynxNoAutocapitalization()
+                        .ynxFieldChrome()
                     Button {
                         if let address = walletStore.wallet?.address {
                             faucetAddress = address
                         }
                     } label: {
-                        Image(systemName: "wallet.pass")
+                        Image(systemName: "wallet.pass.fill")
                             .font(.headline)
-                            .frame(width: 42, height: 38)
+                            .foregroundStyle(YNXTheme.klein)
+                            .frame(width: 44, height: 44)
                             .background(YNXTheme.klein.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(PressableButtonStyle())
-                    .foregroundStyle(YNXTheme.klein)
                     .disabled(walletStore.wallet == nil)
                 }
 
-                Button {
+                FilledActionButton(
+                    title: isRequestingFaucet ? "Requesting..." : "Request Test Tokens",
+                    symbol: isRequestingFaucet ? "arrow.triangle.2.circlepath" : "drop.fill",
+                    color: .cyan,
+                    disabled: !canRequestFaucet || isRequestingFaucet
+                ) {
                     Task { await requestFaucet() }
-                } label: {
-                    Label(isRequestingFaucet ? "Requesting..." : "Request Test Tokens", systemImage: isRequestingFaucet ? "arrow.triangle.2.circlepath" : "drop.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(canRequestFaucet ? YNXTheme.klein : Color.gray.opacity(0.18), in: Capsule())
-                        .foregroundStyle(canRequestFaucet ? .white : YNXTheme.muted)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(!canRequestFaucet || isRequestingFaucet)
 
-                GlassCard(padding: 12, radius: 18) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: faucetStatus.hasPrefix("Success") ? "checkmark.seal.fill" : "info.circle.fill")
-                            .foregroundStyle(faucetStatus.hasPrefix("Success") ? .green : YNXTheme.klein)
-                        Text(faucetStatus)
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                SoftActionButton(
+                    title: "Open Faucet Website",
+                    symbol: "arrow.up.right.square",
+                    color: YNXTheme.klein
+                ) {
+                    openURL(URL(string: "https://faucet.ynxweb4.com")!)
                 }
+
+                statusMessageCard(faucetStatus, ok: faucetStatus.hasPrefix("Success"))
             }
         }
     }
 
     private var messageCard: some View {
-        GlassCard(padding: 18, radius: 28) {
+        GlassCard(padding: 18, radius: 24) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "lock.doc", color: .indigo)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Encrypted Web4 message")
-                            .font(.headline)
-                        Text("Local CryptoKit envelope for Web4 policy messages.")
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                }
+                SectionHeading(title: selectedMode.rawValue, subtitle: selectedMode.subtitle)
+
                 TextField("Recipient identity", text: $messageRecipient)
-                    .textFieldStyle(.roundedBorder)
                     .ynxNoAutocapitalization()
+                    .ynxFieldChrome()
                 TextField("Message", text: $message, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
                     .lineLimit(3...6)
-                Button {
+                    .ynxFieldChrome()
+
+                FilledActionButton(
+                    title: "Encrypt Message",
+                    symbol: "lock.fill",
+                    color: .indigo
+                ) {
                     walletStore.encryptMessage(message, recipient: messageRecipient)
-                } label: {
-                    Label("Encrypt Message", systemImage: "lock.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(.indigo, in: Capsule())
-                        .foregroundStyle(.white)
                 }
-                .buttonStyle(PressableButtonStyle())
             }
         }
     }
 
     private var sessionCard: some View {
-        GlassCard(padding: 18, radius: 28) {
+        GlassCard(padding: 18, radius: 24) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "key.radiowaves.forward", color: .green)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Web4 session")
-                            .font(.headline)
-                        Text("Owner > Policy > Session Key > Agent Action")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                }
+                SectionHeading(title: selectedMode.rawValue, subtitle: selectedMode.subtitle)
+
                 TextField("Spend limit (\(YNX.denom))", text: $spendLimit)
-                    .textFieldStyle(.roundedBorder)
-                TextField("Duration", text: $sessionDuration)
-                    .textFieldStyle(.roundedBorder)
+                    .ynxFieldChrome()
+                TextField("Session label (optional)", text: $sessionDuration)
+                    .ynxFieldChrome()
+
                 ForEach(Array(settlementSteps.enumerated()), id: \.element.id) { index, step in
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         Text("\(index + 1)")
                             .font(.caption.monospaced().weight(.bold))
                             .foregroundStyle(.white)
-                            .frame(width: 26, height: 26)
+                            .frame(width: 22, height: 22)
                             .background(YNXTheme.klein, in: Circle())
                         VStack(alignment: .leading, spacing: 2) {
                             Text(step.title)
@@ -314,80 +317,61 @@ struct ChainActionsView: View {
                                 .font(.caption)
                                 .foregroundStyle(YNXTheme.muted)
                         }
-                    }
-                }
-                GlassCard(padding: 12, radius: 18) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: walletStore.liveActionStatus.hasPrefix("Live") ? "checkmark.seal.fill" : "info.circle.fill")
-                            .foregroundStyle(walletStore.liveActionStatus.hasPrefix("Live") ? .green : YNXTheme.klein)
-                        Text(walletStore.liveActionStatus)
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
                     }
                 }
 
-                Button {
+                statusMessageCard(walletStore.liveActionStatus, ok: walletStore.liveActionStatus.hasPrefix("Live"))
+
+                FilledActionButton(
+                    title: walletStore.isRunningLiveAction ? "Issuing..." : "Issue Live Session",
+                    symbol: "key.fill",
+                    color: .green,
+                    disabled: walletStore.wallet == nil || walletStore.isRunningLiveAction
+                ) {
                     Task {
                         await walletStore.issueLiveSessionPolicy(
                             spendLimit: spendLimit,
                             actions: ["ai.job.create", "ai.job.commit", "ai.job.finalize", "ai.payment.charge"]
                         )
                     }
-                } label: {
-                    Label(walletStore.isRunningLiveAction ? "Issuing..." : "Issue Live Session", systemImage: "key.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : .green, in: Capsule())
-                        .foregroundStyle(walletStore.wallet == nil ? YNXTheme.muted : .white)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
 
-                Button {
+                FilledActionButton(
+                    title: walletStore.isRunningLiveAction ? "Creating..." : "Create Live AI Job",
+                    symbol: "cpu.fill",
+                    color: YNXTheme.klein,
+                    disabled: walletStore.wallet == nil || walletStore.isRunningLiveAction
+                ) {
                     Task { await walletStore.createLiveAIJob() }
-                } label: {
-                    Label(walletStore.isRunningLiveAction ? "Creating..." : "Create Live AI Job", systemImage: "cpu.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : YNXTheme.klein, in: Capsule())
-                        .foregroundStyle(.white)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
             }
         }
     }
 
     private var thirdPartyCard: some View {
-        GlassCard(padding: 18, radius: 28) {
+        GlassCard(padding: 18, radius: 24) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    LivePulse(symbol: "network", color: .teal)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Any third-party API")
-                            .font(.headline)
-                        Text("Authorize first via Web4 policy/session, then call the real endpoint.")
-                            .font(.caption)
-                            .foregroundStyle(YNXTheme.muted)
-                    }
-                }
+                SectionHeading(title: selectedMode.rawValue, subtitle: selectedMode.subtitle)
 
                 TextField("Service URL", text: $thirdPartyURL)
-                    .textFieldStyle(.roundedBorder)
                     .ynxNoAutocapitalization()
+                    .ynxFieldChrome()
                 TextField("Action", text: $thirdPartyAction)
-                    .textFieldStyle(.roundedBorder)
                     .ynxNoAutocapitalization()
+                    .ynxFieldChrome()
                 TextField("Amount", text: $thirdPartyAmount)
-                    .textFieldStyle(.roundedBorder)
+                    .ynxFieldChrome()
                     #if os(iOS)
                     .keyboardType(.decimalPad)
                     #endif
 
-                Button {
+                FilledActionButton(
+                    title: walletStore.isRunningLiveAction ? "Testing..." : "Authorize and Test API",
+                    symbol: "bolt.shield.fill",
+                    color: .teal,
+                    disabled: walletStore.wallet == nil || walletStore.isRunningLiveAction
+                ) {
                     Task {
                         await walletStore.testThirdPartyAPI(
                             serviceURL: thirdPartyURL,
@@ -395,35 +379,29 @@ struct ChainActionsView: View {
                             amount: thirdPartyAmount
                         )
                     }
-                } label: {
-                    Label(walletStore.isRunningLiveAction ? "Testing..." : "Authorize and Test API", systemImage: "bolt.shield.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(walletStore.wallet == nil ? Color.gray.opacity(0.18) : .teal, in: Capsule())
-                        .foregroundStyle(walletStore.wallet == nil ? YNXTheme.muted : .white)
                 }
-                .buttonStyle(PressableButtonStyle())
-                .disabled(walletStore.wallet == nil || walletStore.isRunningLiveAction)
 
-                GlassCard(padding: 12, radius: 18) {
-                    Text(walletStore.thirdPartyStatus)
-                        .font(.caption)
-                        .foregroundStyle(YNXTheme.muted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                statusMessageCard(
+                    walletStore.thirdPartyStatus,
+                    ok: walletStore.thirdPartyStatus.contains("passed")
+                )
+
                 if !walletStore.thirdPartyAuditTrail.isEmpty {
-                    GlassCard(padding: 12, radius: 18) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Latest audit trail")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(YNXTheme.ink)
-                            Text(walletStore.thirdPartyAuditTrail)
-                                .font(.caption2.monospaced())
-                                .foregroundStyle(YNXTheme.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Latest audit trail")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(YNXTheme.ink)
+                        Text(walletStore.thirdPartyAuditTrail)
+                            .font(.caption2.monospaced())
+                            .foregroundStyle(YNXTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                    .padding(12)
+                    .background(YNXTheme.paper, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(YNXTheme.hairline, lineWidth: 1)
+                    )
                 }
             }
         }
@@ -470,14 +448,35 @@ struct ChainActionsView: View {
     }
 
     private func broadcastResult(_ result: BroadcastResult) -> some View {
-        GlassCard(padding: 12, radius: 18) {
-            VStack(alignment: .leading, spacing: 8) {
-                FactRow(label: "Tx hash", value: result.txhash)
-                FactRow(label: "Code", value: "\(result.code)")
-                FactRow(label: "Height", value: result.height)
-                FactRow(label: "Log", value: result.rawLog.isEmpty ? "Accepted" : result.rawLog)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            FactRow(label: "Tx hash", value: result.txhash)
+            FactRow(label: "Code", value: "\(result.code)")
+            FactRow(label: "Height", value: result.height)
+            FactRow(label: "Log", value: result.rawLog.isEmpty ? "Accepted" : result.rawLog)
         }
+        .padding(12)
+        .background(YNXTheme.paper, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(YNXTheme.hairline, lineWidth: 1)
+        )
+    }
+
+    private func statusMessageCard(_ text: String, ok: Bool = false) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: ok ? "checkmark.seal.fill" : "info.circle.fill")
+                .foregroundStyle(ok ? .green : YNXTheme.klein)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(YNXTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .background(YNXTheme.paper, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(YNXTheme.hairline, lineWidth: 1)
+        )
     }
 
     private var canRequestFaucet: Bool {
@@ -502,17 +501,17 @@ struct ChainActionsView: View {
 
         do {
             var request = URLRequest(url: url)
-            request.timeoutInterval = 10
+            request.timeoutInterval = 12
             let (data, response) = try await URLSession.shared.data(for: request)
             let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
             let body = String(data: data, encoding: .utf8) ?? "No response body"
             if (200..<300).contains(statusCode) {
                 faucetStatus = "Success. Faucet accepted the request for \(short(address))."
                 await walletStore.refreshBalance()
-            } else if statusCode == 429 {
-                faucetStatus = "Rate limited. This IP has already requested faucet tokens recently. Wait for the faucet window to reset, then try again or refresh balance."
+            } else if statusCode == 429 || body.lowercased().contains("ip_rate_limited") {
+                faucetStatus = "Rate limited by faucet IP policy. Wait a few minutes, then retry. If your wallet already received tokens, tap refresh balance."
             } else {
-                faucetStatus = "Faucet returned HTTP \(statusCode): \(body.prefix(120))"
+                faucetStatus = "Faucet returned HTTP \(statusCode): \(body.prefix(140))"
             }
         } catch {
             faucetStatus = "Faucet request failed: \(error.localizedDescription)"
@@ -541,8 +540,8 @@ struct TransactionReviewSheet: View {
 
                 ScreenHeader(
                     eyebrow: "Testnet Review",
-                    title: "Review transfer draft",
-                    subtitle: "This draft uses live wallet data. Sign it with a Cosmos signer, then paste signed tx_bytes in Broadcast."
+                    title: "Review Transfer Draft",
+                    subtitle: "Sign with a Cosmos signer, then paste tx_bytes into Broadcast."
                 )
 
                 GlassCard {
@@ -559,17 +558,14 @@ struct TransactionReviewSheet: View {
                 Toggle("I understand this is a testnet transaction flow", isOn: $armed)
                     .font(.callout.weight(.semibold))
 
-                Button {
+                FilledActionButton(
+                    title: "Close Review",
+                    symbol: armed ? "checkmark.seal.fill" : "lock.fill",
+                    color: YNXTheme.klein,
+                    disabled: !armed
+                ) {
                     dismiss()
-                } label: {
-                    Label("Close Review", systemImage: armed ? "checkmark.seal.fill" : "lock.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(armed ? YNXTheme.klein : Color.gray.opacity(0.18), in: Capsule())
-                        .foregroundStyle(armed ? .white : YNXTheme.muted)
                 }
-                .buttonStyle(PressableButtonStyle())
 
                 Spacer()
             }

@@ -16,19 +16,20 @@ struct RootView: View {
             currentScreen
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
-            VStack {
-                Spacer()
-                bottomBar
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-            }
-
             if showLaunch {
                 LaunchCover()
                     .transition(.opacity.combined(with: .scale(scale: 1.04)))
                     .zIndex(5)
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            bottomBar
+                .padding(.horizontal, 14)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+                .background(.clear)
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .task {
             await viewModel.refresh()
             guard !reduceMotion else {
@@ -64,30 +65,32 @@ struct RootView: View {
     }
 
     private var bottomBar: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             ForEach(YNXTab.allCases) { tab in
                 Button {
                     withAnimation(YNXTheme.standard) {
                         selectedTab = tab
                     }
                 } label: {
-                    VStack(spacing: 5) {
+                    VStack(spacing: 6) {
                         ZStack {
                             if selectedTab == tab {
                                 Capsule()
                                     .fill(YNXTheme.klein)
-                                    .frame(width: 48, height: 34)
+                                    .frame(width: 48, height: 32)
                                     .matchedGeometryEffect(id: "tab-pill", in: tabNamespace)
                             }
                             Image(systemName: tab.symbol)
-                                .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(selectedTab == tab ? .white : YNXTheme.muted)
                         }
                         Text(tab.rawValue)
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(selectedTab == tab ? YNXTheme.klein : YNXTheme.muted)
                     }
+                    .padding(.vertical, 2)
                     .frame(maxWidth: .infinity)
+                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(PressableButtonStyle())

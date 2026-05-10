@@ -25,18 +25,27 @@ struct NetworkView: View {
             }
             .staggered(0)
 
+            if let lastRefresh = viewModel.lastRefresh {
+                StatusPill(
+                    label: "Updated \(relativeTime(lastRefresh))",
+                    color: .green,
+                    systemImage: "clock.fill"
+                )
+                .staggered(1)
+            }
+
             GlassCard {
                 VStack(spacing: 13) {
                     ForEach(Array(viewModel.endpoints.enumerated()), id: \.element.id) { index, endpoint in
                         EndpointRow(endpoint: endpoint)
-                            .staggered(index + 1)
+                            .staggered(index + 2)
                         if endpoint.id != viewModel.endpoints.last?.id {
                             Divider().opacity(0.42)
                         }
                     }
                 }
             }
-            .staggered(1)
+            .staggered(2)
 
             GlassCard {
                 VStack(alignment: .leading, spacing: 13) {
@@ -49,24 +58,25 @@ struct NetworkView: View {
                     FactRow(label: "Mainnet", value: "Not live")
                 }
             }
-            .staggered(2)
+            .staggered(3)
 
             ValidatorsViewContent()
-                .staggered(3)
+                .staggered(4)
         }
+    }
+
+    private func relativeTime(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
 struct EndpointRow: View {
     let endpoint: EndpointStatus
-    @State private var pressed = false
 
     var body: some View {
-        Button {
-            withAnimation(YNXTheme.quick) {
-                pressed.toggle()
-            }
-        } label: {
+        Button {} label: {
             HStack(spacing: 13) {
                 ZStack {
                     Circle()
