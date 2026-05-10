@@ -325,6 +325,31 @@ export function Docs() {
 
         {/* Main Content */}
         <main className="flex-1 h-full overflow-y-auto py-12 lg:py-8 min-w-0 scroll-smooth relative">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: motionEase.standard }}
+            className="mb-4 p-4 rounded-xl border border-klein/20 bg-klein/5 flex flex-wrap items-center gap-3"
+          >
+            <span className="text-sm font-medium text-ink">Mobile app downloads:</span>
+            <a
+              href="/downloads/YNX-iOS-Simulator-Preview.zip"
+              download
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-klein border border-klein/20 hover:bg-klein/5 transition-colors text-sm font-semibold"
+            >
+              <Download size={15} />
+              iOS Simulator Preview
+            </a>
+            <a
+              href="/downloads/YNX-Android-Preview.apk"
+              download
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-klein border border-klein/20 hover:bg-klein/5 transition-colors text-sm font-semibold"
+            >
+              <Download size={15} />
+              Android APK
+            </a>
+          </motion.div>
+
           <div className="flex justify-end mb-4 gap-4">
             {currentDoc && currentPath !== "docs" && (
               <motion.a
