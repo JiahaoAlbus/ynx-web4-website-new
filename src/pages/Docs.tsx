@@ -268,7 +268,7 @@ export function Docs() {
             className="mb-6 p-3 rounded-xl border border-border bg-white flex items-center gap-3 hover:border-klein/30 transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <img src="/brand/ynx-logo.png" alt="YNX logo" className="w-9 h-9 object-contain" />
+            <img src="/brand/ynx-logo-v3.png" alt="YNX logo" className="w-9 h-9 object-contain" />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-ink leading-tight">YNX Web4</p>
               <p className="text-[11px] text-ink/50 font-mono uppercase tracking-wider">Docs</p>
