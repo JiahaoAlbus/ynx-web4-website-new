@@ -101,10 +101,10 @@ function Hero() {
               </Link>
             </Button>
             <Button size="xl" variant="outline" className="group relative overflow-hidden bg-white/80" asChild>
-              <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download>
-                Download iOS Simulator Preview
+              <Link to="/docs/en/ynx-ios-feature-manual">
+                iOS Install Guide
                 <Download className="ml-2 w-5 h-5 opacity-50 group-hover:opacity-100 transition-all" />
-              </a>
+              </Link>
             </Button>
           </motion.div>
 
@@ -119,7 +119,7 @@ function Hero() {
               { label: "Execution Layer", value: t("hero.stats.chain") },
               { label: "Consensus Hub", value: t("hero.stats.nodes") },
               { label: "Protocol Track", value: "v2-web4-stable" },
-              { label: "iOS Build", value: "Updated May 10, 2026" },
+              { label: "iOS Build", value: "Updated May 16, 2026" },
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -615,9 +615,9 @@ function FinalCTA() {
           <Link to="/docs" className="px-10 py-5 bg-white text-klein rounded-2xl hover:scale-105 hover:bg-surface transition-all shadow-xl shadow-black/20">
             Read Docs
           </Link>
-          <a href="/downloads/YNX-iOS-Simulator-Preview.zip" download className="px-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl hover:scale-105 hover:bg-white/15 transition-all inline-flex items-center gap-3">
-            Download iOS Simulator Preview <Download size={20} />
-          </a>
+          <Link to="/docs/en/ynx-ios-feature-manual" className="px-10 py-5 bg-white/10 text-white border border-white/20 rounded-2xl hover:scale-105 hover:bg-white/15 transition-all inline-flex items-center gap-3">
+            iOS Install Guide <Download size={20} />
+          </Link>
           <a href={NETWORK.socials.github} target="_blank" rel="noreferrer" className="px-10 py-5 bg-black text-white rounded-2xl hover:scale-105 hover:bg-ink transition-all inline-flex items-center gap-3">
              View on GitHub <ExternalLink size={20} />
           </a>

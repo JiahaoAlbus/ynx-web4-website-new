@@ -15,6 +15,8 @@ const Testnet = lazy(() => import("./pages/Testnet").then((module) => ({ default
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
 const About = lazy(() => import("./pages/About").then((module) => ({ default: module.About })));
 const Docs = lazy(() => import("./pages/Docs").then((module) => ({ default: module.Docs })));
+const Privacy = lazy(() => import("./pages/Privacy").then((module) => ({ default: module.Privacy })));
+const Terms = lazy(() => import("./pages/Terms").then((module) => ({ default: module.Terms })));
 
 function warmDocsRoute() {
   void import("./pages/Docs");
@@ -56,6 +58,8 @@ export default function App() {
           <Route path="testnet" element={<Testnet />} />
           <Route path="faq" element={<FAQPage />} />
           <Route path="about" element={<About />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
           <Route path="docs" element={<Navigate to="/docs/en/public-testnet-join" replace />} />
           <Route path="docs/*" element={<Docs />} />
         </Route>

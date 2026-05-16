@@ -55,6 +55,20 @@
           "validator",
           "onboarding"
         ]
+      },
+      {
+        "id": "en/ynx-ios-feature-manual",
+        "title": "YNX iOS Feature Manual",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/YNX_IOS_FEATURE_MANUAL.md",
+        "publicPath": "/docs/en/ynx-ios-feature-manual.md",
+        "description": "Feature map and install guidance for the YNX iOS client.",
+        "tags": [
+          "ios",
+          "manual",
+          "app"
+        ]
       }
     ]
   },
@@ -102,6 +116,20 @@
         ]
       },
       {
+        "id": "en/universal-bridge-method",
+        "title": "Universal Bridge Method",
+        "language": "en",
+        "category": "AI / Web4",
+        "sourcePath": "docs/en/UNIVERSAL_BRIDGE_METHOD.md",
+        "publicPath": "/docs/en/universal-bridge-method.md",
+        "description": "Multi-chain asset onboarding method for YNX.",
+        "tags": [
+          "bridge",
+          "multichain",
+          "integration"
+        ]
+      },
+      {
         "id": "openapi/ynx-v2-web4-yaml",
         "title": "Web4 Hub OpenAPI",
         "language": "en",
@@ -143,6 +171,20 @@
         "tags": [
           "testnet",
           "status"
+        ]
+      },
+      {
+        "id": "en/releases-2-current-status",
+        "title": "Releases 2 Current Status",
+        "language": "en",
+        "category": "Validators & Testnet Ops",
+        "sourcePath": "docs/en/RELEASES_2_CURRENT_STATUS.md",
+        "publicPath": "/docs/en/releases-2-current-status.md",
+        "description": "Current rollout status across chain, gateway, and client surfaces.",
+        "tags": [
+          "release",
+          "status",
+          "rollout"
         ]
       },
       {
@@ -294,6 +336,20 @@
         "tags": [
           "web4",
           "definition",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/ynx-ios-feature-manual",
+        "title": "YNX iOS 功能手册",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/YNX_iOS_功能手册.md",
+        "publicPath": "/docs/zh/ynx-ios-feature-manual.md",
+        "description": "YNX iOS 客户端功能与入口说明。",
+        "tags": [
+          "ios",
+          "manual",
           "zh"
         ]
       },

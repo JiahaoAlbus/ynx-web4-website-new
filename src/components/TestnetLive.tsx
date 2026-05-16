@@ -4,6 +4,7 @@ import { Check, Copy, ExternalLink, Terminal } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { NETWORK } from "../constants/network";
+import { useValidatorReadiness } from "../hooks/useValidatorReadiness";
 
 export function TestnetLive() {
   const endpoints = [
@@ -18,6 +19,7 @@ export function TestnetLive() {
   ];
 
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const { snapshot, loading } = useValidatorReadiness();
 
   const handleCopy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -113,7 +115,14 @@ export function TestnetLive() {
             </div>
             
             <div className="mt-8 text-[11px] leading-relaxed text-white/50 space-y-2 font-mono">
-              <p>• Current public testnet has 4 bonded active validators.</p>
+              <p>
+                •{" "}
+                {snapshot
+                  ? `Current public testnet has ${snapshot.bonded_count} bonded validators (${snapshot.unjailed_count} unjailed).`
+                  : loading
+                    ? "Checking bonded validator set..."
+                    : "Validator data unavailable. Please verify via REST/indexer."}
+              </p>
               <p>• Testnet tokens have no mainnet value. Mainnet is not live yet.</p>
               <p>• Remaining external work before mainnet: independent external validators, additional public RPC/sentry outside current provider/account, real alerting/on-call, restore drill, external security review.</p>
             </div>

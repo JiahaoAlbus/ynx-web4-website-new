@@ -265,7 +265,7 @@ export function Docs() {
         >
           <Link
             to="/"
-            className="mb-6 p-3 rounded-xl border border-border bg-surface/60 flex items-center gap-3 hover:border-klein/30 transition-colors"
+            className="mb-6 p-3 rounded-xl border border-border bg-white flex items-center gap-3 hover:border-klein/30 transition-colors"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <img src="/brand/ynx-logo.png" alt="YNX logo" className="w-9 h-9 object-contain" />
@@ -343,14 +343,21 @@ export function Docs() {
             transition={{ duration: 0.28, ease: motionEase.standard }}
             className="mb-4 p-4 rounded-xl border border-klein/20 bg-klein/5 flex flex-wrap items-center gap-3"
           >
-            <span className="text-sm font-medium text-ink">Mobile app downloads:</span>
-            <a
-              href="/downloads/YNX-iOS-Simulator-Preview.zip"
-              download
+            <span className="text-sm font-medium text-ink">Mobile app:</span>
+            <Link
+              to="/docs/en/ynx-ios-feature-manual"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-klein border border-klein/20 hover:bg-klein/5 transition-colors text-sm font-semibold"
             >
               <Download size={15} />
-              iOS Simulator Preview
+              iOS Install Guide
+            </Link>
+            <a
+              href="/downloads/YNX-iOS-Simulator-Preview.zip"
+              download
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-ink border border-border hover:bg-surface transition-colors text-sm font-semibold"
+            >
+              <Download size={15} />
+              Simulator Build (Xcode)
             </a>
           </motion.div>
 

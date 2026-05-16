@@ -6,12 +6,14 @@ import { TiltCard } from "../components/ui/TiltCard";
 import { Magnetic } from "../components/ui/Magnetic";
 import { Link } from "react-router-dom";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
+import { useValidatorReadiness } from "../hooks/useValidatorReadiness";
 import { NETWORK } from "../constants/network";
 import { motionEase, revealSoft, stagger } from "../lib/motion";
 import { SignalRail } from "../components/motion/SignalRail";
 
 export function Testnet() {
   const { status, loading, error, refetch } = useNetworkStatus();
+  const { snapshot, loading: validatorLoading } = useValidatorReadiness();
 
   const endpoints = [
     { label: "RPC", url: NETWORK.endpoints.rpc, id: 'rpc' },
@@ -45,6 +47,15 @@ export function Testnet() {
     if (svcStatus === 'offline') return 'bg-rose-500';
     return 'bg-ink/20';
   };
+
+  const validatorRows = snapshot?.validators.slice(0, 6) ?? [];
+  const validatorGateLabel = snapshot
+    ? snapshot.validator_gate_pass
+      ? "Validator Gate Passed"
+      : `Validator Gate Pending (${snapshot.bonded_count}/${snapshot.min_validators})`
+    : validatorLoading
+      ? "Checking Validator Gate"
+      : "Validator Gate Unavailable";
 
   return (
     <div className="pt-24 pb-32">
@@ -101,6 +112,12 @@ export function Testnet() {
                 <div>
                   <span className="text-white/40 text-xs font-mono uppercase tracking-widest block mb-2">Denom</span>
                   <span className="text-2xl font-mono tracking-tight text-white">{NETWORK.denom}</span>
+                </div>
+                <div>
+                  <span className="text-white/40 text-xs font-mono uppercase tracking-widest block mb-2">Validator Gate</span>
+                  <span className={`text-sm font-mono tracking-tight ${snapshot?.validator_gate_pass ? "text-emerald-300" : "text-amber-300"}`}>
+                    {validatorGateLabel}
+                  </span>
                 </div>
               </div>
             </div>
@@ -247,25 +264,37 @@ export function Testnet() {
               Global Validator Mesh
             </h3>
             <div className="space-y-4 font-mono text-sm px-4 py-3 bg-white rounded-2xl border border-border">
-              <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="text-ink/40">ynx-sv-v2-1</span>
-                <span className="flex items-center gap-2">Active <span className="text-[10px] bg-emerald-100 text-emerald-600 px-1.5 rounded font-bold uppercase">Bonded</span></span>
-              </div>
-              <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="text-ink/40">ynx-sv-v2-2</span>
-                <span className="flex items-center gap-2">Active <span className="text-[10px] bg-emerald-100 text-emerald-600 px-1.5 rounded font-bold uppercase">Bonded</span></span>
-              </div>
-              <div className="flex justify-between border-b border-border/50 pb-2">
-                <span className="text-ink/40">ynx-sv-v2-3</span>
-                <span className="flex items-center gap-2">Active <span className="text-[10px] bg-emerald-100 text-emerald-600 px-1.5 rounded font-bold uppercase">Bonded</span></span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ink/40">ynx-sv-v2-4</span>
-                <span className="flex items-center gap-2">Active <span className="text-[10px] bg-emerald-100 text-emerald-600 px-1.5 rounded font-bold uppercase">Bonded</span></span>
-              </div>
+              {validatorRows.length === 0 ? (
+                <div className="text-ink/60">
+                  {validatorLoading ? "Loading live validator set..." : "Validator snapshot unavailable."}
+                </div>
+              ) : (
+                validatorRows.map((validator, idx) => (
+                  <div
+                    key={validator.operator}
+                    className={`flex justify-between ${idx < validatorRows.length - 1 ? "border-b border-border/50 pb-2" : ""}`}
+                  >
+                    <span className="text-ink/40 truncate pr-3">{validator.moniker || validator.operator}</span>
+                    <span className="flex items-center gap-2">
+                      {validator.jailed ? "Jailed" : "Active"}
+                      <span
+                        className={`text-[10px] px-1.5 rounded font-bold uppercase ${
+                          validator.jailed
+                            ? "bg-rose-100 text-rose-600"
+                            : "bg-emerald-100 text-emerald-600"
+                        }`}
+                      >
+                        {validator.jailed ? "Jailed" : "Bonded"}
+                      </span>
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
             <p className="mt-6 text-sm text-ink/60">
-              4 bonded validators are currently active and unjailed. External validators are encouraged to join via the install script to enhance network decentralization.
+              {snapshot
+                ? `${snapshot.bonded_count} bonded validators are currently active, ${snapshot.unjailed_count} are unjailed. Mainnet gate target is at least ${snapshot.min_validators} bonded validators.`
+                : "Validator set is fetched from live REST and indexer endpoints. External validators are encouraged to join to improve decentralization."}
             </p>
           </motion.div>
         </motion.div>
@@ -321,7 +350,7 @@ export function Testnet() {
             { 
               title: "Deployment Profile", 
               desc: "Public track infrastructure details.", 
-              link: "https://github.com/JiahaoAlbus/YNX/blob/main/docs/en/V2_DEPLOYMENT_PROFILE.md" 
+              link: "https://github.com/JiahaoAlbus/YNX/blob/main/docs/en/V2_GCP_CURRENT_DEPLOYMENT_PROFILE.md"
             },
             { 
               title: "Faucet Docs", 
