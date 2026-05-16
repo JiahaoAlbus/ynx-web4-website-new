@@ -19,8 +19,6 @@ export const NETWORK = {
   },
   socials: {
     github: "https://github.com/JiahaoAlbus/YNX",
-    twitter: "https://x.com/ynx_web4", // Placeholder if not provided
-    discord: "https://discord.gg/ynx", // Placeholder if not provided
   }
 };
 

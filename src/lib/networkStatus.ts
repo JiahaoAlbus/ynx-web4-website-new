@@ -10,7 +10,7 @@ export interface ServiceStatus {
   code?: number;
 }
 
-export type NetworkStatusResponse = Record<string, ServiceStatus | string | boolean | undefined>;
+export type NetworkStatusResponse = Record<string, ServiceStatus | string | number | boolean | undefined>;
 
 type EndpointConfig = {
   url: string;
@@ -18,6 +18,7 @@ type EndpointConfig = {
   body?: unknown;
   acceptStatuses?: number[];
   parseJson?: boolean;
+  timeoutMs?: number;
   check: (data: unknown, response: Response) => ServiceState;
   summarize?: (data: unknown) => unknown;
 };
@@ -28,6 +29,7 @@ const EXPECTED_EVM_CHAIN_ID_HEX = NETWORK.evmChainIdHex;
 const ENDPOINTS: Record<string, EndpointConfig> = {
   rpc: {
     url: `${NETWORK.endpoints.rpc}/status`,
+    timeoutMs: 5500,
     check: (data) => {
       const result = (data as any)?.result;
       if (result?.node_info?.network === EXPECTED_CHAIN_ID) {
@@ -49,12 +51,14 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   evm: {
     url: NETWORK.endpoints.evm,
     method: "POST",
+    timeoutMs: 5500,
     body: { jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] },
     check: (data) => ((data as any)?.result === EXPECTED_EVM_CHAIN_ID_HEX ? "online" : "offline"),
     summarize: (data) => ({ chain_id: (data as any)?.result }),
   },
   rest: {
     url: `${NETWORK.endpoints.rest}/cosmos/base/tendermint/v1beta1/node_info`,
+    timeoutMs: 5500,
     check: (data) =>
       (data as any)?.default_node_info?.network === EXPECTED_CHAIN_ID ? "online" : "offline",
     summarize: (data) => {
@@ -70,11 +74,13 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     url: NETWORK.endpoints.grpc,
     acceptStatuses: [200, 404, 415],
     parseJson: false,
+    timeoutMs: 3500,
     check: (_data, response) =>
       response.ok || response.status === 404 || response.status === 415 ? "online" : "offline",
   },
   faucet: {
     url: `${NETWORK.endpoints.faucet}/health`,
+    timeoutMs: 5000,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.chain_id === EXPECTED_CHAIN_ID ? "online" : "offline",
     summarize: (data) => {
@@ -89,6 +95,7 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
   indexer: {
     url: `${NETWORK.endpoints.indexer}/health`,
+    timeoutMs: 5000,
     check: (data) => {
       const body = data as any;
       if (body?.ok === true && body?.chain_id === EXPECTED_CHAIN_ID) {
@@ -109,11 +116,14 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
   explorer: {
     url: NETWORK.endpoints.explorer,
+    method: "HEAD",
     parseJson: false,
+    timeoutMs: 5500,
     check: (_data, response) => (response.ok ? "online" : "offline"),
   },
   ai: {
     url: `${NETWORK.endpoints.ai}/health`,
+    timeoutMs: 5500,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.service === "ynx-ai-gateway" ? "online" : "offline",
     summarize: (data) => {
@@ -130,6 +140,7 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
   web4: {
     url: `${NETWORK.endpoints.web4}/health`,
+    timeoutMs: 5500,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.service === "ynx-web4-hub" ? "online" : "offline",
     summarize: (data) => {
@@ -170,7 +181,7 @@ async function checkService(config: EndpointConfig): Promise<ServiceStatus> {
   const start = Date.now();
 
   try {
-    const response = await fetchWithTimeout(config, 6000);
+    const response = await fetchWithTimeout(config, config.timeoutMs ?? 3000);
     const latency_ms = Date.now() - start;
     const acceptable = response.ok || config.acceptStatuses?.includes(response.status);
 
@@ -226,6 +237,7 @@ export async function getNetworkStatus(): Promise<NetworkStatusResponse> {
     updated_at: new Date().toISOString(),
     chain_id: EXPECTED_CHAIN_ID,
     evm_chain_id: EXPECTED_EVM_CHAIN_ID_HEX,
+    source: "live-probe",
   };
 
   const checks = Object.entries(ENDPOINTS).map(async ([key, config]) => {
@@ -233,5 +245,23 @@ export async function getNetworkStatus(): Promise<NetworkStatusResponse> {
   });
 
   await Promise.allSettled(checks);
+
+  const serviceStatuses = Object.keys(ENDPOINTS)
+    .map((key) => results[key])
+    .filter((item): item is ServiceStatus => typeof item === "object" && item !== null && "status" in item);
+  const online = serviceStatuses.filter((item) => item.status === "online").length;
+  const degraded = serviceStatuses.filter((item) => item.status === "degraded").length;
+  const offline = serviceStatuses.filter((item) => item.status === "offline").length;
+
+  results.summary =
+    offline === 0 && degraded === 0
+      ? "online"
+      : online > 0
+        ? "degraded"
+        : "offline";
+  results.online_count = online;
+  results.degraded_count = degraded;
+  results.offline_count = offline;
+
   return results;
 }

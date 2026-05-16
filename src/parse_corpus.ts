@@ -91,7 +91,7 @@ const finalData = Array.from(categoriesMap.values());
 
 const buildStamp = {
   generatedAt: new Date().toISOString(),
-  commitHash: 'f9d314e' // Placeholder or actual if available
+  commitHash: process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || 'local'
 };
 
 const tsContent = `export type DocSection = {

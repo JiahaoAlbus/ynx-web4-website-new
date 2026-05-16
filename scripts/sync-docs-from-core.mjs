@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,7 +7,26 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, '..');
 
 const coreRepoBaseUrl = 'https://raw.githubusercontent.com/JiahaoAlbus/YNX/main/';
-const localRepoPath = process.env.YNX_CORE_REPO_PATH;
+const forceRemote = process.env.YNX_DOCS_SOURCE === 'remote';
+const localRepoCandidates = [
+  process.env.YNX_CORE_REPO_PATH,
+  path.resolve(projectRoot, '..', 'YNX'),
+  process.env.HOME ? path.resolve(process.env.HOME, 'Desktop', 'YNX') : '',
+].filter(Boolean);
+
+const localRepoPath = forceRemote
+  ? ''
+  : localRepoCandidates.find((candidate) => {
+      try {
+        return fs.existsSync(path.join(candidate, 'README.md')) && fs.existsSync(path.join(candidate, 'docs'));
+      } catch {
+        return false;
+      }
+    });
+
+const allowFallback = process.env.YNX_DOCS_ALLOW_FALLBACK === '1';
+const fetchTimeoutMs = Number.parseInt(process.env.YNX_DOCS_FETCH_TIMEOUT_MS || '12000', 10);
+const fetchRetries = Number.parseInt(process.env.YNX_DOCS_FETCH_RETRIES || '2', 10);
 
 const publicDocsPath = path.join(projectRoot, 'public', 'docs');
 
@@ -59,12 +77,24 @@ const docList = [
   { sourcePath: 'docs/zh/主网与行业级上线门禁.md', fallbackPath: 'content/fallback-docs/zh/mainnet-readiness-gates.md', category: 'Chinese Docs', id: 'zh/mainnet-readiness-gates', title: '主网与行业级上线门禁', language: 'zh', description: '主网上线必须满足的门禁。', tags: ['mainnet', 'readiness', 'zh'] },
 ];
 
-async function fetchUrl(url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${url}: ${res.statusText}`);
+async function fetchUrl(url, attempt = 0) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), fetchTimeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    }
+    return await res.text();
+  } catch (err) {
+    if (attempt < fetchRetries) {
+      console.warn(`Retrying source after failure (${attempt + 1}/${fetchRetries}): ${url}`);
+      return fetchUrl(url, attempt + 1);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-  return await res.text();
 }
 
 if (!fs.existsSync(publicDocsPath)) {
@@ -78,7 +108,13 @@ async function syncDocs() {
   const failedPaths = [];
   const fallbackedPaths = [];
 
-  const promises = docList.map(async (doc, index) => {
+  if (localRepoPath) {
+    console.log(`Using local core repository for docs: ${localRepoPath}`);
+  } else {
+    console.log(`Using remote core repository for docs: ${coreRepoBaseUrl}`);
+  }
+
+  for (const [index, doc] of docList.entries()) {
     let content = '';
     const isYaml = doc.sourcePath.endsWith('.yaml');
     let isSuccess = true;
@@ -95,12 +131,14 @@ async function syncDocs() {
         content = await fetchUrl(url);
       }
     } catch (err) {
-      if (doc.fallbackPath && fs.existsSync(path.join(projectRoot, doc.fallbackPath))) {
-        console.warn(`Source missing, using fallback for: ${doc.sourcePath}`);
+      const fallbackFullPath = doc.fallbackPath ? path.join(projectRoot, doc.fallbackPath) : '';
+      const reason = err instanceof Error ? err.message : String(err);
+      if (allowFallback && fallbackFullPath && fs.existsSync(fallbackFullPath)) {
+        console.warn(`Source unavailable, using fallback for: ${doc.sourcePath} (${reason})`);
         content = fs.readFileSync(path.join(projectRoot, doc.fallbackPath), 'utf8');
         didFallback = true;
       } else {
-        console.error(`ERROR: Failed to source ${doc.sourcePath} and no fallback found!`);
+        console.error(`ERROR: Failed to source ${doc.sourcePath}: ${reason}`);
         isSuccess = false;
       }
     }
@@ -112,7 +150,7 @@ async function syncDocs() {
       fallbackedPaths.push(doc.sourcePath);
     } else {
       failedPaths.push(doc.sourcePath);
-      return; // Will cause exit(1) later
+      continue; // Will cause exit(1) later
     }
     
     // Wrap yaml output
@@ -138,15 +176,16 @@ async function syncDocs() {
       description: doc.description,
       tags: doc.tags
     });
-  });
+  }
 
-  await Promise.all(promises);
   registryItems.sort((a, b) => a.order - b.order);
   
   if (failedPaths.length > 0) {
     console.error('\n!!! SYNC FAILED !!!');
-    console.error('The following documents were not found and have no fallback:');
+    console.error('The following documents could not be sourced from the canonical repository:');
     failedPaths.forEach(p => console.error(`  - ${p}`));
+    console.error('\nFallback is intentionally disabled by default so public docs cannot silently downgrade.');
+    console.error('Set YNX_DOCS_ALLOW_FALLBACK=1 only for emergency offline previews.');
     process.exit(1);
   }
 

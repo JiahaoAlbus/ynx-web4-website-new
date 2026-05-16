@@ -9,15 +9,17 @@ const PUBLIC_TESTNET_BASELINE: NetworkStatus = {
   updated_at: new Date().toISOString(),
   chain_id: "ynx_9102-1",
   evm_chain_id: "0x238e",
-  rpc: { status: "online" },
-  rest: { status: "online" },
-  grpc: { status: "online" },
-  evm: { status: "online" },
-  faucet: { status: "online" },
-  indexer: { status: "online" },
-  explorer: { status: "online" },
-  ai: { status: "online" },
-  web4: { status: "online" },
+  source: "static-fallback",
+  summary: "degraded",
+  rpc: { status: "degraded", error: "status_api_unavailable" },
+  rest: { status: "degraded", error: "status_api_unavailable" },
+  grpc: { status: "degraded", error: "status_api_unavailable" },
+  evm: { status: "degraded", error: "status_api_unavailable" },
+  faucet: { status: "degraded", error: "status_api_unavailable" },
+  indexer: { status: "degraded", error: "status_api_unavailable" },
+  explorer: { status: "degraded", error: "status_api_unavailable" },
+  ai: { status: "degraded", error: "status_api_unavailable" },
+  web4: { status: "degraded", error: "status_api_unavailable" },
 };
 
 export function useNetworkStatus() {
@@ -26,9 +28,13 @@ export function useNetworkStatus() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStatus = async () => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+
     try {
       const fetchUrl = "/api/network/status";
       const response = await fetch(fetchUrl, {
+        signal: controller.signal,
         headers: {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache'
@@ -48,14 +54,15 @@ export function useNetworkStatus() {
       setStatus(data);
       setError(null);
     } catch (err: any) {
-      let displayError = err.message;
+      let displayError = err.name === "AbortError" ? "Status API timed out" : err.message;
       if (err.message === "Failed to fetch") {
         displayError = "Connection failed. The dashboard server might be restarting or unreachable.";
       }
       
       setStatus((current) => current || PUBLIC_TESTNET_BASELINE);
-      setError((currentError) => (status ? displayError : currentError));
+      setError((currentError) => (status ? displayError : currentError || displayError));
     } finally {
+      window.clearTimeout(timeoutId);
       setLoading(false);
     }
   };

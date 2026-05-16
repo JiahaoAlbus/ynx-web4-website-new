@@ -56,6 +56,23 @@ export function Testnet() {
     : validatorLoading
       ? "Checking Validator Gate"
       : "Validator Gate Unavailable";
+  const networkSummary = status?.summary;
+  const infrastructureLabel =
+    networkSummary === "online"
+      ? "Public Infrastructure Online"
+      : networkSummary === "degraded"
+        ? "Public Infrastructure Degraded"
+        : networkSummary === "offline"
+          ? "Public Infrastructure Offline"
+          : "Checking Public Infrastructure";
+  const infrastructureDot =
+    networkSummary === "online"
+      ? "bg-emerald-500"
+      : networkSummary === "degraded"
+        ? "bg-amber-500"
+        : networkSummary === "offline"
+          ? "bg-rose-500"
+          : "bg-ink/30";
 
   return (
     <div className="pt-24 pb-32">
@@ -73,11 +90,11 @@ export function Testnet() {
               transition={{ duration: 0.18 }}
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${infrastructureDot} opacity-60`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${infrastructureDot}`}></span>
               </span>
               <span className="text-xs font-mono font-medium tracking-wide text-ink/70 uppercase">
-                Public Infrastructure Active
+                {infrastructureLabel}
               </span>
             </motion.div>
             <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-ink mb-6">
