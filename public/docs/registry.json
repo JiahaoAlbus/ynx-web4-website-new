@@ -44,6 +44,34 @@
         ]
       },
       {
+        "id": "en/public-asset-status",
+        "title": "Public Asset Status",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/PUBLIC_ASSET_STATUS.md",
+        "publicPath": "/docs/en/public-asset-status.md",
+        "description": "Current official public-testnet asset status and mainstream asset targets.",
+        "tags": [
+          "assets",
+          "trading",
+          "testnet"
+        ]
+      },
+      {
+        "id": "en/speed-first-multi-asset-trading-plan",
+        "title": "Speed-First Multi-Asset Trading Plan",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/SPEED_FIRST_MULTI_ASSET_TRADING_PLAN.md",
+        "publicPath": "/docs/en/speed-first-multi-asset-trading-plan.md",
+        "description": "Speed-first trading direction and wrapped BTC/ETH/BNB/stablecoin roadmap.",
+        "tags": [
+          "speed",
+          "trading",
+          "assets"
+        ]
+      },
+      {
         "id": "en/external-validator-onboarding",
         "title": "Validator Onboarding",
         "language": "en",
@@ -322,6 +350,35 @@
           "ai",
           "web4",
           "demo",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/public-asset-status",
+        "title": "公开资产状态",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/公开资产状态.md",
+        "publicPath": "/docs/zh/public-asset-status.md",
+        "description": "当前公开测试网资产状态与主流币目标。",
+        "tags": [
+          "assets",
+          "trading",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/speed-first-multi-asset-trading-plan",
+        "title": "极速优先多资产交易计划",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/极速优先多资产交易计划.md",
+        "publicPath": "/docs/zh/speed-first-multi-asset-trading-plan.md",
+        "description": "极速优先交易方向和 wrapped 主流资产路线图。",
+        "tags": [
+          "speed",
+          "trading",
+          "assets",
           "zh"
         ]
       },
