@@ -8,3 +8,4 @@ coverage/
 !.env.example
 android/**/.gradle/
 android/**/local.properties
+.vercel
