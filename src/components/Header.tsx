@@ -28,6 +28,8 @@ export function Header() {
     { name: t("nav.builders"), href: "/builders" },
     { name: t("nav.validators"), href: "/validators" },
     { name: t("nav.trade"), href: "/trading" },
+    { name: t("nav.bridge"), href: "/bridge" },
+    { name: t("nav.assets"), href: "/test-assets" },
     { name: t("nav.docs"), href: "/docs" },
     { name: t("nav.testnet"), href: "/testnet" },
     { name: t("nav.faq"), href: "/faq" },
@@ -55,13 +57,13 @@ export function Header() {
           <Link to="/" className="flex items-center text-ink hover:text-klein transition-colors">
             <span className="font-display font-bold text-2xl tracking-tighter">YNX</span>
           </Link>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-dark/50 border border-border/50 text-ink text-[10px] font-mono font-medium uppercase tracking-widest backdrop-blur-sm">
+          <span className="hidden 2xl:inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-0.5 rounded-full bg-surface-dark/50 border border-border/50 text-ink text-[10px] font-mono font-medium uppercase tracking-widest backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {t("hero.badge")}
           </span>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -82,7 +84,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3 xl:gap-4">
           <Button
             variant="ghost"
             size="sm"

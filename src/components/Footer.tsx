@@ -41,6 +41,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/trading" className="text-white/60 hover:text-klein transition-colors flex items-center group">
+                  Trade
+                </Link>
+              </li>
+              <li>
                 <Link to="/research" className="text-white/60 hover:text-klein transition-colors flex items-center group">
                   Research
                 </Link>
@@ -60,6 +65,16 @@ export function Footer() {
                 <Link to="/testnet" className="text-white/60 hover:text-klein transition-colors flex items-center group">
                   Testnet Status
                   <span className="ml-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </Link>
+              </li>
+              <li>
+                <Link to="/bridge" className="text-white/60 hover:text-klein transition-colors flex items-center group">
+                  Bridge
+                </Link>
+              </li>
+              <li>
+                <Link to="/test-assets" className="text-white/60 hover:text-klein transition-colors flex items-center group">
+                  Test Assets
                 </Link>
               </li>
               <li>

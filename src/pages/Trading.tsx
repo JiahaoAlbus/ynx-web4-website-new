@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRightLeft, Check, Copy, ExternalLink, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
+import { addOrSwitchYnx, connectAccounts, encodeAddress, encodeApprove, encodeBalanceOf, encodeUint, formatUnits, parseUnits, publicEthCall, waitForTx } from "../lib/evm";
 
 type Asset = {
   symbol: string;
@@ -26,19 +27,7 @@ type Registry = {
   riskNotice: string;
 };
 
-type EthereumProvider = {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-};
-
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
-}
-
 const BRIDGE_ASSETS_URL = "https://rpc.ynxweb4.com/bridge/assets";
-const ERC20_BALANCE_OF = "0x70a08231";
-const ERC20_APPROVE = "0x095ea7b3";
 const PAIR_QUOTE = "0x8f79306e";
 const PAIR_SWAP = "0xf3e6ea8a";
 const YUSD = "YUSD.test";
@@ -49,80 +38,12 @@ function addressOf(asset?: Asset) {
   return asset?.contract || asset?.evmContract || "";
 }
 
-function strip0x(value: string) {
-  return value.startsWith("0x") ? value.slice(2) : value;
-}
-
-function pad64(value: string) {
-  return strip0x(value).padStart(64, "0");
-}
-
-function encodeAddress(address: string) {
-  return pad64(address.toLowerCase());
-}
-
-function encodeUint(value: bigint) {
-  return value.toString(16).padStart(64, "0");
-}
-
-function encodeBalanceOf(account: string) {
-  return `${ERC20_BALANCE_OF}${encodeAddress(account)}`;
-}
-
-function encodeApprove(spender: string, amount: bigint) {
-  return `${ERC20_APPROVE}${encodeAddress(spender)}${encodeUint(amount)}`;
-}
-
 function encodeQuote(tokenIn: string, amountIn: bigint) {
   return `${PAIR_QUOTE}${encodeAddress(tokenIn)}${encodeUint(amountIn)}`;
 }
 
 function encodeSwap(tokenIn: string, amountIn: bigint, minAmountOut: bigint, recipient: string) {
   return `${PAIR_SWAP}${encodeAddress(tokenIn)}${encodeUint(amountIn)}${encodeUint(minAmountOut)}${encodeAddress(recipient)}`;
-}
-
-function parseUnits(value: string, decimals: number) {
-  const clean = value.trim();
-  if (!/^\d*(\.\d*)?$/.test(clean) || clean === "" || clean === ".") return 0n;
-  const [wholeRaw, fractionRaw = ""] = clean.split(".");
-  const whole = wholeRaw || "0";
-  const fraction = fractionRaw.slice(0, decimals).padEnd(decimals, "0");
-  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fraction || "0");
-}
-
-function formatUnits(value: bigint, decimals: number, precision = 6) {
-  const base = 10n ** BigInt(decimals);
-  const whole = value / base;
-  const fraction = value % base;
-  if (fraction === 0n) return whole.toString();
-  const padded = fraction.toString().padStart(decimals, "0");
-  const trimmed = padded.slice(0, precision).replace(/0+$/, "");
-  return trimmed ? `${whole}.${trimmed}` : whole.toString();
-}
-
-async function publicEthCall(to: string, data: string) {
-  const response = await fetch(NETWORK.endpoints.evm, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method: "eth_call", params: [{ to, data }, "latest"] }),
-  });
-  const json = await response.json();
-  if (json.error) throw new Error(json.error.message || "eth_call failed");
-  return BigInt(json.result || "0x0");
-}
-
-async function waitForTx(hash: string) {
-  for (let i = 0; i < 40; i += 1) {
-    const response = await fetch(NETWORK.endpoints.evm, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: Date.now(), method: "eth_getTransactionReceipt", params: [hash] }),
-    });
-    const json = await response.json();
-    if (json.result) return json.result;
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
-  throw new Error("transaction receipt timeout");
 }
 
 export function Trading() {
@@ -175,19 +96,8 @@ export function Trading() {
       setStatus("Wallet not found. Install MetaMask or another EVM wallet.");
       return;
     }
-    await window.ethereum.request({
-      method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: NETWORK.evmChainIdHex,
-          chainName: NETWORK.name,
-          nativeCurrency: { name: "NYXT", symbol: "NYXT", decimals: 18 },
-          rpcUrls: [NETWORK.endpoints.evm],
-          blockExplorerUrls: [NETWORK.endpoints.explorer],
-        },
-      ],
-    });
-    const accounts = (await window.ethereum.request({ method: "eth_requestAccounts" })) as string[];
+    await addOrSwitchYnx();
+    const accounts = await connectAccounts();
     setAccount(accounts[0] || "");
     setStatus("Wallet connected");
   }
