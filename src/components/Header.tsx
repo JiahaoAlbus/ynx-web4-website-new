@@ -27,6 +27,7 @@ export function Header() {
     { name: t("nav.home"), href: "/" },
     { name: t("nav.builders"), href: "/builders" },
     { name: t("nav.validators"), href: "/validators" },
+    { name: t("nav.trade"), href: "/trading" },
     { name: t("nav.docs"), href: "/docs" },
     { name: t("nav.testnet"), href: "/testnet" },
     { name: t("nav.faq"), href: "/faq" },

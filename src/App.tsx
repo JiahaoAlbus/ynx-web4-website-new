@@ -12,6 +12,7 @@ const Builders = lazy(() => import("./pages/Builders").then((module) => ({ defau
 const Validators = lazy(() => import("./pages/Validators").then((module) => ({ default: module.Validators })));
 const Research = lazy(() => import("./pages/Research").then((module) => ({ default: module.Research })));
 const Testnet = lazy(() => import("./pages/Testnet").then((module) => ({ default: module.Testnet })));
+const Trading = lazy(() => import("./pages/Trading").then((module) => ({ default: module.Trading })));
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
 const About = lazy(() => import("./pages/About").then((module) => ({ default: module.About })));
 const Docs = lazy(() => import("./pages/Docs").then((module) => ({ default: module.Docs })));
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="validators" element={<Validators />} />
           <Route path="research" element={<Research />} />
           <Route path="testnet" element={<Testnet />} />
+          <Route path="trading" element={<Trading />} />
           <Route path="faq" element={<FAQPage />} />
           <Route path="about" element={<About />} />
           <Route path="privacy" element={<Privacy />} />
