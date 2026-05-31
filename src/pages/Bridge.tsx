@@ -38,8 +38,19 @@ type RoutesResponse = {
   items?: Route[];
 };
 
+type WatcherResponse = {
+  ok: boolean;
+  items: Record<string, {
+    last_scanned_block?: number;
+    last_scan_at?: string;
+    last_error?: string;
+    events_seen?: number;
+    deposits_minted?: number;
+  }>;
+};
+
 const BRIDGE_ROUTES_URL = "https://rpc.ynxweb4.com/bridge/routes";
-const BRIDGE_WATCHER_SCAN_URL = "https://rpc.ynxweb4.com/bridge/watchers/scan";
+const BRIDGE_WATCHERS_URL = "https://rpc.ynxweb4.com/bridge/watchers";
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io";
 
@@ -55,6 +66,7 @@ export function Bridge() {
   const [amount, setAmount] = useState("0.1");
   const [sourceBalance, setSourceBalance] = useState("-");
   const [ynxBalance, setYnxBalance] = useState("-");
+  const [watchers, setWatchers] = useState<WatcherResponse["items"]>({});
   const [status, setStatus] = useState("Ready");
   const [lastTx, setLastTx] = useState("");
   const [copied, setCopied] = useState("");
@@ -67,6 +79,25 @@ export function Bridge() {
       })
       .then((json: RoutesResponse) => setRoutes((json.routes || json.items || []).filter((item) => item.sourceKind === "evm" && item.lockboxAddress)))
       .catch((error) => setStatus(`Bridge routes unavailable: ${error.message}`));
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    async function refreshWatchers() {
+      try {
+        const response = await fetch(BRIDGE_WATCHERS_URL);
+        const json = (await response.json()) as WatcherResponse;
+        if (mounted && json.ok) setWatchers(json.items || {});
+      } catch {
+        if (mounted) setStatus("Watcher status unavailable");
+      }
+    }
+    void refreshWatchers();
+    const id = window.setInterval(refreshWatchers, 30000);
+    return () => {
+      mounted = false;
+      window.clearInterval(id);
+    };
   }, []);
 
   const route = useMemo(() => routes.find((item) => item.routeId === routeId) || routes[0], [routeId, routes]);
@@ -156,15 +187,6 @@ export function Bridge() {
     await refreshBalances(account, recipient);
   }
 
-  async function scanWatcher() {
-    setStatus("Requesting watcher scan...");
-    const response = await fetch(BRIDGE_WATCHER_SCAN_URL, { method: "POST" });
-    const json = await response.json();
-    if (!response.ok || !json.ok) throw new Error(json.error || `scan ${response.status}`);
-    setStatus(`Watcher scan complete: ${json.results?.length || 0} route result(s)`);
-    await refreshBalances(account, recipient);
-  }
-
   async function copy(value: string, label: string) {
     await navigator.clipboard.writeText(value);
     setCopied(label);
@@ -175,6 +197,8 @@ export function Bridge() {
     await addOrSwitchYnx();
     setStatus("YNX network added to wallet");
   }
+
+  const watcher = route ? watchers[route.routeId] : undefined;
 
   return (
     <div className="min-h-screen pt-24 pb-24">
@@ -252,9 +276,36 @@ export function Bridge() {
               <p className="break-words text-sm text-ink/55">{status}</p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={deposit} variant="klein" className="rounded-xl px-8">Approve / Deposit</Button>
-                <Button onClick={scanWatcher} variant="outline" className="rounded-xl px-8">Scan Watcher</Button>
+                <Button onClick={() => refreshBalances()} variant="outline" className="rounded-xl px-8">Refresh</Button>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Automated Watcher</p>
+                <h3 className="mt-1 font-display text-lg font-semibold">{route?.routeId || "No route selected"}</h3>
+              </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${watcher?.last_error ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"}`}>
+                {watcher?.last_error ? "Error" : "Live"}
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl bg-surface px-3 py-2">
+                <p className="text-xs text-ink/45">Last scanned block</p>
+                <p className="font-mono text-sm text-ink">{watcher?.last_scanned_block || "-"}</p>
+              </div>
+              <div className="rounded-xl bg-surface px-3 py-2">
+                <p className="text-xs text-ink/45">Deposits minted</p>
+                <p className="font-mono text-sm text-ink">{watcher?.deposits_minted ?? "-"}</p>
+              </div>
+              <div className="rounded-xl bg-surface px-3 py-2">
+                <p className="text-xs text-ink/45">Last scan</p>
+                <p className="truncate font-mono text-sm text-ink">{watcher?.last_scan_at || "-"}</p>
+              </div>
+            </div>
+            {watcher?.last_error && <p className="mt-3 break-words text-sm text-red-700">{watcher.last_error}</p>}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -287,7 +338,7 @@ export function Bridge() {
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <ShieldCheck className="mb-2 h-4 w-4" />
-            Public-testnet bridge routes are for testing only. Sepolia assets have no mainnet value, and BNB/TRON/BTC routes remain disabled until their testnet source watchers are configured.
+            Public-testnet bridge routes are for testing only. Sepolia deposits are watched automatically. Withdrawals and non-Sepolia source routes remain gated until source release automation and route-specific watchers are enabled.
           </div>
         </section>
       </main>

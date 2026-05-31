@@ -30,6 +30,7 @@ export function Header() {
     { name: t("nav.trade"), href: "/trading" },
     { name: t("nav.bridge"), href: "/bridge" },
     { name: t("nav.assets"), href: "/test-assets" },
+    { name: t("nav.readiness"), href: "/readiness" },
     { name: t("nav.docs"), href: "/docs" },
     { name: t("nav.testnet"), href: "/testnet" },
     { name: t("nav.faq"), href: "/faq" },
@@ -63,7 +64,7 @@ export function Header() {
           </span>
         </div>
 
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}

@@ -78,6 +78,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/readiness" className="text-white/60 hover:text-klein transition-colors flex items-center group">
+                  Readiness Gates
+                </Link>
+              </li>
+              <li>
                 <a href="https://explorer.ynxweb4.com" target="_blank" rel="noreferrer" className="text-white/60 hover:text-klein transition-colors flex items-center group">
                   Explorer
                   <ArrowUpRight className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
