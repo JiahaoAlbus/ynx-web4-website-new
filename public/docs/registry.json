@@ -58,6 +58,34 @@
         ]
       },
       {
+        "id": "en/yusd-test-asset-manual",
+        "title": "YUSD.test Asset Manual",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/YUSD_TEST_ASSET_MANUAL.md",
+        "publicPath": "/docs/en/yusd-test-asset-manual.md",
+        "description": "Manual, risk boundaries, and commands for the YUSD.test synthetic test asset.",
+        "tags": [
+          "assets",
+          "stablecoin",
+          "testnet"
+        ]
+      },
+      {
+        "id": "en/testnet-trading-manual",
+        "title": "Testnet Trading Manual",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/TESTNET_TRADING_MANUAL.md",
+        "publicPath": "/docs/en/testnet-trading-manual.md",
+        "description": "Commands and risk boundaries for the YNX testnet AMM trading pilot.",
+        "tags": [
+          "trading",
+          "amm",
+          "testnet"
+        ]
+      },
+      {
         "id": "en/speed-first-multi-asset-trading-plan",
         "title": "Speed-First Multi-Asset Trading Plan",
         "language": "en",
@@ -364,6 +392,34 @@
         "tags": [
           "assets",
           "trading",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/yusd-test-asset-manual",
+        "title": "YUSD.test 资产手册",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/YUSD_test_资产手册.md",
+        "publicPath": "/docs/zh/yusd-test-asset-manual.md",
+        "description": "YUSD.test 合成测试资产的手册、风险边界和命令。",
+        "tags": [
+          "assets",
+          "stablecoin",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/testnet-trading-manual",
+        "title": "测试网交易手册",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/测试网交易手册.md",
+        "publicPath": "/docs/zh/testnet-trading-manual.md",
+        "description": "YNX 测试网 AMM 交易 pilot 的命令和风险边界。",
+        "tags": [
+          "trading",
+          "amm",
           "zh"
         ]
       },
