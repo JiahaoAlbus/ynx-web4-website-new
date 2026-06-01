@@ -43,6 +43,31 @@ type RouteCheckResponse = {
   items: Array<{ routeId: string; ok: boolean; expectedWrappedToken?: string; mappedWrappedToken?: string; error?: string }>;
 };
 
+type RouteReadinessResponse = {
+  ok: boolean;
+  summary?: {
+    routes: number;
+    full_loop_ready: number;
+    full_loop_tested: number;
+    deposit_tested: number;
+    mapped_route_only: number;
+  };
+  items: Array<{
+    routeId: string;
+    asset?: string;
+    displayName?: string;
+    wrappedSymbol?: string;
+    phase: string;
+    full_loop_ready: boolean;
+    full_loop_tested: boolean;
+    blockers?: string[];
+    evidence?: {
+      minted_deposits?: number;
+      released_withdrawals?: number;
+    };
+  }>;
+};
+
 type Gate = {
   label: string;
   ok: boolean;
@@ -60,20 +85,23 @@ export function Readiness() {
   const [watchers, setWatchers] = useState<WatcherResponse | null>(null);
   const [withdrawalWatchers, setWithdrawalWatchers] = useState<WatcherResponse | null>(null);
   const [routeChecks, setRouteChecks] = useState<RouteCheckResponse | null>(null);
+  const [routeReadiness, setRouteReadiness] = useState<RouteReadinessResponse | null>(null);
   const [status, setStatus] = useState("Loading readiness evidence...");
 
   async function refresh() {
     try {
-      const [nextHealth, nextWatchers, nextWithdrawalWatchers, nextRoutes] = await Promise.all([
+      const [nextHealth, nextWatchers, nextWithdrawalWatchers, nextRoutes, nextRouteReadiness] = await Promise.all([
         getJson<BridgeHealth>("https://rpc.ynxweb4.com/bridge/health"),
         getJson<WatcherResponse>("https://rpc.ynxweb4.com/bridge/watchers"),
         getJson<WatcherResponse>("https://rpc.ynxweb4.com/bridge/withdrawal-watchers"),
         getJson<RouteCheckResponse>("https://rpc.ynxweb4.com/bridge/route-checks"),
+        getJson<RouteReadinessResponse>("https://rpc.ynxweb4.com/bridge/route-readiness"),
       ]);
       setHealth(nextHealth);
       setWatchers(nextWatchers);
       setWithdrawalWatchers(nextWithdrawalWatchers);
       setRouteChecks(nextRoutes);
+      setRouteReadiness(nextRouteReadiness);
       setStatus("Live evidence refreshed");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Readiness evidence unavailable");
@@ -87,15 +115,17 @@ export function Readiness() {
   const watcherItems = Object.entries(watchers?.items || {});
   const withdrawalWatcherItems = Object.entries(withdrawalWatchers?.items || {});
   const routeItems = routeChecks?.items || [];
+  const routeReadinessItems = routeReadiness?.items || [];
   const gates = useMemo<Gate[]>(() => {
     const watcherOk = watcherItems.length >= 2 && watcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
     const withdrawalWatcherOk = withdrawalWatcherItems.length >= 2 && withdrawalWatcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
     const routeOk = routeItems.length >= 5 && routeItems.every((item) => item.ok);
+    const fullLoopOk = (routeReadiness?.summary?.full_loop_tested || 0) >= 2;
     const releaseOk = Boolean(
       health?.onchain?.withdrawal_release_enabled &&
         health?.onchain?.source_relayer_configured &&
         withdrawalWatcherOk &&
-        (health?.stats?.released_withdrawals || 0) >= 1,
+        (health?.stats?.released_withdrawals || 0) >= 2,
     );
     return [
       {
@@ -119,14 +149,21 @@ export function Readiness() {
         detail: "Website exposes assets, Sepolia deposit, and YNX swap flows.",
       },
       {
+        label: "Full-loop tested routes",
+        ok: fullLoopOk,
+        detail: fullLoopOk
+          ? "Sepolia ETH and USDC both completed deposit, YNX burn, and Sepolia release smoke tests."
+          : "At least two Sepolia full-loop smoke tests are required.",
+      },
+      {
         label: "Withdrawal release automation",
         ok: releaseOk,
         detail: releaseOk
-          ? "YNX burn watcher and Sepolia lockbox release automation are live; smoke withdrawal has released."
+          ? "YNX burn watcher and Sepolia lockbox release automation are live; ETH and USDC smoke withdrawals have released."
           : "Outbound source-chain release automation still needs a successful live release.",
       },
     ];
-  }, [health, routeItems, watcherItems, withdrawalWatcherItems]);
+  }, [health, routeItems, routeReadiness, watcherItems, withdrawalWatcherItems]);
 
   const passCount = gates.filter((gate) => gate.ok).length;
 
@@ -179,6 +216,7 @@ export function Readiness() {
               <p>watcher poll ms: {health?.onchain?.watcher_poll_ms ?? "-"}</p>
               <p>withdrawal poll ms: {health?.onchain?.withdrawal_watcher_poll_ms ?? "-"}</p>
               <p>released withdrawals: {health?.stats?.released_withdrawals ?? "-"}</p>
+              <p>full-loop tested: {routeReadiness?.summary?.full_loop_tested ?? "-"}</p>
               <p>last error: {health?.onchain?.last_error || "-"}</p>
             </div>
           </div>
@@ -208,6 +246,35 @@ export function Readiness() {
                 <p className="font-mono text-xs text-ink/60">queued {watcher.withdrawals_queued ?? "-"}</p>
                 <p className="font-mono text-xs text-ink/60">released {watcher.releases_executed ?? "-"}</p>
                 <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Route Readiness</p>
+              <h2 className="mt-1 font-display text-xl font-semibold">Full-loop status</h2>
+            </div>
+            <p className="font-mono text-sm text-ink/55">
+              tested {routeReadiness?.summary?.full_loop_tested ?? "-"}/{routeReadiness?.summary?.routes ?? "-"}
+            </p>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {routeReadinessItems.map((item) => (
+              <div key={item.routeId} className="rounded-xl bg-surface p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-ink">{item.routeId}</p>
+                  <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase ${item.full_loop_tested ? "bg-emerald-50 text-emerald-700" : item.full_loop_ready ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
+                    {item.phase.replaceAll("_", " ")}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-ink/60">{item.wrappedSymbol || item.asset || item.displayName || "route"}</p>
+                <p className="mt-2 font-mono text-xs text-ink/60">
+                  minted {item.evidence?.minted_deposits ?? 0} / released {item.evidence?.released_withdrawals ?? 0}
+                </p>
+                {!!item.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{item.blockers.join(", ")}</p>}
               </div>
             ))}
           </div>
@@ -259,7 +326,7 @@ export function Readiness() {
 
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
           <Activity className="mb-2 h-4 w-4" />
-          This is mainnet-grade rehearsal infrastructure, not mainnet value infrastructure. Real mainnet status still requires external audits, independent operators, full withdrawal release automation, and production legal/compliance sign-off.
+          This is mainnet-grade rehearsal infrastructure, not mainnet value infrastructure. Real mainnet status still requires external audits, independent operators, production custody/signing controls, and legal/compliance sign-off.
         </div>
       </main>
     </div>
