@@ -15,6 +15,7 @@ export const ERC20_APPROVE = "0x095ea7b3";
 export const ERC20_ALLOWANCE = "0xdd62ed3e";
 export const LOCKBOX_DEPOSIT_NATIVE = "0x80a6de92";
 export const LOCKBOX_DEPOSIT_ERC20 = "0x5846b1e2";
+export const GATEWAY_BURN_FOR_BRIDGE_MAPPED = "0x30607820";
 
 export function strip0x(value: string) {
   return value.startsWith("0x") ? value.slice(2) : value;
@@ -54,6 +55,10 @@ export function encodeDepositNative(sourceAssetId: string, recipient: string) {
 
 export function encodeDepositERC20(sourceAssetId: string, amount: bigint, recipient: string) {
   return `${LOCKBOX_DEPOSIT_ERC20}${encodeBytes32(sourceAssetId)}${encodeUint(amount)}${encodeAddress(recipient)}`;
+}
+
+export function encodeBurnForBridgeMapped(token: string, amount: bigint, destinationChainId: string | number | bigint, destinationRecipient: string) {
+  return `${GATEWAY_BURN_FOR_BRIDGE_MAPPED}${encodeAddress(token)}${encodeUint(amount)}${encodeUint(BigInt(destinationChainId))}${encodeBytes32(destinationRecipient)}`;
 }
 
 export function parseUnits(value: string, decimals: number) {

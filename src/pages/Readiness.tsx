@@ -9,6 +9,9 @@ type BridgeHealth = {
     enabled: boolean;
     ready: boolean;
     watcher_poll_ms: number;
+    withdrawal_watcher_poll_ms: number;
+    withdrawal_release_enabled: boolean;
+    source_relayer_configured: boolean;
     last_error: string;
   };
   stats?: {
@@ -17,6 +20,8 @@ type BridgeHealth = {
     withdrawals: number;
     minted_deposits: number;
     watcher_routes: number;
+    withdrawal_watcher_routes: number;
+    released_withdrawals: number;
   };
 };
 
@@ -28,6 +33,8 @@ type WatcherResponse = {
     last_error?: string;
     events_seen?: number;
     deposits_minted?: number;
+    withdrawals_queued?: number;
+    releases_executed?: number;
   }>;
 };
 
@@ -51,18 +58,21 @@ async function getJson<T>(url: string): Promise<T> {
 export function Readiness() {
   const [health, setHealth] = useState<BridgeHealth | null>(null);
   const [watchers, setWatchers] = useState<WatcherResponse | null>(null);
+  const [withdrawalWatchers, setWithdrawalWatchers] = useState<WatcherResponse | null>(null);
   const [routeChecks, setRouteChecks] = useState<RouteCheckResponse | null>(null);
   const [status, setStatus] = useState("Loading readiness evidence...");
 
   async function refresh() {
     try {
-      const [nextHealth, nextWatchers, nextRoutes] = await Promise.all([
+      const [nextHealth, nextWatchers, nextWithdrawalWatchers, nextRoutes] = await Promise.all([
         getJson<BridgeHealth>("https://rpc.ynxweb4.com/bridge/health"),
         getJson<WatcherResponse>("https://rpc.ynxweb4.com/bridge/watchers"),
+        getJson<WatcherResponse>("https://rpc.ynxweb4.com/bridge/withdrawal-watchers"),
         getJson<RouteCheckResponse>("https://rpc.ynxweb4.com/bridge/route-checks"),
       ]);
       setHealth(nextHealth);
       setWatchers(nextWatchers);
+      setWithdrawalWatchers(nextWithdrawalWatchers);
       setRouteChecks(nextRoutes);
       setStatus("Live evidence refreshed");
     } catch (error) {
@@ -75,10 +85,18 @@ export function Readiness() {
   }, []);
 
   const watcherItems = Object.entries(watchers?.items || {});
+  const withdrawalWatcherItems = Object.entries(withdrawalWatchers?.items || {});
   const routeItems = routeChecks?.items || [];
   const gates = useMemo<Gate[]>(() => {
     const watcherOk = watcherItems.length >= 2 && watcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
+    const withdrawalWatcherOk = withdrawalWatcherItems.length >= 2 && withdrawalWatcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
     const routeOk = routeItems.length >= 5 && routeItems.every((item) => item.ok);
+    const releaseOk = Boolean(
+      health?.onchain?.withdrawal_release_enabled &&
+        health?.onchain?.source_relayer_configured &&
+        withdrawalWatcherOk &&
+        (health?.stats?.released_withdrawals || 0) >= 1,
+    );
     return [
       {
         label: "Public services",
@@ -102,11 +120,13 @@ export function Readiness() {
       },
       {
         label: "Withdrawal release automation",
-        ok: false,
-        detail: "Outbound source-chain release is intentionally gated until testnet release automation and operator controls are enabled.",
+        ok: releaseOk,
+        detail: releaseOk
+          ? "YNX burn watcher and Sepolia lockbox release automation are live; smoke withdrawal has released."
+          : "Outbound source-chain release automation still needs a successful live release.",
       },
     ];
-  }, [health, routeItems, watcherItems]);
+  }, [health, routeItems, watcherItems, withdrawalWatcherItems]);
 
   const passCount = gates.filter((gate) => gate.ok).length;
 
@@ -157,6 +177,8 @@ export function Readiness() {
               <p>routes: {health?.stats?.routes ?? "-"}</p>
               <p>minted deposits: {health?.stats?.minted_deposits ?? "-"}</p>
               <p>watcher poll ms: {health?.onchain?.watcher_poll_ms ?? "-"}</p>
+              <p>withdrawal poll ms: {health?.onchain?.withdrawal_watcher_poll_ms ?? "-"}</p>
+              <p>released withdrawals: {health?.stats?.released_withdrawals ?? "-"}</p>
               <p>last error: {health?.onchain?.last_error || "-"}</p>
             </div>
           </div>
@@ -173,6 +195,21 @@ export function Readiness() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Withdrawal Watchers</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {withdrawalWatcherItems.map(([routeId, watcher]) => (
+              <div key={routeId} className="rounded-xl bg-surface p-3">
+                <p className="font-semibold text-ink">{routeId}</p>
+                <p className="mt-2 font-mono text-xs text-ink/60">block {watcher.last_scanned_block || "-"}</p>
+                <p className="font-mono text-xs text-ink/60">queued {watcher.withdrawals_queued ?? "-"}</p>
+                <p className="font-mono text-xs text-ink/60">released {watcher.releases_executed ?? "-"}</p>
+                <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -208,6 +245,10 @@ export function Readiness() {
             <p className="font-display text-lg font-semibold">Bridge</p>
             <p className="mt-2 text-sm text-ink/60">Deposit Sepolia ETH and USDC into YNX.</p>
           </Link>
+          <Link to="/withdraw" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+            <p className="font-display text-lg font-semibold">Withdraw</p>
+            <p className="mt-2 text-sm text-ink/60">Burn wrapped assets and release Sepolia test assets.</p>
+          </Link>
           <a href="https://rpc.ynxweb4.com/bridge/health" target="_blank" rel="noreferrer" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
             <p className="flex items-center gap-2 font-display text-lg font-semibold">
               Raw Evidence <ExternalLink className="h-4 w-4" />
@@ -224,4 +265,3 @@ export function Readiness() {
     </div>
   );
 }
-

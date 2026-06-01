@@ -73,6 +73,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/withdraw" className="text-white/60 hover:text-klein transition-colors flex items-center group">
+                  Withdraw
+                </Link>
+              </li>
+              <li>
                 <Link to="/test-assets" className="text-white/60 hover:text-klein transition-colors flex items-center group">
                   Test Assets
                 </Link>

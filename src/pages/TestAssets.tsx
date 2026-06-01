@@ -206,6 +206,10 @@ export function TestAssets() {
               <p className="font-display text-lg font-semibold">Bridge Sepolia Assets</p>
               <p className="mt-2 text-sm leading-6 text-ink/60">Deposit Sepolia ETH or Circle Sepolia USDC to mint wETH.y or wUSDC.y on YNX.</p>
             </Link>
+            <Link to="/withdraw" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+              <p className="font-display text-lg font-semibold">Withdraw to Sepolia</p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">Burn wETH.y or wUSDC.y on YNX and release the matching Sepolia test asset.</p>
+            </Link>
             <Link to="/trading" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
               <p className="font-display text-lg font-semibold">Get YUSD.test Through Swap</p>
               <p className="mt-2 text-sm leading-6 text-ink/60">YUSD.test is a synthetic test stable asset. It is not redeemable and should not be treated as real USD.</p>
@@ -220,4 +224,3 @@ export function TestAssets() {
     </div>
   );
 }
-
