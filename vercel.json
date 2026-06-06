@@ -1,4 +1,27 @@
 {
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; connect-src 'self' https://ai.ynxweb4.com https://web4.ynxweb4.com https://rpc.ynxweb4.com https://evm.ynxweb4.com https://rest.ynxweb4.com https://faucet.ynxweb4.com https://indexer.ynxweb4.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    }
+  ],
   "redirects": [
     {
       "source": "/docs/docs-en-v2-public-testnet-join-guide-md",

@@ -86,6 +86,21 @@
         ]
       },
       {
+        "id": "en/public-testnet-feature-security-commands",
+        "title": "Feature and Security Commands",
+        "language": "en",
+        "category": "Start Here",
+        "sourcePath": "docs/en/PUBLIC_TESTNET_FEATURE_SECURITY_COMMANDS.md",
+        "publicPath": "/docs/en/public-testnet-feature-security-commands.md",
+        "description": "Server-first acceptance commands for public-testnet features, AI, trading, bridge, and security checks.",
+        "tags": [
+          "testnet",
+          "security",
+          "ai",
+          "trading"
+        ]
+      },
+      {
         "id": "en/speed-first-multi-asset-trading-plan",
         "title": "Speed-First Multi-Asset Trading Plan",
         "language": "en",
@@ -420,6 +435,22 @@
         "tags": [
           "trading",
           "amm",
+          "zh"
+        ]
+      },
+      {
+        "id": "zh/public-testnet-feature-security-commands",
+        "title": "公开测试网功能与安全测试命令",
+        "language": "zh",
+        "category": "Chinese Docs",
+        "sourcePath": "docs/zh/公开测试网功能与安全测试命令.md",
+        "publicPath": "/docs/zh/public-testnet-feature-security-commands.md",
+        "description": "服务器优先的公开测试网功能、AI、交易、跨链和安全验收命令。",
+        "tags": [
+          "testnet",
+          "security",
+          "ai",
+          "trading",
           "zh"
         ]
       },
