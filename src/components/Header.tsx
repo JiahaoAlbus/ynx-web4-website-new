@@ -30,6 +30,7 @@ export function Header() {
     { name: t("nav.trade"), href: "/trading" },
     { name: t("nav.bridge"), href: "/bridge" },
     { name: t("nav.withdraw"), href: "/withdraw" },
+    { name: t("nav.ai"), href: "/ai" },
     { name: t("nav.assets"), href: "/test-assets" },
     { name: t("nav.readiness"), href: "/readiness" },
     { name: t("nav.docs"), href: "/docs" },

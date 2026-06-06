@@ -15,6 +15,7 @@ const Testnet = lazy(() => import("./pages/Testnet").then((module) => ({ default
 const Trading = lazy(() => import("./pages/Trading").then((module) => ({ default: module.Trading })));
 const Bridge = lazy(() => import("./pages/Bridge").then((module) => ({ default: module.Bridge })));
 const Withdraw = lazy(() => import("./pages/Withdraw").then((module) => ({ default: module.Withdraw })));
+const AI = lazy(() => import("./pages/AI").then((module) => ({ default: module.AI })));
 const TestAssets = lazy(() => import("./pages/TestAssets").then((module) => ({ default: module.TestAssets })));
 const Readiness = lazy(() => import("./pages/Readiness").then((module) => ({ default: module.Readiness })));
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="trading" element={<Trading />} />
           <Route path="bridge" element={<Bridge />} />
           <Route path="withdraw" element={<Withdraw />} />
+          <Route path="ai" element={<AI />} />
           <Route path="test-assets" element={<TestAssets />} />
           <Route path="readiness" element={<Readiness />} />
           <Route path="faq" element={<FAQPage />} />
