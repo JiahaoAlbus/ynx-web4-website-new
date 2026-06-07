@@ -133,10 +133,13 @@ export function AI() {
     setActionBusy(action);
     setActionStatus(`Running ${action}...`);
     try {
+      const actionBody = action === "trade.quote"
+        ? { action, from_symbol: "YUSD.test", to_symbol: "wUSDC.y", amount: "0.1" }
+        : { action };
       const response = await fetch(AI_ACTION_RUN_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify(actionBody),
       });
       const json = (await response.json()) as ActionRunResponse;
       if (!response.ok || json.ok === false) throw new Error(json.error || `action ${response.status}`);
@@ -160,7 +163,7 @@ export function AI() {
   const bridgeStats = brief?.context?.bridge?.health?.stats || {};
   const onchain = brief?.context?.ai?.onchain || {};
   const answerLines = useMemo(() => answer.split(/\n/).filter((line) => line.trim().length > 0), [answer]);
-  const publicActions = ["assets.list", "validators.status", "bridge.readiness", "tx.latest"];
+  const publicActions = ["assets.list", "validators.status", "bridge.readiness", "trade.quote", "tx.latest"];
   const actionMap = useMemo(() => new Map(actions.map((item) => [item.action, item])), [actions]);
 
   return (
