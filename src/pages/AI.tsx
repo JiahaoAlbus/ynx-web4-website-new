@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bot, Brain, CheckCircle2, RefreshCw, Send, Sparkles } from "lucide-react";
+import { Bot, Brain, CheckCircle2, ListChecks, Play, RefreshCw, Send, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 
 type IntelligenceBrief = {
@@ -47,8 +47,28 @@ type ChatResponse = {
   llm_error?: string;
 };
 
+type ActionCatalog = {
+  ok: boolean;
+  actions: Array<{
+    action: string;
+    title: string;
+    mode: string;
+    auth: string;
+    description: string;
+  }>;
+};
+
+type ActionRunResponse = {
+  ok: boolean;
+  action?: string;
+  result?: unknown;
+  error?: string;
+};
+
 const AI_BRIEF_URL = "https://ai.ynxweb4.com/ai/intelligence/brief";
 const AI_CHAT_URL = "https://ai.ynxweb4.com/ai/chat";
+const AI_ACTIONS_URL = "https://ai.ynxweb4.com/ai/actions";
+const AI_ACTION_RUN_URL = "https://ai.ynxweb4.com/ai/actions/run";
 
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -63,14 +83,25 @@ export function AI() {
   const [mode, setMode] = useState("-");
   const [status, setStatus] = useState("Loading YNX Intelligence...");
   const [busy, setBusy] = useState(false);
+  const [actions, setActions] = useState<ActionCatalog["actions"]>([]);
+  const [actionStatus, setActionStatus] = useState("Action layer loading...");
+  const [actionBusy, setActionBusy] = useState("");
+  const [actionResult, setActionResult] = useState("");
 
   async function refreshBrief() {
     try {
-      const next = await getJson<IntelligenceBrief>(AI_BRIEF_URL);
+      const [next, catalog] = await Promise.all([
+        getJson<IntelligenceBrief>(AI_BRIEF_URL),
+        getJson<ActionCatalog>(AI_ACTIONS_URL).catch(() => null),
+      ]);
       setBrief(next);
       setAnswer((current) => current || next.answer || "");
       setMode(next.mode || "-");
       setStatus("Live intelligence ready");
+      if (catalog?.ok) {
+        setActions(catalog.actions || []);
+        setActionStatus("Action layer ready");
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "AI brief unavailable");
     }
@@ -98,6 +129,27 @@ export function AI() {
     }
   }
 
+  async function runAction(action: string) {
+    setActionBusy(action);
+    setActionStatus(`Running ${action}...`);
+    try {
+      const response = await fetch(AI_ACTION_RUN_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const json = (await response.json()) as ActionRunResponse;
+      if (!response.ok || json.ok === false) throw new Error(json.error || `action ${response.status}`);
+      setActionResult(JSON.stringify(json.result ?? json, null, 2));
+      setActionStatus(`${action} completed`);
+    } catch (error) {
+      setActionResult("");
+      setActionStatus(error instanceof Error ? error.message : `${action} failed`);
+    } finally {
+      setActionBusy("");
+    }
+  }
+
   useEffect(() => {
     void refreshBrief();
   }, []);
@@ -108,6 +160,8 @@ export function AI() {
   const bridgeStats = brief?.context?.bridge?.health?.stats || {};
   const onchain = brief?.context?.ai?.onchain || {};
   const answerLines = useMemo(() => answer.split(/\n/).filter((line) => line.trim().length > 0), [answer]);
+  const publicActions = ["assets.list", "validators.status", "bridge.readiness", "tx.latest"];
+  const actionMap = useMemo(() => new Map(actions.map((item) => [item.action, item])), [actions]);
 
   return (
     <div className="min-h-screen pt-24 pb-24">
@@ -184,6 +238,49 @@ export function AI() {
               {answerLines.map((line, index) => (
                 <p key={`${line}-${index}`}>{line}</p>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <ListChecks className="h-5 w-5 text-klein" />
+                  <p className="font-display text-xl font-semibold">AI Actions</p>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-ink/60">
+                  Run live public actions directly from the YNX AI Gateway. Protected actions stay behind Web4 policy/session controls.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <ShieldCheck className="h-4 w-4" />
+                policy gated
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {publicActions.map((action) => {
+                const item = actionMap.get(action);
+                return (
+                  <button
+                    key={action}
+                    onClick={() => void runAction(action)}
+                    disabled={Boolean(actionBusy)}
+                    className="flex min-h-24 items-start justify-between gap-3 rounded-xl border border-border bg-surface p-4 text-left transition hover:border-klein/40 hover:bg-white disabled:cursor-wait disabled:opacity-70"
+                  >
+                    <span>
+                      <span className="block font-semibold text-ink">{item?.title || action}</span>
+                      <span className="mt-1 block text-xs leading-5 text-ink/55">{item?.description || "Run YNX AI action."}</span>
+                    </span>
+                    {actionBusy === action ? <RefreshCw className="h-5 w-5 animate-spin text-klein" /> : <Play className="h-5 w-5 text-klein" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-4 rounded-xl border border-border bg-ink p-4 text-white">
+              <p className="text-xs font-mono uppercase tracking-widest text-white/45">{actionStatus}</p>
+              <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap break-words text-xs leading-5 text-white/75">
+                {actionResult || "Run an action to inspect live YNX data."}
+              </pre>
             </div>
           </div>
 
