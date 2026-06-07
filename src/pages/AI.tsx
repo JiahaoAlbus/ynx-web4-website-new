@@ -25,9 +25,10 @@ type IntelligenceBrief = {
         summary?: {
           routes?: number;
           full_loop_tested?: number;
+          automatic_loop_ready?: number;
           mapped_route_only?: number;
         };
-        items?: Array<{ routeId: string; phase: string; full_loop_tested?: boolean }>;
+        items?: Array<{ routeId: string; phase: string; full_loop_tested?: boolean; automatic_loop_ready?: boolean }>;
       };
       health?: {
         stats?: {
@@ -133,9 +134,18 @@ export function AI() {
     setActionBusy(action);
     setActionStatus(`Running ${action}...`);
     try {
-      const actionBody = action === "trade.quote"
+      const actionBody = action === "trade.quote" || action === "trade.preflight"
         ? { action, from_symbol: "YUSD.test", to_symbol: "wUSDC.y", amount: "0.1" }
-        : { action };
+        : action === "trade.prepare" || action === "trade.execute"
+          ? {
+              action,
+              from_symbol: "YUSD.test",
+              to_symbol: "wUSDC.y",
+              amount: "0.1",
+              recipient: "0x00000000000000000000000000000000000000aa",
+              slippage_bps: 100,
+            }
+          : { action };
       const response = await fetch(AI_ACTION_RUN_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -163,7 +173,7 @@ export function AI() {
   const bridgeStats = brief?.context?.bridge?.health?.stats || {};
   const onchain = brief?.context?.ai?.onchain || {};
   const answerLines = useMemo(() => answer.split(/\n/).filter((line) => line.trim().length > 0), [answer]);
-  const publicActions = ["assets.list", "validators.status", "bridge.readiness", "trade.quote", "tx.latest"];
+  const publicActions = ["assets.list", "validators.status", "bridge.readiness", "trade.quote", "trade.preflight", "trade.prepare", "trade.execute", "tx.latest"];
   const actionMap = useMemo(() => new Map(actions.map((item) => [item.action, item])), [actions]);
 
   return (
@@ -201,6 +211,7 @@ export function AI() {
             <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Live Stats</p>
             <div className="mt-4 space-y-2 font-mono text-sm text-ink/70">
               <p>routes full-loop: {routeSummary.full_loop_tested ?? "-"}/{routeSummary.routes ?? "-"}</p>
+              <p>automatic loops: {routeSummary.automatic_loop_ready ?? "-"}/{routeSummary.routes ?? "-"}</p>
               <p>minted deposits: {bridgeStats.minted_deposits ?? "-"}</p>
               <p>released withdrawals: {bridgeStats.released_withdrawals ?? "-"}</p>
               <p>AI jobs: {aiStats.total_jobs ?? "-"}</p>
@@ -273,6 +284,9 @@ export function AI() {
                     <span>
                       <span className="block font-semibold text-ink">{item?.title || action}</span>
                       <span className="mt-1 block text-xs leading-5 text-ink/55">{item?.description || "Run YNX AI action."}</span>
+                      <span className="mt-2 inline-flex rounded-full bg-white px-2 py-1 text-[11px] font-semibold uppercase text-ink/55">
+                        {item?.auth || "public"}
+                      </span>
                     </span>
                     {actionBusy === action ? <RefreshCw className="h-5 w-5 animate-spin text-klein" /> : <Play className="h-5 w-5 text-klein" />}
                   </button>
@@ -294,8 +308,11 @@ export function AI() {
                 <div key={route.routeId} className="flex items-center justify-between gap-3 rounded-xl bg-surface p-3">
                   <div>
                     <p className="font-semibold text-ink">{route.routeId}</p>
-                    <p className="mt-1 font-mono text-xs text-ink/55">{route.phase}</p>
-                  </div>
+                  <p className="mt-1 font-mono text-xs text-ink/55">{route.phase}</p>
+                  <p className="mt-1 font-mono text-xs text-ink/45">
+                    automatic {route.automatic_loop_ready ? "ready" : "pending"}
+                  </p>
+                </div>
                   {route.full_loop_tested && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
                 </div>
               ))}

@@ -49,6 +49,7 @@ type RouteReadinessResponse = {
     routes: number;
     full_loop_ready: number;
     full_loop_tested: number;
+    automatic_loop_ready: number;
     deposit_tested: number;
     mapped_route_only: number;
   };
@@ -60,10 +61,13 @@ type RouteReadinessResponse = {
     phase: string;
     full_loop_ready: boolean;
     full_loop_tested: boolean;
+    automatic_loop_ready?: boolean;
     blockers?: string[];
     evidence?: {
       minted_deposits?: number;
       released_withdrawals?: number;
+      deposit_watcher_status?: { status?: string; adapter?: string };
+      release_adapter_status?: { status?: string; adapter?: string };
     };
   }>;
 };
@@ -117,15 +121,15 @@ export function Readiness() {
   const routeItems = routeChecks?.items || [];
   const routeReadinessItems = routeReadiness?.items || [];
   const gates = useMemo<Gate[]>(() => {
-    const watcherOk = watcherItems.length >= 2 && watcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
-    const withdrawalWatcherOk = withdrawalWatcherItems.length >= 2 && withdrawalWatcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
+    const watcherOk = watcherItems.length >= 5 && watcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
+    const withdrawalWatcherOk = withdrawalWatcherItems.length >= 5 && withdrawalWatcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
     const routeOk = routeItems.length >= 5 && routeItems.every((item) => item.ok);
-    const fullLoopOk = (routeReadiness?.summary?.full_loop_tested || 0) >= 2;
+    const fullLoopOk = (routeReadiness?.summary?.full_loop_tested || 0) >= 5;
+    const automaticLoopOk = (routeReadiness?.summary?.automatic_loop_ready || 0) >= 5;
     const releaseOk = Boolean(
       health?.onchain?.withdrawal_release_enabled &&
-        health?.onchain?.source_relayer_configured &&
         withdrawalWatcherOk &&
-        (health?.stats?.released_withdrawals || 0) >= 2,
+        (health?.stats?.released_withdrawals || 0) >= 5,
     );
     return [
       {
@@ -136,7 +140,7 @@ export function Readiness() {
       {
         label: "Automated deposit watcher",
         ok: watcherOk,
-        detail: watcherOk ? "Sepolia ETH and USDC routes are scanned automatically." : "Watcher evidence is incomplete.",
+        detail: watcherOk ? "All five public-testnet routes have live deposit watcher evidence." : "Watcher evidence is incomplete or route config is missing.",
       },
       {
         label: "Route mapping integrity",
@@ -152,15 +156,22 @@ export function Readiness() {
         label: "Full-loop tested routes",
         ok: fullLoopOk,
         detail: fullLoopOk
-          ? "Sepolia ETH and USDC both completed deposit, YNX burn, and Sepolia release smoke tests."
-          : "At least two Sepolia full-loop smoke tests are required.",
+          ? "All five routes have deposit, YNX burn, and source release evidence."
+          : "All five public-testnet routes must have full-loop evidence.",
+      },
+      {
+        label: "Automatic route loop readiness",
+        ok: automaticLoopOk,
+        detail: automaticLoopOk
+          ? "All routes report automatic watcher plus signer-gated release readiness."
+          : "A missing deposit address, TRON contract, BSC lockbox, release signer, or watcher scan blocks automatic PASS.",
       },
       {
         label: "Withdrawal release automation",
         ok: releaseOk,
         detail: releaseOk
           ? "YNX burn watcher and Sepolia lockbox release automation are live; ETH and USDC smoke withdrawals have released."
-          : "Outbound source-chain release automation still needs a successful live release.",
+          : "Outbound source-chain release automation still needs configured signer/lockbox evidence and successful releases.",
       },
     ];
   }, [health, routeItems, routeReadiness, watcherItems, withdrawalWatcherItems]);
@@ -217,6 +228,7 @@ export function Readiness() {
               <p>withdrawal poll ms: {health?.onchain?.withdrawal_watcher_poll_ms ?? "-"}</p>
               <p>released withdrawals: {health?.stats?.released_withdrawals ?? "-"}</p>
               <p>full-loop tested: {routeReadiness?.summary?.full_loop_tested ?? "-"}</p>
+              <p>automatic loops: {routeReadiness?.summary?.automatic_loop_ready ?? "-"}</p>
               <p>last error: {health?.onchain?.last_error || "-"}</p>
             </div>
           </div>
@@ -273,6 +285,12 @@ export function Readiness() {
                 <p className="mt-2 text-sm text-ink/60">{item.wrappedSymbol || item.asset || item.displayName || "route"}</p>
                 <p className="mt-2 font-mono text-xs text-ink/60">
                   minted {item.evidence?.minted_deposits ?? 0} / released {item.evidence?.released_withdrawals ?? 0}
+                </p>
+                <p className="mt-2 font-mono text-xs text-ink/60">
+                  deposit {item.evidence?.deposit_watcher_status?.status || "-"} / release {item.evidence?.release_adapter_status?.status || "-"}
+                </p>
+                <p className={`mt-2 text-xs font-semibold ${item.automatic_loop_ready ? "text-emerald-700" : "text-amber-700"}`}>
+                  automatic loop {item.automatic_loop_ready ? "ready" : "pending"}
                 </p>
                 {!!item.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{item.blockers.join(", ")}</p>}
               </div>

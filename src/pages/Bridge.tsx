@@ -49,8 +49,24 @@ type WatcherResponse = {
   }>;
 };
 
+type RouteReadinessResponse = {
+  ok: boolean;
+  summary?: { routes?: number; full_loop_tested?: number; automatic_loop_ready?: number };
+  items: Array<{
+    routeId: string;
+    phase: string;
+    automatic_loop_ready?: boolean;
+    blockers?: string[];
+    evidence?: {
+      deposit_watcher_status?: { status?: string; adapter?: string };
+      release_adapter_status?: { status?: string; adapter?: string };
+    };
+  }>;
+};
+
 const BRIDGE_ROUTES_URL = "https://rpc.ynxweb4.com/bridge/routes";
 const BRIDGE_WATCHERS_URL = "https://rpc.ynxweb4.com/bridge/watchers";
+const BRIDGE_READINESS_URL = "https://rpc.ynxweb4.com/bridge/route-readiness";
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io";
 
@@ -67,6 +83,7 @@ export function Bridge() {
   const [sourceBalance, setSourceBalance] = useState("-");
   const [ynxBalance, setYnxBalance] = useState("-");
   const [watchers, setWatchers] = useState<WatcherResponse["items"]>({});
+  const [readiness, setReadiness] = useState<RouteReadinessResponse | null>(null);
   const [status, setStatus] = useState("Ready");
   const [lastTx, setLastTx] = useState("");
   const [copied, setCopied] = useState("");
@@ -86,8 +103,12 @@ export function Bridge() {
     async function refreshWatchers() {
       try {
         const response = await fetch(BRIDGE_WATCHERS_URL);
-        const json = (await response.json()) as WatcherResponse;
+        const [json, readinessResponse] = await Promise.all([
+          response.json() as Promise<WatcherResponse>,
+          fetch(BRIDGE_READINESS_URL).then((res) => res.json() as Promise<RouteReadinessResponse>),
+        ]);
         if (mounted && json.ok) setWatchers(json.items || {});
+        if (mounted && readinessResponse.ok) setReadiness(readinessResponse);
       } catch {
         if (mounted) setStatus("Watcher status unavailable");
       }
@@ -199,6 +220,7 @@ export function Bridge() {
   }
 
   const watcher = route ? watchers[route.routeId] : undefined;
+  const routeReadiness = route ? readiness?.items?.find((item) => item.routeId === route.routeId) : null;
 
   return (
     <div className="min-h-screen pt-24 pb-24">
@@ -213,7 +235,7 @@ export function Bridge() {
               <ArrowDownToLine className="text-emerald-300" />
             </div>
             <p className="text-sm leading-6 text-white/65">
-              Lock Sepolia ETH or Circle Sepolia USDC, then mint wETH.y or wUSDC.y on YNX public testnet.
+              Lock supported public-testnet source assets, then mint their wrapped test representation on YNX. Non-Sepolia routes show readiness and automation status before use.
             </p>
             <Button onClick={connectSourceWallet} className="mt-6 w-full justify-between rounded-xl" variant="klein">
               {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Connect Sepolia"}
@@ -306,6 +328,20 @@ export function Bridge() {
               </div>
             </div>
             {watcher?.last_error && <p className="mt-3 break-words text-sm text-red-700">{watcher.last_error}</p>}
+            {routeReadiness && (
+              <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{routeReadiness.phase}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${routeReadiness.automatic_loop_ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                    automatic {routeReadiness.automatic_loop_ready ? "ready" : "pending"}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-ink/60">
+                  deposit watcher: {routeReadiness.evidence?.deposit_watcher_status?.status || "-"} / release adapter: {routeReadiness.evidence?.release_adapter_status?.status || "-"}
+                </p>
+                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{routeReadiness.blockers.join(", ")}</p>}
+              </div>
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -338,7 +374,7 @@ export function Bridge() {
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <ShieldCheck className="mb-2 h-4 w-4" />
-            Public-testnet bridge routes are for testing only. Sepolia deposits are watched automatically. Withdrawals and non-Sepolia source routes remain gated until source release automation and route-specific watchers are enabled.
+            Public-testnet bridge routes are for testing only. AI/readiness panels show whether a route has automatic watcher and signer-gated release configured; missing BSC lockbox, BTC/TRON deposit address, contract, or signer blocks automatic PASS.
           </div>
         </section>
       </main>

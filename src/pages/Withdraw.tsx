@@ -37,8 +37,23 @@ type Withdrawal = {
   release?: { tx_hash?: string; block_number?: number };
 };
 
+type RouteReadinessResponse = {
+  ok: boolean;
+  items: Array<{
+    routeId: string;
+    phase: string;
+    automatic_loop_ready?: boolean;
+    blockers?: string[];
+    evidence?: {
+      release_adapter_status?: { status?: string; adapter?: string };
+      withdrawal_watcher?: { last_scan_at?: string; releases_executed?: number; last_error?: string };
+    };
+  }>;
+};
+
 const BRIDGE_ROUTES_URL = "https://rpc.ynxweb4.com/bridge/routes";
 const BRIDGE_WITHDRAWALS_URL = "https://rpc.ynxweb4.com/bridge/withdrawals";
+const BRIDGE_READINESS_URL = "https://rpc.ynxweb4.com/bridge/route-readiness";
 const GATEWAY_ADDRESS = "0x3a2948da8f35b86dce1440ebfb56b8ae041cebfe";
 const SEPOLIA_EXPLORER = "https://sepolia.etherscan.io";
 
@@ -56,6 +71,7 @@ export function Withdraw() {
   const [status, setStatus] = useState("Ready");
   const [burnTx, setBurnTx] = useState("");
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [readiness, setReadiness] = useState<RouteReadinessResponse | null>(null);
 
   useEffect(() => {
     fetch(BRIDGE_ROUTES_URL)
@@ -81,8 +97,12 @@ export function Withdraw() {
       setBalance(formatUnits(raw, route.decimals, 8));
     }
     const response = await fetch(BRIDGE_WITHDRAWALS_URL);
-    const json = await response.json();
+    const [json, readinessJson] = await Promise.all([
+      response.json(),
+      fetch(BRIDGE_READINESS_URL).then((res) => res.json() as Promise<RouteReadinessResponse>).catch(() => null),
+    ]);
     setWithdrawals(json.items || []);
+    if (readinessJson?.ok) setReadiness(readinessJson);
   }
 
   async function withdraw() {
@@ -128,6 +148,7 @@ export function Withdraw() {
   }, [account, routeId, routes.length]);
 
   const matchingWithdrawals = withdrawals.filter((item) => !burnTx || item.burn_tx_hash.toLowerCase() === burnTx.toLowerCase()).slice(0, 5);
+  const routeReadiness = route ? readiness?.items?.find((item) => item.routeId === route.routeId) : null;
 
   return (
     <div className="min-h-screen pt-24 pb-24">
@@ -142,7 +163,7 @@ export function Withdraw() {
               <ArrowUpFromLine className="text-emerald-300" />
             </div>
             <p className="text-sm leading-6 text-white/65">
-              Burn wUSDC.y or wETH.y on YNX and release the matching Sepolia test asset from the source lockbox.
+              Burn wrapped public-testnet assets on YNX and inspect the route release adapter before source-chain release.
             </p>
             <Button onClick={connectWallet} className="mt-6 w-full justify-between rounded-xl" variant="klein">
               {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Connect YNX"}
@@ -198,6 +219,20 @@ export function Withdraw() {
               <h3 className="font-display text-lg font-semibold">Withdrawal Status</h3>
               <Button size="sm" variant="ghost" onClick={refresh}>Refresh</Button>
             </div>
+            {routeReadiness && (
+              <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{routeReadiness.phase}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${routeReadiness.automatic_loop_ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                    {routeReadiness.evidence?.release_adapter_status?.status || "release status unknown"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-ink/60">
+                  watcher last scan: {routeReadiness.evidence?.withdrawal_watcher?.last_scan_at || "-"} / releases: {routeReadiness.evidence?.withdrawal_watcher?.releases_executed ?? "-"}
+                </p>
+                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{routeReadiness.blockers.join(", ")}</p>}
+              </div>
+            )}
             <div className="mt-4 space-y-3">
               {matchingWithdrawals.length === 0 ? (
                 <p className="text-sm text-ink/55">No matching withdrawal yet. The watcher scans automatically.</p>
@@ -220,11 +255,10 @@ export function Withdraw() {
 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
             <CheckCircle2 className="mb-2 h-4 w-4" />
-            Withdrawal release automation is live for Sepolia ETH and Circle Sepolia USDC test routes. Test assets have no mainnet value.
+            Release automation is route-specific. Sepolia uses source lockboxes; BTC/TRON require configured public-testnet signer adapters; all assets here have no mainnet value.
           </div>
         </section>
       </main>
     </div>
   );
 }
-

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowRightLeft, Check, Copy, ExternalLink, RefreshCw, Wallet } from "lucide-react";
+import { Activity, ArrowRightLeft, Check, Copy, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
 import { addOrSwitchYnx, connectAccounts, encodeAddress, encodeApprove, encodeBalanceOf, encodeUint, formatUnits, parseUnits, publicEthCall, waitForTx } from "../lib/evm";
@@ -28,6 +28,7 @@ type Registry = {
 };
 
 const BRIDGE_ASSETS_URL = "https://rpc.ynxweb4.com/bridge/assets";
+const AI_ACTION_RUN_URL = "https://ai.ynxweb4.com/ai/actions/run";
 const PAIR_QUOTE = "0x8f79306e";
 const PAIR_SWAP = "0xf3e6ea8a";
 const YUSD = "YUSD.test";
@@ -55,6 +56,9 @@ export function Trading() {
   const [quote, setQuote] = useState<bigint | null>(null);
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [status, setStatus] = useState("Ready");
+  const [aiStatus, setAiStatus] = useState("AI preflight loading...");
+  const [preflight, setPreflight] = useState<any | null>(null);
+  const [prepared, setPrepared] = useState<any | null>(null);
   const [copied, setCopied] = useState("");
 
   useEffect(() => {
@@ -125,6 +129,41 @@ export function Trading() {
     setQuote(raw);
   }
 
+  async function refreshAiPreflight() {
+    if (!fromAsset || !toAsset || !amount || Number(amount) <= 0) {
+      setPreflight(null);
+      setPrepared(null);
+      return;
+    }
+    try {
+      const preflightResponse = await fetch(AI_ACTION_RUN_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "trade.preflight", from_symbol: fromSymbol, to_symbol: toSymbol, amount }),
+      });
+      const preflightJson = await preflightResponse.json();
+      if (!preflightResponse.ok || preflightJson.ok === false) throw new Error(preflightJson.error || `preflight ${preflightResponse.status}`);
+      setPreflight(preflightJson.result);
+
+      if (account) {
+        const prepareResponse = await fetch(AI_ACTION_RUN_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "trade.prepare", from_symbol: fromSymbol, to_symbol: toSymbol, amount, recipient: account, slippage_bps: 100 }),
+        });
+        const prepareJson = await prepareResponse.json();
+        if (prepareResponse.ok && prepareJson.ok !== false) setPrepared(prepareJson.result);
+      } else {
+        setPrepared(null);
+      }
+      setAiStatus("AI preflight ready");
+    } catch (error) {
+      setPreflight(null);
+      setPrepared(null);
+      setAiStatus(error instanceof Error ? error.message : "AI preflight unavailable");
+    }
+  }
+
   async function swap() {
     if (!window.ethereum || !account || !pair || !fromAsset || !toAsset) {
       setStatus("Connect wallet first");
@@ -157,8 +196,9 @@ export function Trading() {
 
   useEffect(() => {
     void refreshQuote();
+    void refreshAiPreflight();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount, fromSymbol, pair?.pair, registry, toSymbol]);
+  }, [account, amount, fromSymbol, pair?.pair, registry, toSymbol]);
 
   useEffect(() => {
     if (account && tradableAssets.length) void refreshBalances(account);
@@ -278,6 +318,57 @@ export function Trading() {
               <Button onClick={swap} variant="klein" className="w-full rounded-xl px-8 md:w-auto">
                 Approve + Swap
               </Button>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-klein" />
+                  <p className="font-display text-xl font-semibold">AI Preflight</p>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-ink/60">
+                  Quote, minOut, route status, liquidity, and test-asset risk before wallet signing. Agent execution remains Web4-policy gated.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={refreshAiPreflight}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              <div className="rounded-xl bg-surface p-3">
+                <p className="text-xs text-ink/45">Pair</p>
+                <p className="mt-1 font-semibold text-ink">{preflight?.pair?.label || pair?.label || "-"}</p>
+              </div>
+              <div className="rounded-xl bg-surface p-3">
+                <p className="text-xs text-ink/45">AI quote</p>
+                <p className="mt-1 font-mono text-sm text-ink">{preflight?.quote?.amount_out || "-"}</p>
+              </div>
+              <div className="rounded-xl bg-surface p-3">
+                <p className="text-xs text-ink/45">minOut</p>
+                <p className="mt-1 font-mono text-sm text-ink">{prepared?.min_out || "-"}</p>
+              </div>
+              <div className="rounded-xl bg-surface p-3">
+                <p className="text-xs text-ink/45">Price impact</p>
+                <p className="mt-1 font-mono text-sm text-ink">{preflight?.quote?.liquidity?.price_impact_bps ?? "-"} bps</p>
+              </div>
+            </div>
+            <div className="mt-3 rounded-xl border border-border bg-surface p-3">
+              <p className="text-xs font-mono uppercase tracking-widest text-ink/45">{aiStatus}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(preflight?.routes || []).map((route: any) => (
+                  <span key={route.routeId} className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">
+                    {route.routeId}: {route.phase}
+                  </span>
+                ))}
+              </div>
+              {!!preflight?.warnings?.length && (
+                <ul className="mt-3 space-y-1 text-sm text-amber-800">
+                  {preflight.warnings.slice(0, 4).map((warning: string) => <li key={warning}>{warning}</li>)}
+                </ul>
+              )}
             </div>
           </div>
 
