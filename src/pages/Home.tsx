@@ -38,8 +38,7 @@ export function Home() {
       <Hero />
       <ChoosePathSection />
       <LiveProofSection />
-      <AISettlementDemo />
-      <DeveloperSection />
+      <BuildAndDemoSection />
       <FinalCTA />
       <RiskNotice />
     </div>
@@ -330,11 +329,11 @@ function ChoosePathSection() {
           cta: "View Testnet",
         },
         {
-          icon: <Terminal className="h-5 w-5" />,
-          title: "I want to build on it",
-          desc: "Go straight to RPC, EVM access, join guides, and integration docs.",
+          icon: <Sparkles className="h-5 w-5" />,
+          title: "I want to build or run the demo",
+          desc: "Go straight to RPC, EVM access, join guides, and the official AI/Web4 workflow.",
           href: "/builders",
-          cta: "Builder Path",
+          cta: "Build Path",
         },
         {
           icon: <Wallet className="h-5 w-5" />,
@@ -342,20 +341,6 @@ function ChoosePathSection() {
           desc: "Get test assets first, then bridge in, trade, or withdraw through public flows.",
           href: "/test-assets",
           cta: "Start With Assets",
-        },
-        {
-          icon: <Shield className="h-5 w-5" />,
-          title: "I want to review operational readiness",
-          desc: "Inspect route evidence, blockers, and why testnet progress is not the same as production.",
-          href: "/readiness",
-          cta: "Review Gates",
-        },
-        {
-          icon: <FileText className="h-5 w-5" />,
-          title: "I want readable docs, not just pages",
-          desc: "Use the docs hub to browse by task instead of guessing which document title matters.",
-          href: "/docs",
-          cta: "Open Docs Hub",
         },
       ]
     : [
@@ -374,11 +359,11 @@ function ChoosePathSection() {
           cta: "查看测试网",
         },
         {
-          icon: <Terminal className="h-5 w-5" />,
-          title: "我想接入和开发",
-          desc: "直接进入 RPC、EVM 接入、加入手册和集成文档。",
+          icon: <Sparkles className="h-5 w-5" />,
+          title: "我想开发或跑演示",
+          desc: "直接进入 RPC、EVM 接入、加入手册和官方 AI/Web4 演示流程。",
           href: "/builders",
-          cta: "开发者路径",
+          cta: "开发路径",
         },
         {
           icon: <Wallet className="h-5 w-5" />,
@@ -386,20 +371,6 @@ function ChoosePathSection() {
           desc: "先领测试资产，再体验跨链、交易和提现路径。",
           href: "/test-assets",
           cta: "先拿资产",
-        },
-        {
-          icon: <Shield className="h-5 w-5" />,
-          title: "我想看就绪度和风险",
-          desc: "检查路由证据、剩余阻塞项，以及为何测试网不等于生产。",
-          href: "/readiness",
-          cta: "查看门禁",
-        },
-        {
-          icon: <FileText className="h-5 w-5" />,
-          title: "我想按任务找文档",
-          desc: "通过文档中心按任务浏览，而不是猜文件名。",
-          href: "/docs",
-          cta: "打开文档中心",
         },
       ];
 
@@ -441,6 +412,90 @@ function ChoosePathSection() {
               <p className="mt-3 text-sm leading-7 text-ink/62">{path.desc}</p>
               <div className="mt-6 inline-flex rounded-full border border-klein/12 bg-white/85 px-3 py-2 text-xs font-semibold text-klein">
                 {path.cta}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
+          <Link to="/docs" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Browse docs hub" : "浏览文档中心"}
+          </Link>
+          <Link to="/readiness" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Review readiness and risk" : "查看门禁与风险"}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BuildAndDemoSection() {
+  const { language, t } = useTranslation();
+  const isEn = language === "en";
+
+  const quickLinks = [
+    {
+      title: isEn ? "Builder quickstart" : "开发者快速开始",
+      desc: isEn ? "RPC, EVM access, join path, and CLI setup." : "RPC、EVM 接入、加入路径和 CLI 安装。",
+      href: "/builders",
+    },
+    {
+      title: isEn ? "Official AI demo" : "官方 AI 演示",
+      desc: isEn ? "Bounded session, job flow, and settlement walkthrough." : "受限会话、任务流和结算演示。",
+      href: "/docs/en/ai-web4-official-demo",
+    },
+    {
+      title: isEn ? "Public docs hub" : "公开文档中心",
+      desc: isEn ? "Read by task instead of guessing filenames." : "按任务阅读，不用猜文件名。",
+      href: "/docs",
+    },
+  ];
+
+  return (
+    <section className="border-b border-border/60 bg-white px-6 py-24 md:py-28">
+      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="ynx-panel rounded-[32px] border border-klein/10 p-8">
+          <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-klein/70">
+            {isEn ? "Build / Demo" : "开发 / 演示"}
+          </div>
+          <h2 className="mt-5 text-4xl font-display font-bold tracking-[-0.05em] text-ink md:text-5xl">
+            {isEn ? "One short path for builders and evaluators." : "给开发者和评估者的一条短路径。"}
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-ink/64">
+            {isEn
+              ? "If someone wants to test the real surface, they usually need only three things: builder setup, the official AI demo, and the docs hub."
+              : "如果有人只是想快速验证真实表面，通常只需要三件事：开发接入、官方 AI 演示和文档中心。"}
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Button variant="klein" size="lg" asChild className="rounded-2xl">
+              <Link to="/builders">
+                {isEn ? "Open builder path" : "进入开发路径"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="rounded-2xl">
+              <Link to="/docs/en/ai-web4-official-demo">
+                {isEn ? "Run AI demo" : "运行 AI 演示"}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          {quickLinks.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className="group rounded-[28px] border border-border bg-surface/60 p-6 transition hover:-translate-y-0.5 hover:border-klein/20 hover:bg-white"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-display font-semibold tracking-tight text-ink">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-ink/60">{item.desc}</p>
+                </div>
+                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-ink/25 transition-all group-hover:translate-x-1 group-hover:text-klein" />
               </div>
             </Link>
           ))}
