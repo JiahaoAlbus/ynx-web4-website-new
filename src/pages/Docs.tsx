@@ -240,6 +240,43 @@ export function Docs() {
     [deferredSearchQuery, registry],
   );
 
+  const featuredPaths = useMemo(
+    () => [
+      {
+        title: "Start building",
+        description: "Connect to RPC, EVM, and the fastest builder setup path.",
+        ids: ["en/builder-quickstart", "en/public-testnet-join"],
+      },
+      {
+        title: "Run the AI path",
+        description: "See the official AI and Web4 demo flow first.",
+        ids: ["en/ai-web4-official-demo", "en/ynx-v2-ai-settlement-api"],
+      },
+      {
+        title: "Operate assets",
+        description: "Bridge, trade, and test-asset flows in the right order.",
+        ids: ["en/public-asset-status", "en/testnet-trading-manual", "en/yusd-test-asset-manual"],
+      },
+      {
+        title: "Review readiness",
+        description: "Check operational gates, boundaries, and current production caveats.",
+        ids: ["en/mainnet-and-industry-readiness-gates", "en/non-custodial-business-and-compliance-boundary"],
+      },
+    ],
+    [],
+  );
+
+  const featuredDocs = useMemo(
+    () =>
+      featuredPaths.map((group) => ({
+        ...group,
+        docs: group.ids
+          .map((id) => registry.flatMap((category) => category.items).find((item) => item.id === id))
+          .filter((item): item is DocItem => Boolean(item)),
+      })),
+    [featuredPaths, registry],
+  );
+
   return (
     <div className="h-[calc(100vh-5rem)] bg-white overflow-hidden">
       {/* Mobile Menu Button */}
@@ -299,6 +336,28 @@ export function Docs() {
               </motion.div>
             )}
           </motion.div>
+
+          <div className="mb-8 rounded-2xl border border-klein/12 bg-klein/5 p-4">
+            <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-klein/75">Quick paths</p>
+            <div className="mt-3 grid gap-2">
+              {[
+                { label: "Build", to: "/builders" },
+                { label: "Testnet", to: "/testnet" },
+                { label: "Bridge", to: "/bridge" },
+                { label: "Trade", to: "/trading" },
+                { label: "Readiness", to: "/readiness" },
+              ].map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className="rounded-xl bg-white/82 px-3 py-2.5 text-sm font-medium text-ink/72 transition hover:text-klein"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
 
           <nav className="space-y-8 pb-12">
             {filteredDocs.map((category, i) => (
@@ -422,7 +481,34 @@ export function Docs() {
             ) : (
               <motion.div key="index" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-ink py-10">
                 <h1 className="text-4xl font-display font-bold text-ink mb-4 tracking-tight">YNX v2 Documentation</h1>
-                <p className="text-xl text-ink/60 mb-12">Select a topic from the sidebar or explore the key areas below.</p>
+                <p className="text-xl text-ink/60 mb-12">Start by task, then drill into the underlying documents only when you need the detail.</p>
+
+                <div className="mb-12 grid gap-5 md:grid-cols-2 not-prose">
+                  {featuredDocs.map((group, index) => (
+                    <motion.div
+                      key={group.title}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.38, delay: index * 0.05, ease: motionEase.emphasized }}
+                      className="ynx-panel rounded-[1.75rem] border border-klein/10 p-6"
+                    >
+                      <h3 className="text-xl font-display font-semibold text-ink">{group.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-ink/58">{group.description}</p>
+                      <div className="mt-5 space-y-2">
+                        {group.docs.map((item) => (
+                          <Link
+                            key={item.id}
+                            to={`/docs/${item.id}`}
+                            className="flex items-center justify-between rounded-xl border border-border/70 bg-white/78 px-4 py-3 text-sm font-medium text-ink/72 transition hover:border-klein/20 hover:text-klein"
+                          >
+                            <span className="pr-4">{item.title}</span>
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-ink/30" />
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
                 
                 <div className="grid md:grid-cols-2 gap-6 not-prose">
                   {registry.slice(0, 4).map((category, index) => (

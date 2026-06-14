@@ -6,12 +6,15 @@ import {
   Cpu,
   Download,
   ExternalLink,
+  FileText,
   Globe,
   Lock,
   Orbit,
+  Search,
   Shield,
   Sparkles,
   Terminal,
+  Wallet,
   Waves,
 } from "lucide-react";
 import { useState } from "react";
@@ -34,6 +37,7 @@ export function Home() {
     <div className="flex min-h-screen flex-col bg-white">
       <Hero />
       <ValueStrip />
+      <ChoosePathSection />
       <HowItWorks />
       <LiveProofSection />
       <CapabilitiesOverview />
@@ -306,6 +310,147 @@ function Hero() {
             </div>
           </TiltCard>
         </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function ChoosePathSection() {
+  const { language } = useTranslation();
+  const isEn = language === "en";
+
+  const paths = isEn
+    ? [
+        {
+          icon: <Search className="h-5 w-5" />,
+          title: "I want to understand YNX quickly",
+          desc: "Start with the product framing, current boundaries, and the cleanest docs path.",
+          href: "/about",
+          cta: "Open About",
+        },
+        {
+          icon: <Globe className="h-5 w-5" />,
+          title: "I want to check the live network",
+          desc: "See public endpoints, validator signals, and the current public operating surface.",
+          href: "/testnet",
+          cta: "View Testnet",
+        },
+        {
+          icon: <Terminal className="h-5 w-5" />,
+          title: "I want to build on it",
+          desc: "Go straight to RPC, EVM access, join guides, and integration docs.",
+          href: "/builders",
+          cta: "Builder Path",
+        },
+        {
+          icon: <Wallet className="h-5 w-5" />,
+          title: "I want to try bridge, assets, or swap",
+          desc: "Get test assets first, then bridge in, trade, or withdraw through public flows.",
+          href: "/test-assets",
+          cta: "Start With Assets",
+        },
+        {
+          icon: <Shield className="h-5 w-5" />,
+          title: "I want to review operational readiness",
+          desc: "Inspect route evidence, blockers, and why testnet progress is not the same as production.",
+          href: "/readiness",
+          cta: "Review Gates",
+        },
+        {
+          icon: <FileText className="h-5 w-5" />,
+          title: "I want readable docs, not just pages",
+          desc: "Use the docs hub to browse by task instead of guessing which document title matters.",
+          href: "/docs",
+          cta: "Open Docs Hub",
+        },
+      ]
+    : [
+        {
+          icon: <Search className="h-5 w-5" />,
+          title: "我想先快速理解 YNX",
+          desc: "先看产品定位、当前边界，以及最清晰的阅读路径。",
+          href: "/about",
+          cta: "查看关于",
+        },
+        {
+          icon: <Globe className="h-5 w-5" />,
+          title: "我想先看网络是否真的在运行",
+          desc: "直接看公开端点、验证者信号和当前运行表面。",
+          href: "/testnet",
+          cta: "查看测试网",
+        },
+        {
+          icon: <Terminal className="h-5 w-5" />,
+          title: "我想接入和开发",
+          desc: "直接进入 RPC、EVM 接入、加入手册和集成文档。",
+          href: "/builders",
+          cta: "开发者路径",
+        },
+        {
+          icon: <Wallet className="h-5 w-5" />,
+          title: "我想试跨链、资产和交易",
+          desc: "先领测试资产，再体验跨链、交易和提现路径。",
+          href: "/test-assets",
+          cta: "先拿资产",
+        },
+        {
+          icon: <Shield className="h-5 w-5" />,
+          title: "我想看就绪度和风险",
+          desc: "检查路由证据、剩余阻塞项，以及为何测试网不等于生产。",
+          href: "/readiness",
+          cta: "查看门禁",
+        },
+        {
+          icon: <FileText className="h-5 w-5" />,
+          title: "我想按任务找文档",
+          desc: "通过文档中心按任务浏览，而不是猜文件名。",
+          href: "/docs",
+          cta: "打开文档中心",
+        },
+      ];
+
+  return (
+    <section className="border-b border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-16 md:py-20">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-klein/70">
+              {isEn ? "Start by task" : "按任务开始"}
+            </div>
+            <h2 className="mt-4 text-4xl font-display font-bold tracking-[-0.05em] text-ink md:text-5xl">
+              {isEn ? "Most people do not want every page. They want the right next step." : "大多数人不是想看所有页面，而是想找到下一步。"}
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-ink/64">
+              {isEn
+                ? "Pick the closest intention below and the site will route you into the right operating path, rather than making you decode internal product labels."
+                : "从下面选最接近你当前目的的一条路径，网站会把你带到更合适的入口，而不是让你先理解内部命名。"}
+            </p>
+          </div>
+          <Link to="/docs" className="inline-flex items-center gap-2 text-sm font-semibold text-klein transition-colors hover:text-klein-dark">
+            {isEn ? "Open the full docs hub" : "打开完整文档中心"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {paths.map((path) => (
+            <Link
+              key={path.title}
+              to={path.href}
+              className="group ynx-panel rounded-[28px] border border-klein/10 p-6 transition-all hover:-translate-y-1 hover:border-klein/22 hover:shadow-[0_20px_80px_rgba(0,47,167,0.08)]"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="rounded-2xl border border-klein/10 bg-klein/6 p-3 text-klein">{path.icon}</div>
+                <ArrowRight className="h-4 w-4 text-ink/25 transition-all group-hover:translate-x-1 group-hover:text-klein" />
+              </div>
+              <h3 className="mt-6 text-2xl font-display font-bold tracking-tight text-ink">{path.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-ink/62">{path.desc}</p>
+              <div className="mt-6 inline-flex rounded-full border border-klein/12 bg-white/85 px-3 py-2 text-xs font-semibold text-klein">
+                {path.cta}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

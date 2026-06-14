@@ -5,7 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Button } from "./ui/button";
 
-type NavItem = { name: string; href: string };
+type NavItem = { name: string; href: string; description?: string };
 type NavGroup = { title: string; items: NavItem[] };
 
 export function Header() {
@@ -27,7 +27,7 @@ export function Header() {
     setIsScrolled(latest > 50);
   });
 
-  const primaryLinks = [
+  const primaryLinks: NavItem[] = [
     { name: t("nav.home"), href: "/" },
     { name: t("nav.testnet"), href: "/testnet" },
     { name: t("nav.ai"), href: "/ai" },
@@ -40,33 +40,33 @@ export function Header() {
       {
         title: "Build",
         items: [
-          { name: t("nav.builders"), href: "/builders" },
-          { name: t("nav.validators"), href: "/validators" },
-          { name: t("nav.assets"), href: "/test-assets" },
+          { name: t("nav.builders"), href: "/builders", description: "Connect apps, RPC, and live tooling." },
+          { name: t("nav.validators"), href: "/validators", description: "Run infrastructure and join the network." },
+          { name: t("nav.assets"), href: "/test-assets", description: "Get gas and test assets before trying flows." },
         ],
       },
       {
         title: "Operate",
         items: [
-          { name: t("nav.bridge"), href: "/bridge" },
-          { name: t("nav.withdraw"), href: "/withdraw" },
-          { name: t("nav.trade"), href: "/trading" },
-          { name: t("nav.readiness"), href: "/readiness" },
+          { name: t("nav.bridge"), href: "/bridge", description: "Deposit Sepolia assets into YNX testnet." },
+          { name: t("nav.withdraw"), href: "/withdraw", description: "Burn wrapped assets and release back out." },
+          { name: t("nav.trade"), href: "/trading", description: "Test swap paths and AI preflight." },
+          { name: t("nav.readiness"), href: "/readiness", description: "Review gates, evidence, and blockers." },
         ],
       },
       {
         title: "Learn",
         items: [
-          { name: t("nav.faq"), href: "/faq" },
-          { name: "Risk", href: "/risk" },
-          { name: "Security", href: "/security" },
+          { name: t("nav.faq"), href: "/faq", description: "Fast answers to the main product questions." },
+          { name: "Risk", href: "/risk", description: "Current project, asset, and legal boundary risks." },
+          { name: "Security", href: "/security", description: "How issues are reported and what is still open." },
         ],
       },
     ],
     [t],
   );
 
-  const mobileGroups = [
+  const mobileGroups: NavGroup[] = [
     { title: "Primary", items: primaryLinks },
     ...groupedMenus,
   ];
@@ -131,7 +131,7 @@ export function Header() {
             <Link to="/readiness">Readiness</Link>
           </Button>
           <Button variant="klein" size="sm" asChild className="rounded-full shadow-lg shadow-klein/18">
-            <Link to="/docs/en/ai-web4-official-demo">{t("hero.cta.build")}</Link>
+            <Link to="/docs">Start Here</Link>
           </Button>
         </div>
 
@@ -164,7 +164,10 @@ export function Header() {
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {link.name}
+                      <span className="block">{link.name}</span>
+                      {link.description ? (
+                        <span className="mt-1 block text-sm font-normal text-ink/45">{link.description}</span>
+                      ) : null}
                     </Link>
                   ))}
                 </div>
@@ -254,14 +257,17 @@ function NavDropdown({
               <Link
                 key={item.href}
                 to={item.href}
-                className={`block rounded-xl px-3 py-2.5 text-sm transition ${
+                className={`block rounded-xl px-3 py-3 text-sm transition ${
                   item.href === currentPath
                     ? "bg-klein/6 text-klein"
                     : "text-ink/70 hover:bg-surface hover:text-ink"
                 }`}
                 onClick={onClose}
               >
-                {item.name}
+                <span className="block font-medium">{item.name}</span>
+                {item.description ? (
+                  <span className="mt-1 block text-xs leading-5 text-ink/48">{item.description}</span>
+                ) : null}
               </Link>
             ))}
           </div>
