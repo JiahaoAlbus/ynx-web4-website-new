@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -15,6 +15,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -26,6 +27,32 @@ export function Header() {
     }
     setIsScrolled(latest > 50);
   });
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openDropdown(title: string) {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setActiveDropdown(title);
+  }
+
+  function scheduleCloseDropdown(title: string) {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setActiveDropdown((current) => (current === title ? null : current));
+      closeTimerRef.current = null;
+    }, 220);
+  }
 
   const primaryLinks: NavItem[] = [
     { name: t("nav.home"), href: "/" },
@@ -110,8 +137,8 @@ export function Header() {
               currentPath={location.pathname}
               active={group.items.some((item) => item.href === location.pathname)}
               open={activeDropdown === group.title}
-              onOpen={() => setActiveDropdown(group.title)}
-              onClose={() => setActiveDropdown((current) => (current === group.title ? null : current))}
+              onOpen={() => openDropdown(group.title)}
+              onClose={() => scheduleCloseDropdown(group.title)}
             />
           ))}
         </nav>
@@ -251,7 +278,7 @@ function NavDropdown({
       </button>
 
       {open ? (
-        <div className="ynx-frost absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] p-3 text-ink shadow-2xl">
+        <div className="absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] border border-border bg-white p-3 text-ink shadow-[0_22px_70px_rgba(10,15,28,0.12)]">
           <div className="space-y-1">
             {items.map((item) => (
               <Link
