@@ -13,7 +13,7 @@ export function Footer() {
         <div className="ynx-glass rounded-[2rem] border border-white/10 px-8 py-10 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))]">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/80">
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/12 bg-white/12 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/80">
               Public Testnet Project
             </div>
             <Link
@@ -32,7 +32,7 @@ export function Footer() {
                 href="https://github.com/JiahaoAlbus/YNX"
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/70 transition-colors hover:border-klein/30 hover:bg-klein hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-white/12 text-white/78 transition-colors hover:border-klein/30 hover:bg-klein hover:text-white"
               >
                 <Github className="h-5 w-5" />
               </a>

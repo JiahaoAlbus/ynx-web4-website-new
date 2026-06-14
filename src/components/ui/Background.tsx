@@ -26,7 +26,7 @@ export function Background() {
         }
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
       />
-      <div className="absolute inset-0 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-white/[0.14]" />
       <motion.div 
         className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,47,167,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(10,15,28,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"
         style={{

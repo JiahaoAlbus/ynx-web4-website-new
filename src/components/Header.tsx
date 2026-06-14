@@ -78,7 +78,7 @@ export function Header() {
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "border-b border-white/45 bg-white/42 shadow-[0_14px_45px_rgba(10,15,28,0.05)] backdrop-blur-[28px]"
+          ? "border-b border-white/70 bg-white/78 shadow-[0_14px_45px_rgba(10,15,28,0.05)] backdrop-blur-[16px]"
           : "bg-transparent"
       }`}
     >
@@ -148,7 +148,7 @@ export function Header() {
           initial={{ opacity: 0, y: -18 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -18 }}
-          className="absolute inset-x-0 top-20 z-40 border-b border-white/45 bg-white/68 p-6 shadow-xl backdrop-blur-[28px] lg:hidden"
+          className="absolute inset-x-0 top-20 z-40 border-b border-white/70 bg-white/92 p-6 shadow-xl backdrop-blur-[16px] lg:hidden"
         >
           <div className="space-y-5">
             {mobileGroups.map((group) => (
@@ -251,7 +251,7 @@ function NavDropdown({
       </button>
 
       {open ? (
-        <div className="ynx-frost absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] p-3 shadow-2xl">
+        <div className="ynx-frost absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] p-3 text-ink shadow-2xl">
           <div className="space-y-1">
             {items.map((item) => (
               <Link

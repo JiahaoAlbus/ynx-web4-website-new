@@ -730,7 +730,7 @@ function DeveloperSection() {
           whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.58, ease: motionEase.emphasized }}
-          className="relative z-10 rounded-[32px] border border-white/10 bg-white/6 p-8 shadow-2xl backdrop-blur-3xl"
+          className="relative z-10 rounded-[32px] border border-white/14 bg-white/12 p-8 shadow-2xl backdrop-blur-xl"
         >
           <div className="mb-6 flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-rose-500" />
@@ -750,7 +750,7 @@ function DeveloperSection() {
             <code className="text-white">ynx join --role validator</code>
           </pre>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
+            <div className="rounded-2xl border border-white/14 bg-white/12 p-4">
               <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
                 {isEn ? "Why it matters" : "为什么重要"}
               </div>
@@ -760,7 +760,7 @@ function DeveloperSection() {
                   : "只有外部开发者真的能连上并测试，基础设施才算有可信度。"}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
+            <div className="rounded-2xl border border-white/14 bg-white/12 p-4">
               <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
                 {isEn ? "Fast path" : "快速路径"}
               </div>
@@ -1271,7 +1271,7 @@ function RiskNotice() {
 
   return (
     <section className="bg-[linear-gradient(180deg,#081121_0%,#0a0f1c_100%)] px-6 py-14 text-white">
-      <div className="mx-auto grid max-w-7xl gap-6 rounded-[28px] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+      <div className="mx-auto grid max-w-7xl gap-6 rounded-[28px] border border-white/12 bg-white/[0.09] p-8 backdrop-blur-lg md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <div>
           <strong className="mb-3 block text-[10px] uppercase tracking-[0.24em] text-klein/80">
             {isEn ? "Current public boundary" : "当前公开边界"}
