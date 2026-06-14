@@ -66,13 +66,13 @@ function Hero() {
         { label: "Core framing", value: "Web4 execution layer" },
         { label: "Primary audience", value: "Builders, operators, AI apps" },
         { label: "Current state", value: "Public testnet on live endpoints" },
-        { label: "Operating form", value: "Project, not legal entity yet" },
+        { label: "Operating form", value: "Project stage, no public legal entity yet" },
       ]
     : [
         { label: "核心定位", value: "Web4 执行层" },
         { label: "主要用户", value: "开发者、运营者、AI 应用" },
         { label: "当前状态", value: "公开测试网与线上端点运行中" },
-        { label: "当前形态", value: "项目阶段，尚未公开设立实体" },
+        { label: "当前形态", value: "项目阶段，尚未公开设立法律实体" },
       ];
 
   return (
@@ -1278,8 +1278,8 @@ function RiskNotice() {
           </strong>
           <p className="max-w-4xl text-sm leading-8 text-white/64 md:text-base">
             {isEn
-              ? "YNX is currently a public-testnet infrastructure project. This site publishes real operational evidence, but it should not be read as proof that a legal operating entity, audited production controls, regulated financial services, or real-asset custody are already live."
-              : "YNX 当前是公开测试网基础设施项目。这个网站展示的是真实运行证据，但不应被理解为已经具备法律运营主体、审计后的生产控制、受监管金融服务或真实资产托管能力。"}
+              ? "YNX is currently a public-testnet infrastructure project. This site publishes real operational evidence, but it should not be read as proof that a legal operating entity, audited production controls, regulated financial services, or real-asset custody are already live. Until entity formation is complete, support is best framed as grants, sponsorships, or other project-stage backing."
+              : "YNX 当前是公开测试网基础设施项目。这个网站展示的是真实运行证据，但不应被理解为已经具备法律运营主体、审计后的生产控制、受监管金融服务或真实资产托管能力。在主体设立完成前，更适合 grant、赞助或其他项目阶段支持。"}
           </p>
           <p className="mt-3 text-sm text-white/40">{t("footer.risk")}</p>
         </div>

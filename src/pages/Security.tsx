@@ -46,6 +46,7 @@ export function Security() {
             "Dedicated company-managed security contact infrastructure still needs to be created.",
             "Production-grade persistence, disaster recovery, and broader incident drills remain part of ongoing hardening.",
             "Audit completion, governance control hardening, and clearer operator ownership are still needed before stronger production language is credible.",
+            "Current security handling should be read as honest project-stage best effort, not as a contractual enterprise assurance model.",
           ],
         },
       ]}

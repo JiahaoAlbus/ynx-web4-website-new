@@ -21,6 +21,7 @@ export function About() {
               "YNX is best described today as a Web4 and AI-execution public testnet project.",
               "The current site should not imply a separate operating company has already been publicly formed.",
               "The project is strongest when discussed as execution infrastructure, not as a speculative token or exaggerated consensus-moat story.",
+              "The best-fit support posture today is grant, sponsorship, or strategic technical backing while legal entity work remains open.",
             ],
           },
           {
@@ -39,6 +40,7 @@ export function About() {
               "No public legal company entity is announced on this site yet.",
               "External legal memo, broader organizational controls, and production-grade audit coverage are not yet presented as complete.",
               "Current public-testnet bridge and asset evidence should not be overstated as production custody, redemption, or official real-asset trading.",
+              "A standard equity underwriting process would still require entity formation, ownership assignment, and legal sign-off that are not yet shown here.",
             ],
           },
           {
@@ -63,8 +65,10 @@ export function About() {
               Build from the live surface, but keep the claims disciplined.
             </h2>
             <p className="mt-6 text-lg leading-9 text-white/74">
-              The right next milestone is not louder positioning. It is better publication,
-              cleaner disclosures, stronger operational controls, and real external usage.
+              The right next milestone is not louder positioning. It is cleaner
+              disclosures, stronger operational controls, real external usage,
+              and eventual entity formation that can carry ownership and
+              accountability.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link

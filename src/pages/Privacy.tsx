@@ -45,6 +45,7 @@ export function Privacy() {
           bullets: [
             "Public infrastructure may use multiple regions and service providers, so data may transit or be processed outside a visitor's home jurisdiction.",
             "Retention, deletion, and processor inventories are still part of the project's compliance-readiness work and should not be overstated as fully institutionalized controls yet.",
+            "No public legal data-controller entity is named on this site yet, so this notice describes present project-stage handling expectations rather than a finished corporate privacy program.",
             "If and when a legal operating entity is formed, this notice should be replaced or updated with entity-specific ownership, processor, and rights information.",
           ],
         },

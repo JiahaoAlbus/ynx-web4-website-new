@@ -46,6 +46,7 @@ export function Risk() {
             "No public legal operating entity has been announced yet, so company-level legal and compliance implementation remains incomplete by definition.",
             "Project disclosures, privacy, terms, and security pages should be understood as current-stage drafts and boundaries rather than final company policies.",
             "Any future expansion into custody, exchange, stablecoin, or regulated services would require separate legal, technical, and governance work.",
+            "Until those prerequisites are complete, YNX is better suited to grants, sponsorships, or exploratory diligence than standard no-surprises institutional underwriting.",
           ],
         },
       ]}

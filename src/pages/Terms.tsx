@@ -37,6 +37,7 @@ export function Terms() {
             "Testnet tokens and synthetic test assets have no monetary value and are not investment products.",
             "The site does not provide investment advice, broker or dealer services, or guaranteed return language.",
             "Use of YNX materials should not be treated as an offer of regulated financial services in any jurisdiction.",
+            "Nothing on this site should be read as an equity, token-sale, or other fundraising offer by a formed legal entity.",
           ],
         },
         {
