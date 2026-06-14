@@ -10,6 +10,7 @@ export function Footer() {
       <div className="absolute inset-x-0 top-0 h-px ynx-hairline" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6">
+        <div className="ynx-glass rounded-[2rem] border border-white/10 px-8 py-10 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))]">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/80">
@@ -17,7 +18,7 @@ export function Footer() {
             </div>
             <Link
               to="/"
-              className="mt-6 block font-display text-4xl font-bold tracking-[-0.08em] text-white transition-colors hover:text-klein"
+              className="mt-6 block font-display text-4xl font-semibold tracking-[-0.07em] text-white transition-colors hover:text-klein"
             >
               YNX
             </Link>
@@ -106,6 +107,7 @@ export function Footer() {
               <ArrowUpRight className="h-3.5 w-3.5 text-klein" />
             </a>
           </div>
+        </div>
         </div>
       </div>
     </footer>

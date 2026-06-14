@@ -7,7 +7,7 @@ export function Background() {
 
   return (
     <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none bg-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,47,167,0.055),transparent_38%),radial-gradient(circle_at_15%_35%,rgba(0,47,167,0.025),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_46%,#ffffff_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,47,167,0.05),transparent_38%),radial-gradient(circle_at_15%_35%,rgba(0,47,167,0.022),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_46%,#ffffff_100%)]" />
       <motion.div
         className="absolute right-[-10%] top-[-18%] h-[620px] w-[620px] rounded-full bg-klein/6 blur-[120px] mix-blend-multiply"
         animate={
@@ -26,6 +26,7 @@ export function Background() {
         }
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
       />
+      <div className="absolute inset-0 backdrop-blur-[2px]" />
       <motion.div 
         className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,47,167,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(10,15,28,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"
         style={{

@@ -78,7 +78,7 @@ export function Header() {
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "border-b border-border/70 bg-white/82 shadow-[0_12px_40px_rgba(10,15,28,0.04)] backdrop-blur-2xl"
+          ? "border-b border-white/45 bg-white/42 shadow-[0_14px_45px_rgba(10,15,28,0.05)] backdrop-blur-[28px]"
           : "bg-transparent"
       }`}
     >
@@ -89,7 +89,7 @@ export function Header() {
 
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         <Link to="/" className="group flex items-center gap-3 text-ink transition-colors hover:text-klein">
-          <span className="font-display text-2xl font-bold tracking-[-0.08em]">YNX</span>
+          <span className="font-display text-[1.9rem] font-semibold tracking-[-0.07em]">YNX</span>
           <span className="hidden rounded-full border border-klein/10 bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-klein/75 shadow-sm xl:inline-flex">
             Public Testnet Project
           </span>
@@ -148,7 +148,7 @@ export function Header() {
           initial={{ opacity: 0, y: -18 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -18 }}
-          className="absolute inset-x-0 top-20 z-40 border-b border-border bg-white/96 p-6 shadow-xl backdrop-blur-2xl lg:hidden"
+          className="absolute inset-x-0 top-20 z-40 border-b border-white/45 bg-white/68 p-6 shadow-xl backdrop-blur-[28px] lg:hidden"
         >
           <div className="space-y-5">
             {mobileGroups.map((group) => (
@@ -248,7 +248,7 @@ function NavDropdown({
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] border border-border bg-white/96 p-3 shadow-2xl backdrop-blur-2xl">
+        <div className="ynx-frost absolute right-0 top-full z-50 mt-3 min-w-[240px] rounded-[1.5rem] p-3 shadow-2xl">
           <div className="space-y-1">
             {items.map((item) => (
               <Link

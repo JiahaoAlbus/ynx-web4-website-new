@@ -4,6 +4,7 @@ import { Header } from "../Header";
 import { Footer } from "../Footer";
 import { Cursor } from "../ui/Cursor";
 import { Background } from "../ui/Background";
+import { ScrollToTopButton } from "../ui/ScrollToTopButton";
 import { useEffect } from "react";
 import { motionDuration, motionEase } from "../../lib/motion";
 
@@ -34,6 +35,7 @@ export function Layout() {
         </motion.main>
       </AnimatePresence>
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }
