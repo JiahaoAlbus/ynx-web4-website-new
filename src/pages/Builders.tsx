@@ -173,7 +173,7 @@ export default {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6">
+      <section className="max-w-7xl mx-auto px-6 mb-16">
         <TaskFlowBand
           eyebrow="Suggested user path"
           title="Start with access, then move into assets and flows."
@@ -212,7 +212,7 @@ export default {
         whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
         variants={stagger}
-        className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-8 mb-20"
+        className="max-w-7xl mx-auto px-6 grid gap-8 lg:grid-cols-3 mb-24"
       >
         <BuildPathCard
           icon={<Code2 className="w-8 h-8" />}
@@ -247,7 +247,7 @@ export default {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5, ease: motionEase.emphasized }}
-          className="bg-surface border border-border p-8 md:p-12 rounded-[32px] grid lg:grid-cols-2 gap-12 items-center"
+          className="bg-surface border border-border p-8 md:p-12 rounded-[36px] grid lg:grid-cols-2 gap-16 items-center"
         >
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-klein/10 text-klein rounded-full text-xs font-bold uppercase tracking-widest mb-6">

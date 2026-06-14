@@ -92,7 +92,7 @@ function Hero() {
         animate={{ opacity: 1, scaleX: 1 }}
         transition={{ duration: 1, ease: motionEase.emphasized }}
       />
-      <div className="mx-auto grid max-w-7xl items-start gap-14 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+      <div className="mx-auto grid max-w-7xl items-start gap-18 xl:gap-24 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.82fr)]">
         <div className="relative z-10 max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -128,7 +128,7 @@ function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.14, duration: 0.5, ease: motionEase.standard }}
-            className="mt-10 grid gap-3 sm:grid-cols-3"
+            className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-3"
           >
             {guidePoints.map((point) => (
               <div
@@ -186,7 +186,7 @@ function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-12 grid gap-4 border-t border-border/70 pt-8 md:grid-cols-2 xl:grid-cols-4"
+            className="mt-14 grid gap-5 border-t border-border/70 pt-10 md:grid-cols-2 2xl:grid-cols-4"
           >
             {summaryCards.map((item, index) => (
               <motion.div
@@ -209,10 +209,10 @@ function Hero() {
           initial={{ opacity: 0, x: 28, y: 20 }}
           animate={{ opacity: 1, x: 0, y: 0 }}
           transition={{ delay: 0.1, duration: 0.72, ease: motionEase.emphasized }}
-          className="relative z-10 lg:pt-6"
+            className="relative z-10 lg:pt-10"
         >
           <TiltCard className="h-full">
-            <div className="ynx-glass relative overflow-hidden rounded-[32px] border border-klein/12 p-6 shadow-[0_36px_120px_rgba(0,47,167,0.16)]">
+            <div className="ynx-glass relative overflow-hidden rounded-[36px] border border-klein/12 p-7 md:p-8 shadow-[0_36px_120px_rgba(0,47,167,0.16)]">
               <motion.div
                 className="absolute -right-10 top-10 h-36 w-36 rounded-full bg-klein/15 blur-[70px]"
                 animate={{ opacity: [0.4, 0.8, 0.45], scale: [1, 1.08, 1] }}
@@ -237,7 +237,7 @@ function Hero() {
                 </div>
               </div>
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-8 space-y-5">
                 {[
                   {
                     label: isEn ? "Policy layer" : "策略层",
@@ -277,7 +277,7 @@ function Hero() {
                 ))}
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {[
                   {
                     label: isEn ? "Chain ID" : "链 ID",
@@ -410,7 +410,7 @@ function ChoosePathSection() {
       ];
 
   return (
-    <section className="border-b border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-16 md:py-20">
+    <section className="border-b border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-20 md:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
@@ -432,12 +432,12 @@ function ChoosePathSection() {
           </Link>
         </div>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
           {paths.map((path) => (
             <Link
               key={path.title}
               to={path.href}
-              className="group ynx-panel rounded-[28px] border border-klein/10 p-6 transition-all hover:-translate-y-1 hover:border-klein/22 hover:shadow-[0_20px_80px_rgba(0,47,167,0.08)]"
+              className="group ynx-panel rounded-[32px] border border-klein/10 p-7 transition-all hover:-translate-y-1 hover:border-klein/22 hover:shadow-[0_20px_80px_rgba(0,47,167,0.08)]"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="rounded-2xl border border-klein/10 bg-klein/6 p-3 text-klein">{path.icon}</div>
@@ -533,7 +533,7 @@ function HowItWorks() {
       ];
 
   return (
-    <section className="bg-white px-6 py-24 md:py-28">
+    <section className="bg-white px-6 py-28 md:py-32">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-3xl">
           <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-klein/70">
@@ -554,7 +554,7 @@ function HowItWorks() {
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerSlow}
-          className="mt-14 grid gap-6 lg:grid-cols-3"
+          className="mt-16 grid gap-8 lg:grid-cols-3"
         >
           {steps.map((step) => (
             <motion.div key={step.id} variants={revealSoft}>

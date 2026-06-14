@@ -26,12 +26,12 @@ export function TaskFlowBand({
         <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">{title}</h2>
         <p className="mt-3 text-sm leading-7 text-ink/62">{description}</p>
       </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid gap-5 lg:grid-cols-2 2xl:grid-cols-4">
         {steps.map((step, index) => (
           <Link
             key={step.href}
             to={step.href}
-            className={`group rounded-[1.5rem] border p-4 transition hover:-translate-y-0.5 ${
+            className={`group rounded-[1.75rem] border p-5 transition hover:-translate-y-0.5 ${
               step.state === "current"
                 ? "border-klein/18 bg-klein/6"
                 : "border-border bg-white/82 hover:border-klein/20"
