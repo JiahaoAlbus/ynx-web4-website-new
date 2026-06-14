@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, Check, Copy, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
+import { fetchJsonWithTimeout } from "../lib/request";
 import {
   addOrSwitchEvmChain,
   addOrSwitchYnx,
@@ -89,11 +90,7 @@ export function Bridge() {
   const [copied, setCopied] = useState("");
 
   useEffect(() => {
-    fetch(BRIDGE_ROUTES_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`routes ${res.status}`);
-        return res.json();
-      })
+    fetchJsonWithTimeout<RoutesResponse>(BRIDGE_ROUTES_URL, { timeoutMs: 3500 })
       .then((json: RoutesResponse) => setRoutes((json.routes || json.items || []).filter((item) => item.sourceKind === "evm" && item.lockboxAddress)))
       .catch((error) => setStatus(`Bridge routes unavailable: ${error.message}`));
   }, []);
@@ -102,10 +99,9 @@ export function Bridge() {
     let mounted = true;
     async function refreshWatchers() {
       try {
-        const response = await fetch(BRIDGE_WATCHERS_URL);
         const [json, readinessResponse] = await Promise.all([
-          response.json() as Promise<WatcherResponse>,
-          fetch(BRIDGE_READINESS_URL).then((res) => res.json() as Promise<RouteReadinessResponse>),
+          fetchJsonWithTimeout<WatcherResponse>(BRIDGE_WATCHERS_URL, { timeoutMs: 3500 }),
+          fetchJsonWithTimeout<RouteReadinessResponse>(BRIDGE_READINESS_URL, { timeoutMs: 3500 }),
         ]);
         if (mounted && json.ok) setWatchers(json.items || {});
         if (mounted && readinessResponse.ok) setReadiness(readinessResponse);

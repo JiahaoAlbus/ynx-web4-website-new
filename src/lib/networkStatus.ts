@@ -1,4 +1,4 @@
-import { NETWORK } from "../constants/network";
+import { NETWORK } from "../constants/network.ts";
 
 export type ServiceState = "online" | "degraded" | "offline";
 
@@ -25,11 +25,19 @@ type EndpointConfig = {
 
 const EXPECTED_CHAIN_ID = NETWORK.chainId;
 const EXPECTED_EVM_CHAIN_ID_HEX = NETWORK.evmChainIdHex;
+const NETWORK_STATUS_CACHE_TTL_MS = 15_000;
+const NETWORK_STATUS_REVALIDATE_AFTER_MS = 45_000;
+const NETWORK_STATUS_TOTAL_BUDGET_MS = 4_000;
+
+type CachedNetworkStatus = {
+  payload: NetworkStatusResponse;
+  fetchedAt: number;
+};
 
 const ENDPOINTS: Record<string, EndpointConfig> = {
   rpc: {
     url: `${NETWORK.endpoints.rpc}/status`,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (data) => {
       const result = (data as any)?.result;
       if (result?.node_info?.network === EXPECTED_CHAIN_ID) {
@@ -51,14 +59,14 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   evm: {
     url: NETWORK.endpoints.evm,
     method: "POST",
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     body: { jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] },
     check: (data) => ((data as any)?.result === EXPECTED_EVM_CHAIN_ID_HEX ? "online" : "offline"),
     summarize: (data) => ({ chain_id: (data as any)?.result }),
   },
   rest: {
     url: `${NETWORK.endpoints.rest}/cosmos/base/tendermint/v1beta1/node_info`,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (data) =>
       (data as any)?.default_node_info?.network === EXPECTED_CHAIN_ID ? "online" : "offline",
     summarize: (data) => {
@@ -74,13 +82,13 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     url: NETWORK.endpoints.grpc,
     acceptStatuses: [200, 404, 415],
     parseJson: false,
-    timeoutMs: 3500,
+    timeoutMs: 1500,
     check: (_data, response) =>
       response.ok || response.status === 404 || response.status === 415 ? "online" : "offline",
   },
   faucet: {
     url: `${NETWORK.endpoints.faucet}/health`,
-    timeoutMs: 5000,
+    timeoutMs: 1800,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.chain_id === EXPECTED_CHAIN_ID ? "online" : "offline",
     summarize: (data) => {
@@ -95,7 +103,7 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
   indexer: {
     url: `${NETWORK.endpoints.indexer}/health`,
-    timeoutMs: 5000,
+    timeoutMs: 1800,
     check: (data) => {
       const body = data as any;
       if (body?.ok === true && body?.chain_id === EXPECTED_CHAIN_ID) {
@@ -118,12 +126,12 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     url: NETWORK.endpoints.explorer,
     method: "HEAD",
     parseJson: false,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (_data, response) => (response.ok ? "online" : "offline"),
   },
   ai: {
     url: `${NETWORK.endpoints.ai}/health`,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.service === "ynx-ai-gateway" ? "online" : "offline",
     summarize: (data) => {
@@ -140,7 +148,7 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
   web4: {
     url: `${NETWORK.endpoints.web4}/health`,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (data) =>
       (data as any)?.ok === true && (data as any)?.service === "ynx-web4-hub" ? "online" : "offline",
     summarize: (data) => {
@@ -157,6 +165,9 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
 };
+
+let cachedStatus: CachedNetworkStatus | null = null;
+let inFlightStatus: Promise<NetworkStatusResponse> | null = null;
 
 async function fetchWithTimeout(config: EndpointConfig, timeoutMs: number) {
   const controller = new AbortController();
@@ -264,4 +275,62 @@ export async function getNetworkStatus(): Promise<NetworkStatusResponse> {
   results.offline_count = offline;
 
   return results;
+}
+
+export function getCachedNetworkStatusSnapshot(): NetworkStatusResponse | null {
+  return cachedStatus?.payload ?? null;
+}
+
+export async function getNetworkStatusCached(
+  options: { forceRefresh?: boolean } = {},
+): Promise<NetworkStatusResponse> {
+  const now = Date.now();
+  const ageMs = cachedStatus ? now - cachedStatus.fetchedAt : Number.POSITIVE_INFINITY;
+  const isFresh = ageMs <= NETWORK_STATUS_CACHE_TTL_MS;
+
+  if (!options.forceRefresh && cachedStatus && isFresh) {
+    return cachedStatus.payload;
+  }
+
+  if (inFlightStatus) {
+    if (cachedStatus && !options.forceRefresh) {
+      return cachedStatus.payload;
+    }
+    return inFlightStatus;
+  }
+
+  inFlightStatus = Promise.race<NetworkStatusResponse>([
+    getNetworkStatus(),
+    new Promise<NetworkStatusResponse>((_, reject) => {
+      setTimeout(() => reject(new Error("network_status_budget_exceeded")), NETWORK_STATUS_TOTAL_BUDGET_MS);
+    }),
+  ])
+    .then((payload) => {
+      cachedStatus = {
+        payload,
+        fetchedAt: Date.now(),
+      };
+      return payload;
+    })
+    .finally(() => {
+      inFlightStatus = null;
+    });
+
+  if (cachedStatus && !options.forceRefresh && ageMs <= NETWORK_STATUS_REVALIDATE_AFTER_MS) {
+    void inFlightStatus.catch(() => {});
+    return cachedStatus.payload;
+  }
+
+  try {
+    return await inFlightStatus;
+  } catch (error) {
+    if (cachedStatus) {
+      return {
+        ...cachedStatus.payload,
+        updated_at: new Date().toISOString(),
+        source: "stale-cache",
+      };
+    }
+    throw error;
+  }
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpFromLine, CheckCircle2, ExternalLink, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
+import { fetchJsonWithTimeout } from "../lib/request";
 import {
   addOrSwitchYnx,
   connectAccounts,
@@ -74,8 +75,7 @@ export function Withdraw() {
   const [readiness, setReadiness] = useState<RouteReadinessResponse | null>(null);
 
   useEffect(() => {
-    fetch(BRIDGE_ROUTES_URL)
-      .then((res) => res.json())
+    fetchJsonWithTimeout<{ items?: Route[] }>(BRIDGE_ROUTES_URL, { timeoutMs: 3500 })
       .then((json) => setRoutes((json.items || []).filter((item: Route) => item.sourceKind === "evm" && item.lockboxAddress)))
       .catch((error) => setStatus(`Routes unavailable: ${error.message}`));
   }, []);
@@ -96,10 +96,9 @@ export function Withdraw() {
       const raw = await publicEthCall(route.wrappedToken, encodeBalanceOf(account));
       setBalance(formatUnits(raw, route.decimals, 8));
     }
-    const response = await fetch(BRIDGE_WITHDRAWALS_URL);
     const [json, readinessJson] = await Promise.all([
-      response.json(),
-      fetch(BRIDGE_READINESS_URL).then((res) => res.json() as Promise<RouteReadinessResponse>).catch(() => null),
+      fetchJsonWithTimeout<{ items?: Withdrawal[] }>(BRIDGE_WITHDRAWALS_URL, { timeoutMs: 3500 }),
+      fetchJsonWithTimeout<RouteReadinessResponse>(BRIDGE_READINESS_URL, { timeoutMs: 3500 }).catch(() => null),
     ]);
     setWithdrawals(json.items || []);
     if (readinessJson?.ok) setReadiness(readinessJson);

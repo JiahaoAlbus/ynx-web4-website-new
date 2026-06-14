@@ -1,119 +1,136 @@
-import { motion } from "motion/react";
-import { Github, Twitter, Disc as Discord, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Github } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-ink text-white py-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(0,47,167,0.15),transparent_50%)]" />
-      
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
-          
-          <div className="lg:col-span-2">
-            <Link to="/" className="font-display font-bold text-3xl tracking-tighter text-white mb-6 block hover:text-klein transition-colors">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-ink py-20 text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,47,167,0.24),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(0,47,167,0.12),transparent_32%)]" />
+      <div className="absolute inset-x-0 top-0 h-px ynx-hairline" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))]">
+          <div className="max-w-xl">
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/80">
+              Public Testnet Project
+            </div>
+            <Link
+              to="/"
+              className="mt-6 block font-display text-4xl font-bold tracking-[-0.08em] text-white transition-colors hover:text-klein"
+            >
               YNX
             </Link>
-            <p className="text-white/60 max-w-sm leading-relaxed mb-8">
-              The AI-native Web4 execution chain. Built on Web3 sovereignty, empowering autonomous, policy-bounded, machine-native coordination.
+            <p className="mt-5 text-base leading-8 text-white/62">
+              YNX is currently a Web4 and AI-execution public testnet project.
+              This site should not imply that a separate legal operating company,
+              custodial product, or regulated financial service is already live.
             </p>
-            <div className="flex items-center gap-4">
-              <a href="https://github.com/JiahaoAlbus/YNX" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:bg-klein hover:text-white transition-colors">
-                <Github className="w-5 h-5" />
+            <div className="mt-8 flex items-center gap-4">
+              <a
+                href="https://github.com/JiahaoAlbus/YNX"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/6 text-white/70 transition-colors hover:border-klein/30 hover:bg-klein hover:text-white"
+              >
+                <Github className="h-5 w-5" />
               </a>
-              {/* Add other social links if needed */}
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white/72 transition-colors hover:text-white"
+              >
+                Project status
+                <ArrowUpRight className="h-4 w-4 text-klein" />
+              </Link>
             </div>
           </div>
 
-          <div>
-            <h4 className="font-display font-semibold text-white mb-6">Explore</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link to="/builders" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Builders
-                </Link>
-              </li>
-              <li>
-                <Link to="/validators" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Validators
-                </Link>
-              </li>
-              <li>
-                <Link to="/trading" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Trade
-                </Link>
-              </li>
-              <li>
-                <Link to="/research" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Research
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  About
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Explore"
+            links={[
+              { label: "Home", to: "/" },
+              { label: "AI", to: "/ai" },
+              { label: "Builders", to: "/builders" },
+              { label: "Validators", to: "/validators" },
+              { label: "About", to: "/about" },
+            ]}
+          />
 
-          <div>
-            <h4 className="font-display font-semibold text-white mb-6">Network</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link to="/testnet" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Testnet Status
-                  <span className="ml-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                </Link>
-              </li>
-              <li>
-                <Link to="/bridge" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Bridge
-                </Link>
-              </li>
-              <li>
-                <Link to="/withdraw" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Withdraw
-                </Link>
-              </li>
-              <li>
-                <Link to="/test-assets" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Test Assets
-                </Link>
-              </li>
-              <li>
-                <Link to="/readiness" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Readiness Gates
-                </Link>
-              </li>
-              <li>
-                <a href="https://explorer.ynxweb4.com" target="_blank" rel="noreferrer" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Explorer
-                  <ArrowUpRight className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </a>
-              </li>
-              <li>
-                <a href="https://faucet.ynxweb4.com" target="_blank" rel="noreferrer" className="text-white/60 hover:text-klein transition-colors flex items-center group">
-                  Faucet
-                  <ArrowUpRight className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </a>
-              </li>
-            </ul>
-          </div>
+          <FooterColumn
+            title="Network"
+            links={[
+              { label: "Testnet", to: "/testnet" },
+              { label: "Bridge", to: "/bridge" },
+              { label: "Readiness", to: "/readiness" },
+              { label: "Assets", to: "/test-assets" },
+              { label: "Docs", to: "/docs" },
+            ]}
+          />
 
+          <FooterColumn
+            title="Disclosures"
+            links={[
+              { label: "Privacy", to: "/privacy" },
+              { label: "Terms", to: "/terms" },
+              { label: "Risk", to: "/risk" },
+              { label: "Security", to: "/security" },
+            ]}
+          />
         </div>
 
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-white/40 text-sm">
-            &copy; {currentYear} YNX Protocol. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6 text-sm text-white/40">
-            <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+        <div className="mt-14 flex flex-col gap-4 border-t border-white/10 pt-8 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm text-white/44">&copy; {currentYear} YNX Project.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-white/38">
+              Public testnet only. Test assets have no mainnet value. Company formation,
+              dedicated legal ownership, and broader institutional controls remain in progress.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-5 text-sm text-white/44">
+            <a
+              href="https://explorer.ynxweb4.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 transition-colors hover:text-white"
+            >
+              Explorer
+              <ArrowUpRight className="h-3.5 w-3.5 text-klein" />
+            </a>
+            <a
+              href="https://faucet.ynxweb4.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 transition-colors hover:text-white"
+            >
+              Faucet
+              <ArrowUpRight className="h-3.5 w-3.5 text-klein" />
+            </a>
           </div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: Array<{ label: string; to: string }>;
+}) {
+  return (
+    <div>
+      <h4 className="font-display text-lg font-semibold text-white">{title}</h4>
+      <ul className="mt-5 space-y-3">
+        {links.map((link) => (
+          <li key={link.to}>
+            <Link to={link.to} className="text-sm text-white/58 transition-colors hover:text-white">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

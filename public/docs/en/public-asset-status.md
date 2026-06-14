@@ -1,12 +1,12 @@
 # YNX Public Asset Status
 
 Status: active  
-Last updated: 2026-06-07
+Last updated: 2026-06-14
 Scope: public testnet `ynx_9102-1`
 
 ## Current Answer
 
-Today, the public YNX testnet has one fully usable live asset:
+Today, the public YNX testnet has three currently usable public-testnet assets:
 
 | Asset | Type | Unit / Contract | Status |
 |---|---|---|---|
@@ -17,6 +17,9 @@ Today, the public YNX testnet has one fully usable live asset:
 Users can transfer `anyxt`/`NYXT` on the public testnet and use it for gas,
 staking, governance, faucet flows, and EVM-compatible test workflows.
 
+The validator set is live with 4 bonded validators, and current public-testnet
+acceptance checks pass on the current hosted environment.
+
 Testnet assets have no mainnet value. `YUSD.test` is not USDC, USDT, USD,
 e-money, a bank deposit, or a redeemable stablecoin. It is a synthetic
 public-testnet unit for trading, bridge, AI-payment, and UX testing.
@@ -26,7 +29,8 @@ public-testnet unit for trading, bridge, AI-payment, and UX testing.
 The public testnet now has deployed wrapped-token contracts, bridge gateway
 routes, and a bridge observer/relayer API for the first mainstream testnet
 asset set. These are public-testnet wrapped representations, not claims that
-real mainnet external assets are already custodied, redeemable, or liquid.
+real mainnet external assets are already custodied, redeemable, or supported by
+official mainnet liquidity.
 
 Gateway: `0x3a2948da8f35b86dce1440ebfb56b8ae041cebfe`
 Bridge service: `https://rpc.ynxweb4.com/bridge/*`
@@ -115,9 +119,21 @@ Current route readiness:
 GET /bridge/route-readiness
 full_loop_tested: btc-testnet-btc, eth-sepolia-eth, bnb-testnet-bnb, tron-shasta-usdt, eth-sepolia-usdc
 automatic_loop_ready: requires configured deposit addresses/source contracts, BSC lockbox, and testnet release signers
+automatic_loop_observed: strongest live public evidence currently concentrated on Sepolia ETH and USDC
 manual_loop_ready: none
 mapped_route_only: none
 ```
+
+As of 2026-06-13, the live bridge readiness posture is:
+
+- `5/5` routes `full_loop_tested`
+- `4/5` routes `automatic_loop_ready`
+- `2/5` routes with the strongest observed automatic public evidence: Sepolia ETH and Sepolia USDC
+- `btc-testnet-btc`: automatic-ready, but public observed automation evidence is still thinner
+- `eth-sepolia-eth`: automatic-ready and observed
+- `tron-shasta-usdt`: automatic-ready, but public observed automation evidence is still thinner
+- `eth-sepolia-usdc`: automatic-ready and observed
+- `bnb-testnet-bnb`: waiting on BSC lockbox deployment and testnet BNB funding
 
 Full-loop-tested evidence means:
 
@@ -137,6 +153,14 @@ testnet once a BSC lockbox is configured, and exposes signer-gated testnet
 release adapters. A route is not `automatic_loop_ready` unless its deposit
 address/contract, lockbox where needed, watcher scan, burn watcher, release
 signer, and release cap are all configured and healthy.
+
+Important diligence note:
+
+- `automatic_loop_ready` is a configuration and adapter-readiness state;
+- it is stronger than manual-only support, but weaker than repeated public
+  observed automation evidence;
+- investors should not collapse `automatic_loop_ready` into "production-safe"
+  or "fully proven at scale".
 
 ## Not Live Yet
 
@@ -161,7 +185,9 @@ ETH, BNB, USDT, or USDC custody, redemption, or official trading liquidity.
 
 ## Public Testnet Trading Pilot
 
-The public testnet has a minimal AMM pilot for test swaps:
+The public testnet has a minimal AMM pilot for test swaps. This is useful test
+evidence, not a basis for broad "real external assets are tradable on YNX"
+claims:
 
 | Pair | Contract | Status |
 |---|---|---|

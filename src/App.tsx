@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 
@@ -23,13 +23,8 @@ const About = lazy(() => import("./pages/About").then((module) => ({ default: mo
 const Docs = lazy(() => import("./pages/Docs").then((module) => ({ default: module.Docs })));
 const Privacy = lazy(() => import("./pages/Privacy").then((module) => ({ default: module.Privacy })));
 const Terms = lazy(() => import("./pages/Terms").then((module) => ({ default: module.Terms })));
-
-function warmDocsRoute() {
-  void import("./pages/Docs");
-  void fetch("/docs/registry.json", { cache: "force-cache" }).catch(() => {});
-  void fetch("/docs/en/public-testnet-join.md", { cache: "force-cache" }).catch(() => {});
-  void fetch("/docs/en/ai-web4-official-demo.md", { cache: "force-cache" }).catch(() => {});
-}
+const Risk = lazy(() => import("./pages/Risk").then((module) => ({ default: module.Risk })));
+const Security = lazy(() => import("./pages/Security").then((module) => ({ default: module.Security })));
 
 function PageFallback() {
   return (
@@ -48,11 +43,6 @@ function PageFallback() {
 }
 
 export default function App() {
-  useEffect(() => {
-    const id = window.setTimeout(warmDocsRoute, 1200);
-    return () => window.clearTimeout(id);
-  }, []);
-
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
@@ -72,6 +62,8 @@ export default function App() {
           <Route path="about" element={<About />} />
           <Route path="privacy" element={<Privacy />} />
           <Route path="terms" element={<Terms />} />
+          <Route path="risk" element={<Risk />} />
+          <Route path="security" element={<Security />} />
           <Route path="docs" element={<Navigate to="/docs/en/public-testnet-join" replace />} />
           <Route path="docs/*" element={<Docs />} />
         </Route>

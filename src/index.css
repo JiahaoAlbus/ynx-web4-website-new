@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -9,7 +9,9 @@
   --color-klein: #002fa7;
   --color-klein-dark: #001f70;
   --color-ink: #0a0f1c;
+  --color-ink-soft: #324057;
   --color-surface: #f8f9fa;
+  --color-paper: #fbfcff;
   --color-surface-dark: #e2e8f0;
   --color-border: #e2e8f0;
   
@@ -21,14 +23,21 @@
 @layer base {
   body {
     font-family: var(--font-sans);
-    background-color: #ffffff;
+    background:
+      radial-gradient(circle at top, rgba(0, 47, 167, 0.05), transparent 28%),
+      linear-gradient(180deg, #fbfcff 0%, #ffffff 44%, #ffffff 100%);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   
   html {
     scroll-behavior: smooth;
+  }
+
+  * {
+    border-color: var(--color-border);
   }
 
   /* Custom Scrollbar */
@@ -51,6 +60,35 @@
 @layer utilities {
   .vertical-rl {
     writing-mode: vertical-rl;
+  }
+
+  .ynx-panel {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,251,255,0.88) 100%);
+    box-shadow:
+      0 18px 64px rgba(10, 15, 28, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+  }
+
+  .ynx-glass {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(248,251,255,0.78) 100%);
+    box-shadow:
+      0 24px 80px rgba(0, 47, 167, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+  }
+
+  .ynx-mesh {
+    background-image:
+      linear-gradient(to right, rgba(0, 47, 167, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(10, 15, 28, 0.03) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .ynx-hairline {
+    background: linear-gradient(to right, transparent, rgba(0, 47, 167, 0.18), transparent);
   }
 }
 

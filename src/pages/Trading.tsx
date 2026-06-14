@@ -3,6 +3,7 @@ import { Activity, ArrowRightLeft, Check, Copy, ExternalLink, RefreshCw, ShieldC
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
 import { addOrSwitchYnx, connectAccounts, encodeAddress, encodeApprove, encodeBalanceOf, encodeUint, formatUnits, parseUnits, publicEthCall, waitForTx } from "../lib/evm";
+import { fetchJsonWithTimeout } from "../lib/request";
 
 type Asset = {
   symbol: string;
@@ -62,11 +63,7 @@ export function Trading() {
   const [copied, setCopied] = useState("");
 
   useEffect(() => {
-    fetch(BRIDGE_ASSETS_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`registry ${res.status}`);
-        return res.json();
-      })
+    fetchJsonWithTimeout<Registry>(BRIDGE_ASSETS_URL, { timeoutMs: 3500 })
       .then((json) => setRegistry(json))
       .catch((error) => setStatus(`Registry unavailable: ${error.message}`));
   }, []);
@@ -139,6 +136,7 @@ export function Trading() {
       const preflightResponse = await fetch(AI_ACTION_RUN_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({ action: "trade.preflight", from_symbol: fromSymbol, to_symbol: toSymbol, amount }),
       });
       const preflightJson = await preflightResponse.json();
@@ -149,6 +147,7 @@ export function Trading() {
         const prepareResponse = await fetch(AI_ACTION_RUN_URL, {
           method: "POST",
           headers: { "content-type": "application/json" },
+          signal: AbortSignal.timeout(5000),
           body: JSON.stringify({ action: "trade.prepare", from_symbol: fromSymbol, to_symbol: toSymbol, amount, recipient: account, slippage_bps: 100 }),
         });
         const prepareJson = await prepareResponse.json();

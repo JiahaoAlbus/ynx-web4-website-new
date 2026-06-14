@@ -1,64 +1,54 @@
 import { AlertTriangle, Scale, Wallet, Wrench } from "lucide-react";
-
-const termsBlocks = [
-  {
-    title: "Testnet Scope",
-    icon: <Wrench className="w-5 h-5 text-klein" />,
-    text: "YNX public network is currently a testnet environment. Features, APIs, uptime, and behavior may change without prior notice.",
-  },
-  {
-    title: "No Asset Custody",
-    icon: <Wallet className="w-5 h-5 text-klein" />,
-    text: "YNX does not take custody of user wallets, private keys, or seed phrases. Users are fully responsible for key management and signing actions.",
-  },
-  {
-    title: "No Financial Promise",
-    icon: <AlertTriangle className="w-5 h-5 text-klein" />,
-    text: "Testnet tokens have no monetary value and are provided for development and testing only. Nothing on this site is investment advice.",
-  },
-  {
-    title: "Acceptable Use",
-    icon: <Scale className="w-5 h-5 text-klein" />,
-    text: "Users must not abuse public endpoints, bypass policy controls, attempt unauthorized access, or run activities that disrupt network availability.",
-  },
-];
+import { DisclosureLayout } from "../components/legal/DisclosureLayout";
 
 export function Terms() {
   return (
-    <div className="pt-28 pb-24">
-      <section className="max-w-5xl mx-auto px-6">
-        <div className="mb-12">
-          <p className="text-xs uppercase tracking-widest text-klein font-mono mb-3">
-            Legal
-          </p>
-          <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-ink mb-4">
-            Terms of Service
-          </h1>
-          <p className="text-ink/60 text-lg leading-relaxed">
-            Effective date: May 16, 2026. These terms govern use of the YNX
-            website and public testnet services.
-          </p>
-        </div>
-
-        <div className="grid gap-6">
-          {termsBlocks.map((item) => (
-            <article
-              key={item.title}
-              className="bg-surface border border-border rounded-2xl p-6"
-            >
-              <h2 className="text-xl font-semibold text-ink flex items-center gap-3 mb-3">
-                {item.icon}
-                {item.title}
-              </h2>
-              <p className="text-ink/70 leading-relaxed">{item.text}</p>
-            </article>
-          ))}
-        </div>
-
-        <p className="text-sm text-ink/50 mt-10">
-          Continued use of the service indicates acceptance of these terms.
-        </p>
-      </section>
-    </div>
+    <DisclosureLayout
+      eyebrow="Terms"
+      title="Terms of Use for the YNX Project Site and Public Testnet"
+      summary="These are current project-level terms for using ynxweb4.com, public documentation, and public testnet surfaces. They are intentionally conservative: the site should not imply that YNX is already a launched custodial, exchange, or regulated financial service, and these terms should be updated once a legal operating entity exists."
+      effectiveDate="June 14, 2026"
+      status="Project Draft Terms"
+      boundaryTitle="Current operating posture"
+      boundaryText="Use of the site and public endpoints is governed as access to a public-testnet infrastructure project. The project is still early, experimental, and subject to change; no user should infer production guarantees or regulated-service status from access to the current website."
+      sections={[
+        {
+          title: "Testnet scope only",
+          icon: Wrench,
+          bullets: [
+            "YNX currently operates as a public testnet environment, and behavior, parameters, endpoints, and availability may change without advance notice.",
+            "Testnet assets, balances, bridge routes, AI settlement flows, and route evidence are for testing and evaluation only.",
+            "Nothing on the site should be read as a statement that real external assets are officially tradable, redeemable, or production-safe on YNX today.",
+          ],
+        },
+        {
+          title: "No custody or key management",
+          icon: Wallet,
+          bullets: [
+            "Users remain responsible for their own wallets, private keys, signing devices, and any third-party tools they connect.",
+            "The YNX project does not take custody of user wallets, seed phrases, or production funds through this website.",
+            "Any public bridge evidence shown on the site must be understood as testnet-scoped architecture and workflow evidence, not production custody.",
+          ],
+        },
+        {
+          title: "No financial promise",
+          icon: AlertTriangle,
+          bullets: [
+            "Testnet tokens and synthetic test assets have no monetary value and are not investment products.",
+            "The site does not provide investment advice, broker or dealer services, or guaranteed return language.",
+            "Use of YNX materials should not be treated as an offer of regulated financial services in any jurisdiction.",
+          ],
+        },
+        {
+          title: "Acceptable use",
+          icon: Scale,
+          bullets: [
+            "Do not abuse public endpoints, bypass policy controls, spam faucet or bridge services, or attempt unauthorized access.",
+            "Do not submit sensitive production secrets or illegal content through public interfaces.",
+            "YNX may restrict, rate-limit, or suspend abusive activity to protect public infrastructure and other users.",
+          ],
+        },
+      ]}
+    />
   );
 }

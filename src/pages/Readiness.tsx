@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle2, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
-import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { fetchJsonWithTimeout } from "../lib/request";
 
 type BridgeHealth = {
   ok: boolean;
@@ -79,9 +80,7 @@ type Gate = {
 };
 
 async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url} ${response.status}`);
-  return response.json();
+  return fetchJsonWithTimeout<T>(url, { timeoutMs: 3500 });
 }
 
 export function Readiness() {
@@ -120,6 +119,7 @@ export function Readiness() {
   const withdrawalWatcherItems = Object.entries(withdrawalWatchers?.items || {});
   const routeItems = routeChecks?.items || [];
   const routeReadinessItems = routeReadiness?.items || [];
+
   const gates = useMemo<Gate[]>(() => {
     const watcherOk = watcherItems.length >= 5 && watcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
     const withdrawalWatcherOk = withdrawalWatcherItems.length >= 5 && withdrawalWatcherItems.every(([, item]) => !item.last_error && item.last_scan_at);
@@ -131,47 +131,41 @@ export function Readiness() {
         withdrawalWatcherOk &&
         (health?.stats?.released_withdrawals || 0) >= 5,
     );
+
     return [
       {
         label: "Public services",
         ok: Boolean(health?.ok && health.onchain?.ready),
-        detail: health?.ok ? "Bridge service and YNX on-chain gateway are ready." : "Bridge health is not confirmed.",
+        detail: health?.ok ? "Bridge service and on-chain gateway are responding." : "Bridge health is not currently confirmed.",
       },
       {
         label: "Automated deposit watcher",
         ok: watcherOk,
-        detail: watcherOk ? "All five public-testnet routes have live deposit watcher evidence." : "Watcher evidence is incomplete or route config is missing.",
+        detail: watcherOk ? "Public routes show live deposit watcher evidence." : "Watcher evidence is incomplete or route configuration is missing.",
       },
       {
         label: "Route mapping integrity",
         ok: routeOk,
-        detail: routeOk ? "All configured wrapped-token mappings match the public gateway." : "One or more route mappings need attention.",
-      },
-      {
-        label: "Public product flow",
-        ok: true,
-        detail: "Website exposes assets, Sepolia deposit, and YNX swap flows.",
+        detail: routeOk ? "Configured wrapped-token mappings match the gateway." : "One or more route mappings need attention.",
       },
       {
         label: "Full-loop tested routes",
         ok: fullLoopOk,
-        detail: fullLoopOk
-          ? "All five routes have deposit, YNX burn, and source release evidence."
-          : "All five public-testnet routes must have full-loop evidence.",
+        detail: fullLoopOk ? "All five routes show deposit, burn, and release evidence." : "Not all routes have full-loop evidence yet.",
       },
       {
-        label: "Automatic route loop readiness",
+        label: "Automatic loop readiness",
         ok: automaticLoopOk,
         detail: automaticLoopOk
-          ? "All routes report automatic watcher plus signer-gated release readiness."
-          : "A missing deposit address, TRON contract, BSC lockbox, release signer, or watcher scan blocks automatic PASS.",
+          ? "Routes report watcher plus signer-gated release readiness."
+          : "A missing deposit address, contract, lockbox, signer, or scan path still blocks automatic PASS.",
       },
       {
         label: "Withdrawal release automation",
         ok: releaseOk,
         detail: releaseOk
-          ? "YNX burn watcher and Sepolia lockbox release automation are live; ETH and USDC smoke withdrawals have released."
-          : "Outbound source-chain release automation still needs configured signer/lockbox evidence and successful releases.",
+          ? "Burn watcher and source-chain release automation show successful releases."
+          : "Outbound release automation still needs stronger configured-signer evidence and sustained successful releases.",
       },
     ];
   }, [health, routeItems, routeReadiness, watcherItems, withdrawalWatcherItems]);
@@ -179,173 +173,218 @@ export function Readiness() {
   const passCount = gates.filter((gate) => gate.ok).length;
 
   return (
-    <div className="min-h-screen pt-24 pb-24">
+    <div className="min-h-screen pt-24 pb-28">
       <main className="mx-auto max-w-7xl px-6">
-        <section className="grid gap-8 py-16 lg:grid-cols-[420px_1fr]">
-          <div className="rounded-2xl border border-border bg-ink p-8 text-white shadow-xl">
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-mono uppercase tracking-widest text-white/45">Mainnet-Grade Testnet</p>
-                <h1 className="mt-2 text-4xl font-display font-bold tracking-tight">Readiness Gates</h1>
+        <section className="grid gap-8 py-12 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="overflow-hidden rounded-[2rem] border border-border bg-white shadow-sm">
+            <div className="ynx-mesh border-b border-border px-8 py-10">
+              <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-ink/45">Mainnet-Candidate Discipline</p>
+              <h1 className="mt-4 max-w-3xl font-display text-5xl font-semibold tracking-tight text-ink md:text-6xl">
+                Readiness is framed as gates, not a marketing adjective.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-ink/68 md:text-lg">
+                This page collects live public evidence for route health, watcher automation, and release behavior. A green status here
+                means a testnet rehearsal gate appears satisfied. It does not by itself convert YNX into a launched production system.
+              </p>
+            </div>
+
+            <div className="grid gap-4 px-8 py-8 md:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-surface/70 p-5">
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Strongest Evidence</p>
+                <p className="mt-3 text-sm leading-6 text-ink/72">
+                  Live watcher scans, route mappings, minted deposits, and released withdrawals on public test assets.
+                </p>
               </div>
-              <ShieldCheck className="text-emerald-300" />
+              <div className="rounded-2xl border border-border bg-surface/70 p-5">
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Not Proven Here</p>
+                <p className="mt-3 text-sm leading-6 text-ink/72">
+                  No external audit, no institutional signing controls evidence, and no legal/compliance sign-off is proven by these JSON feeds.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border bg-surface/70 p-5">
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Next Threshold</p>
+                <p className="mt-3 text-sm leading-6 text-ink/72">
+                  Turn route rehearsal into externally reviewable operational maturity with independent operators and stronger controls.
+                </p>
+              </div>
             </div>
-            <p className="text-sm leading-6 text-white/65">
-              Live evidence for whether the public testnet behaves like a mainnet rehearsal environment. Test assets still have no mainnet value.
-            </p>
-            <div className="mt-8 rounded-xl bg-white/5 p-4">
-              <p className="text-xs font-mono uppercase tracking-widest text-white/40">Gate score</p>
-              <p className="mt-2 text-3xl font-display font-bold">{passCount}/{gates.length}</p>
-            </div>
-            <Button onClick={refresh} variant="klein" className="mt-6 w-full rounded-xl">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Evidence
-            </Button>
           </div>
 
-          <div className="space-y-4">
-            {gates.map((gate) => (
-              <div key={gate.label} className="flex gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
-                <div className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${gate.ok ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-700"}`}>
-                  {gate.ok ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-                </div>
-                <div>
-                  <p className="font-display text-lg font-semibold">{gate.label}</p>
-                  <p className="mt-1 text-sm leading-6 text-ink/60">{gate.detail}</p>
-                </div>
+          <div className="rounded-[2rem] border border-border bg-ink p-8 text-white shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/45">Gate Score</p>
+                <h2 className="mt-3 font-display text-5xl font-semibold tracking-tight">{passCount}/{gates.length}</h2>
               </div>
-            ))}
+              <ShieldCheck className="h-6 w-6 text-emerald-300" />
+            </div>
+            <p className="mt-6 text-sm leading-6 text-white/72">
+              The score is a compact summary of rehearsal completeness. It should be read alongside the failed gates and remaining blockers,
+              not as a binary claim that YNX is production-ready.
+            </p>
+            <div className="mt-8 grid gap-3">
+              <Button onClick={refresh} variant="klein" className="justify-between rounded-xl">
+                Refresh Evidence
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button asChild variant="outline" className="justify-between rounded-xl border-white/15 bg-white/5 text-white hover:bg-white/10">
+                <a href="https://rpc.ynxweb4.com/bridge/health" target="_blank" rel="noreferrer">
+                  Open Raw JSON
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-6 text-white/65">
+              Remaining gap categories: external audit, production signing controls, durable independent validator operations, and formal legal structure.
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-            <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Bridge Health</p>
-            <div className="mt-4 space-y-3 font-mono text-sm">
-              <p>routes: {health?.stats?.routes ?? "-"}</p>
-              <p>minted deposits: {health?.stats?.minted_deposits ?? "-"}</p>
-              <p>watcher poll ms: {health?.onchain?.watcher_poll_ms ?? "-"}</p>
-              <p>withdrawal poll ms: {health?.onchain?.withdrawal_watcher_poll_ms ?? "-"}</p>
-              <p>released withdrawals: {health?.stats?.released_withdrawals ?? "-"}</p>
-              <p>full-loop tested: {routeReadiness?.summary?.full_loop_tested ?? "-"}</p>
-              <p>automatic loops: {routeReadiness?.summary?.automatic_loop_ready ?? "-"}</p>
-              <p>last error: {health?.onchain?.last_error || "-"}</p>
+        <section className="grid gap-4">
+          {gates.map((gate) => (
+            <div key={gate.label} className="flex gap-4 rounded-[1.5rem] border border-border bg-white p-5 shadow-sm">
+              <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${gate.ok ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-700"}`}>
+                {gate.ok ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              </div>
+              <div>
+                <p className="font-display text-xl font-semibold text-ink">{gate.label}</p>
+                <p className="mt-1 text-sm leading-6 text-ink/62">{gate.detail}</p>
+              </div>
             </div>
+          ))}
+        </section>
+
+        <section className="mt-6 grid gap-6 lg:grid-cols-[0.78fr_1.22fr]">
+          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
+            <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Bridge Health</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">Operational counters</h2>
+            <div className="mt-8 space-y-3">
+              {[
+                ["routes", health?.stats?.routes ?? "-"],
+                ["minted deposits", health?.stats?.minted_deposits ?? "-"],
+                ["released withdrawals", health?.stats?.released_withdrawals ?? "-"],
+                ["watcher poll ms", health?.onchain?.watcher_poll_ms ?? "-"],
+                ["withdrawal poll ms", health?.onchain?.withdrawal_watcher_poll_ms ?? "-"],
+                ["full-loop tested", routeReadiness?.summary?.full_loop_tested ?? "-"],
+                ["automatic loops", routeReadiness?.summary?.automatic_loop_ready ?? "-"],
+                ["last error", health?.onchain?.last_error || "-"],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface/60 px-4 py-3">
+                  <span className="text-sm text-ink/55">{label}</span>
+                  <span className="font-mono text-sm text-ink">{value}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 text-sm leading-6 text-ink/60">{status}</p>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm lg:col-span-2">
-            <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Automated Watchers</p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {watcherItems.map(([routeId, watcher]) => (
-                <div key={routeId} className="rounded-xl bg-surface p-3">
-                  <p className="font-semibold text-ink">{routeId}</p>
-                  <p className="mt-2 font-mono text-xs text-ink/60">block {watcher.last_scanned_block || "-"}</p>
-                  <p className="font-mono text-xs text-ink/60">minted {watcher.deposits_minted ?? "-"}</p>
-                  <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
+          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Route Readiness</p>
+                <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">Per-route evidence</h2>
+              </div>
+              <p className="font-mono text-sm text-ink/55">
+                tested {routeReadiness?.summary?.full_loop_tested ?? "-"}/{routeReadiness?.summary?.routes ?? "-"}
+              </p>
+            </div>
+            <div className="mt-8 grid gap-3 md:grid-cols-2">
+              {routeReadinessItems.map((item) => (
+                <div key={item.routeId} className="rounded-2xl border border-border bg-surface/60 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-ink">{item.routeId}</p>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${item.full_loop_tested ? "bg-emerald-50 text-emerald-700" : item.full_loop_ready ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
+                      {item.phase.replaceAll("_", " ")}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-ink/60">{item.wrappedSymbol || item.asset || item.displayName || "route"}</p>
+                  <p className="mt-3 font-mono text-xs text-ink/60">
+                    minted {item.evidence?.minted_deposits ?? 0} / released {item.evidence?.released_withdrawals ?? 0}
+                  </p>
+                  <p className="mt-2 font-mono text-xs text-ink/60">
+                    deposit {item.evidence?.deposit_watcher_status?.status || "-"} / release {item.evidence?.release_adapter_status?.status || "-"}
+                  </p>
+                  <p className={`mt-2 text-xs font-semibold ${item.automatic_loop_ready ? "text-emerald-700" : "text-amber-700"}`}>
+                    automatic loop {item.automatic_loop_ready ? "ready" : "pending"}
+                  </p>
+                  {!!item.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{item.blockers.join(", ")}</p>}
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
-          <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Withdrawal Watchers</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {withdrawalWatcherItems.map(([routeId, watcher]) => (
-              <div key={routeId} className="rounded-xl bg-surface p-3">
-                <p className="font-semibold text-ink">{routeId}</p>
-                <p className="mt-2 font-mono text-xs text-ink/60">block {watcher.last_scanned_block || "-"}</p>
-                <p className="font-mono text-xs text-ink/60">queued {watcher.withdrawals_queued ?? "-"}</p>
-                <p className="font-mono text-xs text-ink/60">released {watcher.releases_executed ?? "-"}</p>
-                <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Route Readiness</p>
-              <h2 className="mt-1 font-display text-xl font-semibold">Full-loop status</h2>
-            </div>
-            <p className="font-mono text-sm text-ink/55">
-              tested {routeReadiness?.summary?.full_loop_tested ?? "-"}/{routeReadiness?.summary?.routes ?? "-"}
-            </p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {routeReadinessItems.map((item) => (
-              <div key={item.routeId} className="rounded-xl bg-surface p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-ink">{item.routeId}</p>
-                  <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase ${item.full_loop_tested ? "bg-emerald-50 text-emerald-700" : item.full_loop_ready ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"}`}>
-                    {item.phase.replaceAll("_", " ")}
-                  </span>
+        <section className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
+            <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Watchers</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">Deposit and withdrawal scan traces</h2>
+            <div className="mt-8 grid gap-3 md:grid-cols-2">
+              {watcherItems.map(([routeId, watcher]) => (
+                <div key={routeId} className="rounded-2xl border border-border bg-surface/60 p-4">
+                  <p className="font-semibold text-ink">{routeId}</p>
+                  <p className="mt-3 font-mono text-xs text-ink/60">block {watcher.last_scanned_block || "-"}</p>
+                  <p className="font-mono text-xs text-ink/60">minted {watcher.deposits_minted ?? "-"}</p>
+                  <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
                 </div>
-                <p className="mt-2 text-sm text-ink/60">{item.wrappedSymbol || item.asset || item.displayName || "route"}</p>
-                <p className="mt-2 font-mono text-xs text-ink/60">
-                  minted {item.evidence?.minted_deposits ?? 0} / released {item.evidence?.released_withdrawals ?? 0}
-                </p>
-                <p className="mt-2 font-mono text-xs text-ink/60">
-                  deposit {item.evidence?.deposit_watcher_status?.status || "-"} / release {item.evidence?.release_adapter_status?.status || "-"}
-                </p>
-                <p className={`mt-2 text-xs font-semibold ${item.automatic_loop_ready ? "text-emerald-700" : "text-amber-700"}`}>
-                  automatic loop {item.automatic_loop_ready ? "ready" : "pending"}
-                </p>
-                {!!item.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{item.blockers.join(", ")}</p>}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-2xl border border-border bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Route Mapping</p>
-              <h2 className="mt-1 font-display text-xl font-semibold">Gateway routes</h2>
+              ))}
             </div>
-            <p className="text-sm text-ink/55">{status}</p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {routeItems.map((item) => (
-              <div key={item.routeId} className="rounded-xl bg-surface p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-ink">{item.routeId}</p>
-                  <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase ${item.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
-                    {item.ok ? "ok" : "fail"}
-                  </span>
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
+              {withdrawalWatcherItems.map(([routeId, watcher]) => (
+                <div key={routeId} className="rounded-2xl border border-border bg-surface/60 p-4">
+                  <p className="font-semibold text-ink">{routeId}</p>
+                  <p className="mt-3 font-mono text-xs text-ink/60">block {watcher.last_scanned_block || "-"}</p>
+                  <p className="font-mono text-xs text-ink/60">queued {watcher.withdrawals_queued ?? "-"}</p>
+                  <p className="font-mono text-xs text-ink/60">released {watcher.releases_executed ?? "-"}</p>
+                  <p className="truncate font-mono text-xs text-ink/60">{watcher.last_scan_at || "-"}</p>
                 </div>
-                <p className="mt-2 truncate font-mono text-xs text-ink/60">{item.mappedWrappedToken || item.error || "-"}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
+            <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Route Mapping</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">Gateway integrity checks</h2>
+            <div className="mt-8 grid gap-3 md:grid-cols-2">
+              {routeItems.map((item) => (
+                <div key={item.routeId} className="rounded-2xl border border-border bg-surface/60 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold text-ink">{item.routeId}</p>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${item.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                      {item.ok ? "ok" : "fail"}
+                    </span>
+                  </div>
+                  <p className="mt-3 truncate font-mono text-xs text-ink/60">{item.mappedWrappedToken || item.error || "-"}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
+              <Activity className="mb-2 h-4 w-4" />
+              This page argues for mainnet-candidate discipline, not finished production status. Real mainnet status still requires external audits,
+              independent operators, production signing and custody controls, and formal legal/compliance work.
+            </div>
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-3">
-          <Link to="/test-assets" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+        <section className="mt-6 grid gap-4 md:grid-cols-4">
+          <Link to="/test-assets" className="rounded-[1.5rem] border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
             <p className="font-display text-lg font-semibold">Test Assets</p>
-            <p className="mt-2 text-sm text-ink/60">Fund gas and add live YNX test assets.</p>
+            <p className="mt-2 text-sm text-ink/60">Fund gas and add public test assets.</p>
           </Link>
-          <Link to="/bridge" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+          <Link to="/bridge" className="rounded-[1.5rem] border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
             <p className="font-display text-lg font-semibold">Bridge</p>
-            <p className="mt-2 text-sm text-ink/60">Deposit Sepolia ETH and USDC into YNX.</p>
+            <p className="mt-2 text-sm text-ink/60">Inspect deposit routes and current bridge surface.</p>
           </Link>
-          <Link to="/withdraw" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+          <Link to="/withdraw" className="rounded-[1.5rem] border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
             <p className="font-display text-lg font-semibold">Withdraw</p>
-            <p className="mt-2 text-sm text-ink/60">Burn wrapped assets and release Sepolia test assets.</p>
+            <p className="mt-2 text-sm text-ink/60">Check burn and source-release flow.</p>
           </Link>
-          <a href="https://rpc.ynxweb4.com/bridge/health" target="_blank" rel="noreferrer" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+          <a href="https://rpc.ynxweb4.com/bridge/health" target="_blank" rel="noreferrer" className="rounded-[1.5rem] border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
             <p className="flex items-center gap-2 font-display text-lg font-semibold">
               Raw Evidence <ExternalLink className="h-4 w-4" />
             </p>
-            <p className="mt-2 text-sm text-ink/60">Open the live bridge health JSON.</p>
+            <p className="mt-2 text-sm text-ink/60">Open live bridge health JSON.</p>
           </a>
         </section>
-
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          <Activity className="mb-2 h-4 w-4" />
-          This is mainnet-grade rehearsal infrastructure, not mainnet value infrastructure. Real mainnet status still requires external audits, independent operators, production custody/signing controls, and legal/compliance sign-off.
-        </div>
       </main>
     </div>
   );

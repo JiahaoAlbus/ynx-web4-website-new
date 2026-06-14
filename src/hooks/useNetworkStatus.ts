@@ -22,14 +22,19 @@ const PUBLIC_TESTNET_BASELINE: NetworkStatus = {
   web4: { status: "degraded", error: "status_api_unavailable" },
 };
 
+const STATUS_POLL_INTERVAL_MS = 60_000;
+const STATUS_FETCH_TIMEOUT_MS = 4_500;
+
 export function useNetworkStatus() {
-  const [status, setStatus] = useState<NetworkStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<NetworkStatus | null>(PUBLIC_TESTNET_BASELINE);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStatus = async () => {
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+    const timeoutId = window.setTimeout(() => controller.abort(), STATUS_FETCH_TIMEOUT_MS);
+
+    setLoading(true);
 
     try {
       const fetchUrl = "/api/network/status";
@@ -60,7 +65,7 @@ export function useNetworkStatus() {
       }
       
       setStatus((current) => current || PUBLIC_TESTNET_BASELINE);
-      setError((currentError) => (status ? displayError : currentError || displayError));
+      setError(displayError);
     } finally {
       window.clearTimeout(timeoutId);
       setLoading(false);
@@ -68,8 +73,8 @@ export function useNetworkStatus() {
   };
 
   useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000); // Poll every 30s
+    void fetchStatus();
+    const interval = setInterval(fetchStatus, STATUS_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 

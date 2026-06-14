@@ -1,12 +1,12 @@
 # YNX 公开资产状态
 
 状态：active  
-最后更新：2026-06-07
+最后更新：2026-06-14
 范围：公开测试网 `ynx_9102-1`
 
 ## 当前答案
 
-现在 YNX 公开测试网已完整可用的资产是：
+现在 YNX 公开测试网当前可用的资产是：
 
 | 资产 | 类型 | 单位 / 合约 | 状态 |
 |---|---|---|---|
@@ -19,11 +19,13 @@
 测试网资产没有主网价值。`YUSD.test` 不是 USDC、USDT、USD、电子货币、
 银行存款或可赎回稳定币。它只是用于交易、跨链、AI 支付和 UX 测试的公开测试网合成单位。
 
+4 个 bonded validators 当前在线，公开测试网验收脚本在当前托管环境中可以通过。
+
 ## 公开 wrapped asset route
 
 公开测试网现在已经部署了第一批主流资产的 wrapped token 合约、bridge
 gateway route，以及 bridge observer/relayer API。它们是公开测试网 wrapped
-表示，不等于真实主网外部资产已经完成托管、可赎回或已有交易流动性。
+表示，不等于真实主网外部资产已经完成托管、可赎回或已有官方主网流动性。
 
 Gateway：`0x3a2948da8f35b86dce1440ebfb56b8ae041cebfe`
 Bridge service：`https://rpc.ynxweb4.com/bridge/*`
@@ -104,9 +106,19 @@ TRON release proof:       0xf02bc21e3b8522d784f67e2c17fbb26e91a7294f064957b7e590
 GET /bridge/route-readiness
 full_loop_tested: btc-testnet-btc, eth-sepolia-eth, bnb-testnet-bnb, tron-shasta-usdt, eth-sepolia-usdc
 automatic_loop_ready: 需要 deposit address/source contract、BSC lockbox、测试网 release signer 全部配置
+automatic_loop_observed: 当前最强的真实公开自动化证据主要集中在 Sepolia ETH 和 USDC
 manual_loop_ready: none
 mapped_route_only: none
 ```
+
+截至 2026-06-14，公开 bridge readiness 应统一理解成：
+
+- `5/5` routes `full_loop_tested`
+- `4/5` routes `automatic_loop_ready`
+- `2/5` routes 拥有最强的公开自动化实证：Sepolia ETH 和 Sepolia USDC
+- `btc-testnet-btc`：automatic-ready，但公开自动化实证还偏少
+- `tron-shasta-usdt`：automatic-ready，但公开自动化实证还偏少
+- `bnb-testnet-bnb`：仍等待 BSC lockbox 部署和 testnet BNB 资金
 
 full-loop-tested 证据链的意思是：
 
@@ -125,6 +137,12 @@ TRON Shasta TronGrid watcher、BSC testnet EVM lockbox 自动化路径，以及
 测试网 signer-gated release adapter。某条 route 只有在 deposit address/contract、
 必要的 lockbox、watcher scan、burn watcher、release signer 和 release cap 都
 配置并健康时，才会被标记为 `automatic_loop_ready`。
+
+尽调时必须强调：
+
+- `automatic_loop_ready` 是配置和 adapter 就绪状态；
+- 它强于纯 manual route，但弱于“已经多次公开观察到自动化闭环”；
+- 投资人不应把 `automatic_loop_ready` 直接理解成 production-safe 或规模化已证明。
 
 ## 还没正式上线的能力
 
@@ -148,7 +166,8 @@ TRON Shasta TronGrid watcher、BSC testnet EVM lockbox 自动化路径，以及
 
 ## 公开测试网交易 pilot
 
-公开测试网已有最小 AMM pilot，可用于测试 swap：
+公开测试网已有最小 AMM pilot，可用于测试 swap。这是测试证据，不足以支撑
+“真实外部资产已经在 YNX 上普遍可交易”的对外说法：
 
 | 交易池 | 合约 | 状态 |
 |---|---|---|

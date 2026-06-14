@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Language = "en" | "zh";
 
@@ -51,7 +51,7 @@ const translations = {
     "roadmap.mainnet_gate": "Audit & On-call Drills",
     "footer.risk": "Test tokens have no mainnet value. Distributed infrastructure under active security polish.",
     "nav.faq": "FAQ",
-    "nav.about": "Research",
+    "nav.about": "About",
     "status.online": "Stable",
     "status.offline": "Critical",
     "status.degraded": "Investigating",
@@ -99,7 +99,7 @@ const translations = {
     "roadmap.mainnet_gate": "审计与运维恢复演练进行中",
     "footer.risk": "测试代币不具主网价值。分布式基础设施正处于安全调优阶段。",
     "nav.faq": "常见问题",
-    "nav.about": "研究",
+    "nav.about": "关于",
     "status.online": "稳定",
     "status.offline": "关键故障",
     "status.degraded": "调查中",
@@ -110,22 +110,25 @@ const translations = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem("ynx-lang");
-    return (saved as Language) || "en";
-  });
+  const [languageState, setLanguageState] = useState<Language>("en");
+  const setLanguage = (_lang: Language) => {
+    setLanguageState("en");
+  };
 
   useEffect(() => {
-    localStorage.setItem("ynx-lang", language);
-    document.documentElement.lang = language;
-  }, [language]);
+    localStorage.setItem("ynx-lang", "en");
+    document.documentElement.lang = "en";
+    if (languageState !== "en") {
+      setLanguageState("en");
+    }
+  }, [languageState]);
 
   const t = (key: string) => {
-    return translations[language][key as keyof typeof translations["en"]] || key;
+    return translations.en[key as keyof typeof translations["en"]] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language: "en", setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );

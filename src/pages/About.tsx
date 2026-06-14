@@ -1,82 +1,87 @@
-import { motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { ArrowRight, Building2, Compass, ShieldCheck, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DisclosureLayout } from "../components/legal/DisclosureLayout";
 
 export function About() {
   return (
-    <div className="pt-40 pb-32">
-      <section className="relative py-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="text-klein font-mono text-sm tracking-widest uppercase mb-4 block">
-              Mission
-            </span>
-            <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-ink mb-6">
-              The Future of <br />
-              <span className="text-klein">Coordination</span>
-            </h1>
-            <p className="text-xl text-ink/60 max-w-2xl mx-auto leading-relaxed mb-10">
-              YNX is the AI-native sovereign execution layer. We provide the infrastructure for autonomous coordination between humans and AI agents.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+    <div>
+      <DisclosureLayout
+        eyebrow="About"
+        title="YNX is currently a project with live public-testnet infrastructure."
+        summary="YNX should be understood first as a Web4 and AI-execution public testnet project with real endpoints, operator surfaces, and documentation. It should not yet be framed as a launched legal company, a regulated financial operator, or a production custody stack."
+        effectiveDate="June 14, 2026"
+        status="Project Status Note"
+        boundaryTitle="What exists today"
+        boundaryText="The strongest evidence today is technical and operational: live public endpoints, public testnet workflows, bridge and settlement evidence, and readable readiness materials. The weakest area is not whether the system exists, but whether company formation, audits, and legal-operating controls have fully caught up."
+        sections={[
+          {
+            title: "Current framing",
+            icon: Compass,
+            bullets: [
+              "YNX is best described today as a Web4 and AI-execution public testnet project.",
+              "The current site should not imply a separate operating company has already been publicly formed.",
+              "The project is strongest when discussed as execution infrastructure, not as a speculative token or exaggerated consensus-moat story.",
+            ],
+          },
+          {
+            title: "What is already real",
+            icon: Sparkles,
+            bullets: [
+              "Live public endpoints, a public docs center, bridge route evidence, and operator-facing readiness surfaces.",
+              "Policy-bounded AI and Web4 execution flows with verifiable settlement primitives on public testnet.",
+              "A public-facing site that shows current stage, not just abstract product ambition.",
+            ],
+          },
+          {
+            title: "What is not complete yet",
+            icon: Building2,
+            bullets: [
+              "No public legal company entity is announced on this site yet.",
+              "External legal memo, broader organizational controls, and production-grade audit coverage are not yet presented as complete.",
+              "Current public-testnet bridge and asset evidence should not be overstated as production custody, redemption, or official real-asset trading.",
+            ],
+          },
+          {
+            title: "Why the project exists",
+            icon: ShieldCheck,
+            bullets: [
+              "To let humans define policy before automation starts.",
+              "To let apps and agents execute inside bounded sessions instead of relying on permanent trust.",
+              "To settle machine actions, service access, and AI work with verifiable evidence on a public execution surface.",
+            ],
+          },
+        ]}
+      />
 
-      <section className="max-w-4xl mx-auto px-6 space-y-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="prose prose-lg prose-ink mx-auto"
-        >
-          <h2 className="text-3xl font-display font-bold mb-6">Why YNX?</h2>
-          <p className="text-lg text-ink/70 leading-relaxed mb-6">
-            The internet began as a library (Web1), evolved into a platform (Web2), and transformed into a property rights system (Web3). The next step is agency.
-          </p>
-          <p className="text-lg text-ink/70 leading-relaxed mb-6">
-            Web4 is the era of autonomous action. It is where software doesn't just display information or transfer value, but actively performs work, negotiates services, and executes complex workflows without constant human supervision.
-          </p>
-          <p className="text-lg text-ink/70 leading-relaxed mb-6">
-            Current blockchains are designed for human-speed interaction. They lack the primitives for high-frequency, policy-bounded machine coordination. YNX fills this gap.
-          </p>
-
-          <h2 className="text-3xl font-display font-bold mb-6 mt-16">Our Thesis</h2>
-          <ul className="list-disc pl-6 space-y-4 text-ink/70 marker:text-klein mb-16">
-            <li><strong>Sovereignty First:</strong> AI agents must be owned and controlled by humans or DAOs, not centralized platforms.</li>
-            <li><strong>Policy Over Permission:</strong> Execution should be bounded by code-enforced policies, not manual approval for every action.</li>
-            <li><strong>Machine-Native Economy:</strong> Payments between agents should be streaming, micro-transactional, and friction-free.</li>
-          </ul>
-
-          <h2 className="text-3xl font-display font-bold mb-6 mt-16">Founder</h2>
-          <div className="flex items-center gap-6 mb-16">
-            <div className="w-16 h-16 rounded-full bg-klein/10 flex items-center justify-center text-klein font-display font-bold text-xl">
-              HJ
+      <section className="px-6 pb-28">
+        <div className="mx-auto max-w-6xl rounded-[36px] border border-klein/10 bg-klein px-8 py-12 text-white shadow-[0_28px_100px_rgba(0,47,167,0.22)] md:px-12">
+          <div className="max-w-3xl">
+            <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-white/60">
+              Next step
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-ink">HuangJiahao</h3>
-              <p className="text-ink/60">Founder</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="bg-ink text-white p-12 rounded-3xl text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,47,167,0.4),transparent_70%)]" />
-          <div className="relative z-10">
-            <h2 className="text-3xl font-display font-bold mb-6">Join the Revolution</h2>
-            <p className="text-white/60 max-w-xl mx-auto mb-8">
-              The public testnet is live. Whether you are a developer, validator, or researcher, there is a place for you in the YNX ecosystem.
+            <h2 className="mt-5 text-4xl font-display font-bold tracking-[-0.06em] md:text-5xl">
+              Build from the live surface, but keep the claims disciplined.
+            </h2>
+            <p className="mt-6 text-lg leading-9 text-white/74">
+              The right next milestone is not louder positioning. It is better publication,
+              cleaner disclosures, stronger operational controls, and real external usage.
             </p>
-            <Button variant="klein" size="lg" asChild>
-              <Link to="/docs/en/public-testnet-join">
-                Start Contributing
-                <ArrowRight className="ml-2 w-4 h-4" />
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link
+                to="/readiness"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-4 font-semibold text-klein transition-colors hover:bg-surface"
+              >
+                View readiness
+                <ArrowRight className="h-4 w-4" />
               </Link>
-            </Button>
+              <Link
+                to="/docs"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-6 py-4 font-semibold text-white transition-colors hover:bg-white/14"
+              >
+                Read docs
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

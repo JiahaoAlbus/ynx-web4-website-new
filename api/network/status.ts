@@ -8,6 +8,11 @@ type ServiceStatus = {
   code?: number;
 };
 
+type NetworkStatusResponse = Record<
+  string,
+  ServiceStatus | string | number | boolean | undefined
+>;
+
 type EndpointConfig = {
   url: string;
   method?: "GET" | "POST" | "HEAD";
@@ -19,16 +24,37 @@ type EndpointConfig = {
   summarize?: (data: unknown) => unknown;
 };
 
-const CHAIN_ID = "ynx_9102-1";
-const EVM_CHAIN_ID_HEX = "0x238e";
+const NETWORK = {
+  chainId: "ynx_9102-1",
+  evmChainIdHex: "0x238e",
+  endpoints: {
+    rpc: "https://rpc.ynxweb4.com",
+    evm: "https://evm.ynxweb4.com",
+    rest: "https://rest.ynxweb4.com",
+    grpc: "https://grpc.ynxweb4.com",
+    faucet: "https://faucet.ynxweb4.com",
+    indexer: "https://indexer.ynxweb4.com",
+    explorer: "https://explorer.ynxweb4.com",
+    ai: "https://ai.ynxweb4.com",
+    web4: "https://web4.ynxweb4.com",
+  },
+};
+
+const CACHE_TTL_MS = 15_000;
+const REVALIDATE_AFTER_MS = 45_000;
+
+type CachedNetworkStatus = {
+  payload: NetworkStatusResponse;
+  fetchedAt: number;
+};
 
 const ENDPOINTS: Record<string, EndpointConfig> = {
   rpc: {
-    url: "https://rpc.ynxweb4.com/status",
-    timeoutMs: 5500,
+    url: `${NETWORK.endpoints.rpc}/status`,
+    timeoutMs: 1800,
     check: (data) => {
       const result = (data as any)?.result;
-      if (result?.node_info?.network === CHAIN_ID) {
+      if (result?.node_info?.network === NETWORK.chainId) {
         return result?.sync_info?.catching_up ? "degraded" : "online";
       }
       return "offline";
@@ -45,17 +71,21 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
   evm: {
-    url: "https://evm.ynxweb4.com",
+    url: NETWORK.endpoints.evm,
     method: "POST",
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     body: { jsonrpc: "2.0", id: 1, method: "eth_chainId", params: [] },
-    check: (data) => ((data as any)?.result === EVM_CHAIN_ID_HEX ? "online" : "offline"),
+    check: (data) =>
+      (data as any)?.result === NETWORK.evmChainIdHex ? "online" : "offline",
     summarize: (data) => ({ chain_id: (data as any)?.result }),
   },
   rest: {
-    url: "https://rest.ynxweb4.com/cosmos/base/tendermint/v1beta1/node_info",
-    timeoutMs: 5500,
-    check: (data) => ((data as any)?.default_node_info?.network === CHAIN_ID ? "online" : "offline"),
+    url: `${NETWORK.endpoints.rest}/cosmos/base/tendermint/v1beta1/node_info`,
+    timeoutMs: 1800,
+    check: (data) =>
+      (data as any)?.default_node_info?.network === NETWORK.chainId
+        ? "online"
+        : "offline",
     summarize: (data) => {
       const node = (data as any)?.default_node_info;
       return {
@@ -66,17 +96,22 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
   grpc: {
-    url: "https://grpc.ynxweb4.com",
+    url: NETWORK.endpoints.grpc,
     acceptStatuses: [200, 404, 415],
     parseJson: false,
-    timeoutMs: 3500,
+    timeoutMs: 1500,
     check: (_data, response) =>
-      response.ok || response.status === 404 || response.status === 415 ? "online" : "offline",
+      response.ok || response.status === 404 || response.status === 415
+        ? "online"
+        : "offline",
   },
   faucet: {
-    url: "https://faucet.ynxweb4.com/health",
-    timeoutMs: 5000,
-    check: (data) => ((data as any)?.ok === true && (data as any)?.chain_id === CHAIN_ID ? "online" : "offline"),
+    url: `${NETWORK.endpoints.faucet}/health`,
+    timeoutMs: 1800,
+    check: (data) =>
+      (data as any)?.ok === true && (data as any)?.chain_id === NETWORK.chainId
+        ? "online"
+        : "offline",
     summarize: (data) => {
       const body = data as any;
       return {
@@ -88,11 +123,11 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
   indexer: {
-    url: "https://indexer.ynxweb4.com/health",
-    timeoutMs: 5000,
+    url: `${NETWORK.endpoints.indexer}/health`,
+    timeoutMs: 1800,
     check: (data) => {
       const body = data as any;
-      if (body?.ok === true && body?.chain_id === CHAIN_ID) {
+      if (body?.ok === true && body?.chain_id === NETWORK.chainId) {
         const lag = (body.latest_seen || 0) - (body.last_indexed || 0);
         return lag > 10 ? "degraded" : "online";
       }
@@ -109,16 +144,20 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
   explorer: {
-    url: "https://explorer.ynxweb4.com",
+    url: NETWORK.endpoints.explorer,
     method: "HEAD",
     parseJson: false,
-    timeoutMs: 5500,
+    timeoutMs: 1800,
     check: (_data, response) => (response.ok ? "online" : "offline"),
   },
   ai: {
-    url: "https://ai.ynxweb4.com/health",
-    timeoutMs: 5500,
-    check: (data) => ((data as any)?.ok === true && (data as any)?.service === "ynx-ai-gateway" ? "online" : "offline"),
+    url: `${NETWORK.endpoints.ai}/health`,
+    timeoutMs: 1800,
+    check: (data) =>
+      (data as any)?.ok === true &&
+      (data as any)?.service === "ynx-ai-gateway"
+        ? "online"
+        : "offline",
     summarize: (data) => {
       const body = data as any;
       return {
@@ -132,9 +171,12 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
     },
   },
   web4: {
-    url: "https://web4.ynxweb4.com/health",
-    timeoutMs: 5500,
-    check: (data) => ((data as any)?.ok === true && (data as any)?.service === "ynx-web4-hub" ? "online" : "offline"),
+    url: `${NETWORK.endpoints.web4}/health`,
+    timeoutMs: 1800,
+    check: (data) =>
+      (data as any)?.ok === true && (data as any)?.service === "ynx-web4-hub"
+        ? "online"
+        : "offline",
     summarize: (data) => {
       const body = data as any;
       return {
@@ -150,9 +192,12 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
   },
 };
 
-async function fetchWithTimeout(config: EndpointConfig) {
+let cachedStatus: CachedNetworkStatus | null = null;
+let inFlightStatus: Promise<NetworkStatusResponse> | null = null;
+
+async function fetchWithTimeout(config: EndpointConfig, timeoutMs: number) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs ?? 3000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(config.url, {
@@ -173,7 +218,7 @@ async function checkService(config: EndpointConfig): Promise<ServiceStatus> {
   const start = Date.now();
 
   try {
-    const response = await fetchWithTimeout(config);
+    const response = await fetchWithTimeout(config, config.timeoutMs ?? 3000);
     const latency_ms = Date.now() - start;
     const acceptable = response.ok || config.acceptStatuses?.includes(response.status);
 
@@ -224,11 +269,11 @@ async function checkService(config: EndpointConfig): Promise<ServiceStatus> {
   }
 }
 
-async function getNetworkStatus() {
-  const results: Record<string, unknown> = {
+async function buildNetworkStatus(): Promise<NetworkStatusResponse> {
+  const results: NetworkStatusResponse = {
     updated_at: new Date().toISOString(),
-    chain_id: CHAIN_ID,
-    evm_chain_id: EVM_CHAIN_ID_HEX,
+    chain_id: NETWORK.chainId,
+    evm_chain_id: NETWORK.evmChainIdHex,
     source: "live-probe",
   };
 
@@ -238,24 +283,59 @@ async function getNetworkStatus() {
     }),
   );
 
-  const serviceStatuses = Object.keys(ENDPOINTS)
-    .map((key) => results[key])
-    .filter((item): item is ServiceStatus => typeof item === "object" && item !== null && "status" in item);
-  const online = serviceStatuses.filter((item) => item.status === "online").length;
-  const degraded = serviceStatuses.filter((item) => item.status === "degraded").length;
-  const offline = serviceStatuses.filter((item) => item.status === "offline").length;
+  const states = Object.keys(ENDPOINTS)
+    .map((key) => (results[key] as ServiceStatus | undefined)?.status)
+    .filter(Boolean) as ServiceState[];
 
-  results.summary =
-    offline === 0 && degraded === 0
-      ? "online"
-      : online > 0
-        ? "degraded"
-        : "offline";
-  results.online_count = online;
-  results.degraded_count = degraded;
-  results.offline_count = offline;
+  const onlineCount = states.filter((status) => status === "online").length;
+  const degradedCount = states.filter((status) => status === "degraded").length;
+  const offlineCount = states.filter((status) => status === "offline").length;
+
+  results.summary = offlineCount > 0 ? "degraded" : degradedCount > 0 ? "degraded" : "healthy";
+  results.online = onlineCount;
+  results.degraded = degradedCount;
+  results.offline = offlineCount;
 
   return results;
+}
+
+function getCachedSnapshot() {
+  return cachedStatus?.payload ?? null;
+}
+
+async function getNetworkStatusCached(forceRefresh = false) {
+  const now = Date.now();
+
+  if (!forceRefresh && cachedStatus && now - cachedStatus.fetchedAt < CACHE_TTL_MS) {
+    return cachedStatus.payload;
+  }
+
+  if (!forceRefresh && cachedStatus && now - cachedStatus.fetchedAt < REVALIDATE_AFTER_MS) {
+    if (!inFlightStatus) {
+      inFlightStatus = buildNetworkStatus()
+        .then((payload) => {
+          cachedStatus = { payload, fetchedAt: Date.now() };
+          return payload;
+        })
+        .finally(() => {
+          inFlightStatus = null;
+        });
+    }
+    return cachedStatus.payload;
+  }
+
+  if (!inFlightStatus) {
+    inFlightStatus = buildNetworkStatus()
+      .then((payload) => {
+        cachedStatus = { payload, fetchedAt: Date.now() };
+        return payload;
+      })
+      .finally(() => {
+        inFlightStatus = null;
+      });
+  }
+
+  return inFlightStatus;
 }
 
 export default async function handler(req: any, res: any) {
@@ -265,16 +345,27 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const status = await getNetworkStatus();
+    const forceRefresh = req.query?.refresh === "1";
+    const status = await getNetworkStatusCached(forceRefresh);
     res.setHeader("Cache-Control", "s-maxage=10, stale-while-revalidate=20");
     return res.status(200).json(status);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown_error";
+  } catch (error) {
+    const stale = getCachedSnapshot();
+    if (stale) {
+      res.setHeader("Cache-Control", "s-maxage=5, stale-while-revalidate=20");
+      return res.status(200).json({
+        ...stale,
+        updated_at: new Date().toISOString(),
+        source: "stale-cache",
+      });
+    }
+
+    const message = error instanceof Error ? error.message : "unknown_error";
     return res.status(500).json({
       updated_at: new Date().toISOString(),
-      chain_id: CHAIN_ID,
-      evm_chain_id: EVM_CHAIN_ID_HEX,
-      source: "live-probe",
+      chain_id: NETWORK.chainId,
+      evm_chain_id: NETWORK.evmChainIdHex,
+      source: "live-probe-error",
       summary: "offline",
       error: message,
     });

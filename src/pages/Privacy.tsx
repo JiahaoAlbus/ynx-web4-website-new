@@ -1,85 +1,54 @@
-import { Shield, Database, Lock, Globe } from "lucide-react";
-
-const sections = [
-  {
-    title: "What We Collect",
-    icon: <Database className="w-5 h-5 text-klein" />,
-    points: [
-      "Website analytics and operational logs used for reliability and abuse prevention.",
-      "Public wallet addresses or transaction hashes only when users submit them through public testnet tools.",
-      "Support contact details provided voluntarily through community channels.",
-    ],
-  },
-  {
-    title: "What We Do Not Collect",
-    icon: <Lock className="w-5 h-5 text-klein" />,
-    points: [
-      "No custody of private keys or seed phrases.",
-      "No storage of plaintext wallet secrets.",
-      "No sale of personal data to third parties.",
-    ],
-  },
-  {
-    title: "How Data Is Used",
-    icon: <Shield className="w-5 h-5 text-klein" />,
-    points: [
-      "Maintain and secure public testnet infrastructure.",
-      "Troubleshoot incidents and improve service quality.",
-      "Publish aggregate health metrics and readiness reports.",
-    ],
-  },
-  {
-    title: "Cross-Border Access",
-    icon: <Globe className="w-5 h-5 text-klein" />,
-    points: [
-      "Public infrastructure may be distributed across multiple regions.",
-      "By using the service, users consent to processing required for network operation.",
-      "Compliance obligations are handled according to the non-custodial model described in official docs.",
-    ],
-  },
-];
+import { Database, Globe, Lock, Shield } from "lucide-react";
+import { DisclosureLayout } from "../components/legal/DisclosureLayout";
 
 export function Privacy() {
   return (
-    <div className="pt-28 pb-24">
-      <section className="max-w-5xl mx-auto px-6">
-        <div className="mb-12">
-          <p className="text-xs uppercase tracking-widest text-klein font-mono mb-3">
-            Privacy
-          </p>
-          <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-ink mb-4">
-            Privacy Policy
-          </h1>
-          <p className="text-ink/60 text-lg leading-relaxed">
-            Effective date: May 16, 2026. This policy applies to YNX public
-            testnet services and documentation website.
-          </p>
-        </div>
-
-        <div className="grid gap-6">
-          {sections.map((section) => (
-            <article
-              key={section.title}
-              className="bg-surface border border-border rounded-2xl p-6"
-            >
-              <h2 className="text-xl font-semibold text-ink flex items-center gap-3 mb-4">
-                {section.icon}
-                {section.title}
-              </h2>
-              <ul className="space-y-2 text-ink/70">
-                {section.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-
-        <p className="text-sm text-ink/50 mt-10">
-          For policy and compliance details, refer to YNX canonical documents in
-          the docs center.
-        </p>
-      </section>
-    </div>
+    <DisclosureLayout
+      eyebrow="Privacy"
+      title="Privacy Notice for the YNX Project"
+      summary="This page describes the current project-level privacy posture for ynxweb4.com and related public testnet services. It is written for a public-testnet infrastructure project and should not be read as the final policy of a separately formed legal operating company, because no such public entity has been announced yet."
+      effectiveDate="June 14, 2026"
+      status="Project Draft Disclosure"
+      boundaryTitle="Project, not legal entity"
+      boundaryText="YNX is currently presented as a public-testnet infrastructure project. Until an operating entity is publicly formed, this notice explains current handling expectations and boundaries rather than the policy of a launched corporate service provider."
+      sections={[
+        {
+          title: "Data we may process",
+          icon: Database,
+          bullets: [
+            "Basic analytics, uptime telemetry, and operational logs needed to keep public endpoints available and to investigate abuse or failures.",
+            "Public wallet addresses, transaction hashes, or route identifiers only when users submit them through testnet tools or support flows.",
+            "Contact details that users voluntarily provide when asking for help, reporting bugs, or coordinating validator and builder onboarding.",
+          ],
+        },
+        {
+          title: "Data we do not want",
+          icon: Lock,
+          bullets: [
+            "YNX does not ask users to submit private keys, seed phrases, or plaintext signing secrets.",
+            "YNX should not receive production personal-finance data through public testnet flows.",
+            "The project does not sell personal data to data brokers or advertising networks.",
+          ],
+        },
+        {
+          title: "How data is used today",
+          icon: Shield,
+          bullets: [
+            "Operate, secure, and debug public testnet infrastructure and related documentation services.",
+            "Support incident response, abuse prevention, and reliability investigations.",
+            "Publish aggregate readiness, health, and operator-facing metrics without promising anonymous or zero-log operation.",
+          ],
+        },
+        {
+          title: "Cross-border and retention caveats",
+          icon: Globe,
+          bullets: [
+            "Public infrastructure may use multiple regions and service providers, so data may transit or be processed outside a visitor's home jurisdiction.",
+            "Retention, deletion, and processor inventories are still part of the project's compliance-readiness work and should not be overstated as fully institutionalized controls yet.",
+            "If and when a legal operating entity is formed, this notice should be replaced or updated with entity-specific ownership, processor, and rights information.",
+          ],
+        },
+      ]}
+    />
   );
 }
