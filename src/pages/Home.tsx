@@ -36,16 +36,10 @@ export function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Hero />
-      <ValueStrip />
       <ChoosePathSection />
-      <HowItWorks />
       <LiveProofSection />
-      <CapabilitiesOverview />
       <AISettlementDemo />
       <DeveloperSection />
-      <InfrastructureOverview />
-      <RoadmapSection />
-      <FAQ />
       <FinalCTA />
       <RiskNotice />
     </div>
@@ -410,7 +404,7 @@ function ChoosePathSection() {
       ];
 
   return (
-    <section className="border-b border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-20 md:py-24">
+    <section className="border-y border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-20 md:py-24">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
@@ -470,7 +464,7 @@ function ValueStrip() {
     : ["公开测试网项目", "尚未公开设立法律实体", "不做托管承诺", "真实资产交易尚未上线"];
 
   return (
-    <section className="border-b border-border/60 bg-white px-6 py-6">
+    <section className="border-b border-border/60 bg-white px-6 py-5">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-4">
         <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-ink/35">
           {isEn ? "Boundary before hype" : "先讲边界，再讲想象空间"}
@@ -587,9 +581,9 @@ function LiveProofSection() {
   const isEn = language === "en";
 
   return (
-    <section className="border-y border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-24 md:py-28">
+    <section className="border-b border-border/60 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-6 py-24 md:py-28">
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
+        <div className="grid gap-8 xl:gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
           <div className="ynx-panel rounded-[32px] border border-klein/10 p-8">
             <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-klein/70">
               {isEn ? "Live proof, not slides" : "不是幻灯片，而是线上证据"}
@@ -603,7 +597,7 @@ function LiveProofSection() {
                 : "对于第一次访问的人来说，最快的信任信号很简单: 端点是否在线、运营表面是否可见、当前状态是否能在不读内部黑话的情况下被理解。"}
             </p>
 
-            <div className="mt-10 space-y-4">
+            <div className="mt-8 space-y-3">
               {[
                 isEn ? "Live health across public services" : "公开服务的实时健康状态",
                 isEn ? "Validator and route automation visibility" : "验证者与路由自动化可视性",
@@ -617,15 +611,17 @@ function LiveProofSection() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="ynx-glass rounded-[32px] border border-klein/10 p-6">
-              <NetworkStatusGrid />
+            <div className="space-y-6">
+              <div className="ynx-glass rounded-[32px] border border-klein/10 p-6">
+                <NetworkStatusGrid />
+              </div>
             </div>
+          </div>
+          <div className="mt-6">
             <div className="ynx-glass rounded-[32px] border border-klein/10 p-6">
               <PublicOpsBoard />
             </div>
           </div>
-        </div>
       </div>
     </section>
   );
