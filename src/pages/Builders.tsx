@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import { NETWORK } from "../constants/network";
 import { motionEase, revealSoft, stagger } from "../lib/motion";
 import { SignalRail } from "../components/motion/SignalRail";
+import { TaskFlowBand } from "../components/TaskFlowBand";
 
 function BuildPathCard({
   icon,
@@ -170,6 +171,40 @@ export default {
             </motion.div>
           </motion.div>
         </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-6">
+        <TaskFlowBand
+          eyebrow="Suggested user path"
+          title="Start with access, then move into assets and flows."
+          description="Most users should not start from bridge or swap. The clean path is: connect to the network, fund test assets, bridge or swap, then review readiness if they want to understand current operational depth."
+          steps={[
+            {
+              title: "Builder setup",
+              description: "Read join and RPC docs first.",
+              href: "/builders",
+              state: "current",
+            },
+            {
+              title: "Test assets",
+              description: "Get NYXT gas and add test tokens.",
+              href: "/test-assets",
+              state: "next",
+            },
+            {
+              title: "Bridge or trade",
+              description: "Use live public flows after funding.",
+              href: "/bridge",
+              state: "later",
+            },
+            {
+              title: "Readiness",
+              description: "Check blockers and route evidence.",
+              href: "/readiness",
+              state: "later",
+            },
+          ]}
+        />
       </section>
 
       <motion.section

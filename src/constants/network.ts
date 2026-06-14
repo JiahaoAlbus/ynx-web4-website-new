@@ -25,6 +25,6 @@ export const NETWORK = {
 export const MAINNET_STATUS = {
   stage: "Testnet Phase 2 (Public Cluster)",
   progress: 85,
-  gate: "External Audit & Final Polish",
+  gate: "External audit, legal setup, and production controls still pending",
   estimated: "Q4 2026",
 };

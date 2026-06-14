@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, Check, Copy, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { TaskFlowBand } from "../components/TaskFlowBand";
 import { NETWORK } from "../constants/network";
 import { fetchJsonWithTimeout } from "../lib/request";
 import {
@@ -259,6 +261,38 @@ export function Bridge() {
         </aside>
 
         <section className="space-y-6">
+          <TaskFlowBand
+            eyebrow="User path"
+            title="Bridge is step two, not step zero."
+            description="Users generally succeed faster if they first connect YNX, fund test gas, and understand that only public-testnet assets are moving here. This page is for routing supported Sepolia test assets into YNX."
+            steps={[
+              {
+                title: "Prepare wallet",
+                description: "Connect YNX and fund test gas first.",
+                href: "/test-assets",
+                state: "later",
+              },
+              {
+                title: "Deposit into YNX",
+                description: "Lock supported Sepolia assets and mint wrapped test representations.",
+                href: "/bridge",
+                state: "current",
+              },
+              {
+                title: "Use or swap assets",
+                description: "Continue into YNX-side usage once balances appear.",
+                href: "/trading",
+                state: "next",
+              },
+              {
+                title: "Check readiness",
+                description: "Review whether routes are fully tested or still blocked.",
+                href: "/readiness",
+                state: "later",
+              },
+            ]}
+          />
+
           <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -367,6 +401,17 @@ export function Bridge() {
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link to="/trading" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+              <p className="font-display text-lg font-semibold">Use Bridged Assets on YNX</p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">Once wrapped balances appear, continue into swap and test-asset usage paths.</p>
+            </Link>
+            <Link to="/withdraw" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+              <p className="font-display text-lg font-semibold">Need the reverse flow?</p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">Go to withdraw when you want to burn wrapped assets and release Sepolia test assets back out.</p>
+            </Link>
+          </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <ShieldCheck className="mb-2 h-4 w-4" />

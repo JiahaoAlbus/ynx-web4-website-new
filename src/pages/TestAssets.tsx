@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, Droplets, ExternalLink, Plus, RefreshCw, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { TaskFlowBand } from "../components/TaskFlowBand";
 import { NETWORK } from "../constants/network";
 import { addOrSwitchYnx, connectAccounts, encodeBalanceOf, formatUnits, publicEthCall } from "../lib/evm";
 
@@ -153,6 +154,38 @@ export function TestAssets() {
         </aside>
 
         <section className="space-y-6">
+          <TaskFlowBand
+            eyebrow="Use flow"
+            title="For most users, this is the actual starting point."
+            description="Before trying bridge, swap, or withdrawal, fund gas and add the relevant test tokens to the wallet. That removes the most common source of confusion and failed transactions."
+            steps={[
+              {
+                title: "Get NYXT gas",
+                description: "Connect YNX wallet and request faucet funds.",
+                href: "/test-assets",
+                state: "current",
+              },
+              {
+                title: "Bridge assets in",
+                description: "Deposit supported Sepolia assets to YNX.",
+                href: "/bridge",
+                state: "next",
+              },
+              {
+                title: "Swap test assets",
+                description: "Use the on-chain AMM after balances appear.",
+                href: "/trading",
+                state: "later",
+              },
+              {
+                title: "Withdraw out",
+                description: "Burn wrapped assets and release back to Sepolia.",
+                href: "/withdraw",
+                state: "later",
+              },
+            ]}
+          />
+
           <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
             <div className="mb-6">
               <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Live Registry</p>

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRightLeft, Check, Copy, ExternalLink, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { TaskFlowBand } from "../components/TaskFlowBand";
 import { NETWORK } from "../constants/network";
 import { addOrSwitchYnx, connectAccounts, encodeAddress, encodeApprove, encodeBalanceOf, encodeUint, formatUnits, parseUnits, publicEthCall, waitForTx } from "../lib/evm";
 import { fetchJsonWithTimeout } from "../lib/request";
@@ -258,6 +260,38 @@ export function Trading() {
         </aside>
 
         <section className="space-y-6">
+          <TaskFlowBand
+            eyebrow="Use flow"
+            title="Swap only makes sense after assets are already in place."
+            description="This page is easiest to use after the wallet is funded and either YUSD.test or wrapped bridge assets are already available. It is a public-testnet AMM surface, not a real-value trading venue."
+            steps={[
+              {
+                title: "Fund test wallet",
+                description: "Get gas and test assets first.",
+                href: "/test-assets",
+                state: "later",
+              },
+              {
+                title: "Bridge if needed",
+                description: "Bring supported Sepolia assets into YNX.",
+                href: "/bridge",
+                state: "later",
+              },
+              {
+                title: "Swap on YNX",
+                description: "Use the AMM and AI preflight surface.",
+                href: "/trading",
+                state: "current",
+              },
+              {
+                title: "Withdraw out",
+                description: "Use burn-and-release when testing the reverse flow.",
+                href: "/withdraw",
+                state: "next",
+              },
+            ]}
+          />
+
           <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -394,6 +428,17 @@ export function Trading() {
                 </button>
               </div>
             ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link to="/test-assets" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+              <p className="font-display text-lg font-semibold">Need funding first?</p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">Go back to the asset page to request gas and add the right test tokens before swapping.</p>
+            </Link>
+            <Link to="/withdraw" className="rounded-2xl border border-border bg-white p-5 shadow-sm transition hover:border-klein/40">
+              <p className="font-display text-lg font-semibold">Test the reverse route</p>
+              <p className="mt-2 text-sm leading-6 text-ink/60">After swapping, continue into withdrawal if you want to test burn and Sepolia release behavior.</p>
+            </Link>
           </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
