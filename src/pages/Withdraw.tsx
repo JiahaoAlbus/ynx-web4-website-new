@@ -165,6 +165,9 @@ export function Withdraw() {
             <p className="text-sm leading-6 text-white/65">
               Burn wrapped public-testnet assets on YNX and inspect the route release adapter before source-chain release.
             </p>
+            <p className="mt-4 text-xs leading-6 text-white/50">
+              This page can only burn the connected wallet's own wrapped test assets. Source-chain release still depends on the route watcher and release adapter; it is not an open admin action for arbitrary balances.
+            </p>
             <Button onClick={connectWallet} className="mt-6 w-full justify-between rounded-xl" variant="klein">
               {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : "Connect YNX"}
               <Wallet className="h-4 w-4" />
@@ -255,7 +258,7 @@ export function Withdraw() {
 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
             <CheckCircle2 className="mb-2 h-4 w-4" />
-            Release automation is route-specific. Sepolia uses source lockboxes; BTC/TRON require configured public-testnet signer adapters; all assets here have no mainnet value.
+            Release automation is route-specific. Sepolia uses source lockboxes; BTC/TRON require configured public-testnet signer adapters. Users can burn only their own wrapped test assets, while release execution still depends on route-specific operator or signer configuration. All assets here have no mainnet value.
           </div>
         </section>
       </main>

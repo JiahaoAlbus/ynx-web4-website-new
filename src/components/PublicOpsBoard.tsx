@@ -39,19 +39,19 @@ export function PublicOpsBoard() {
       tone: depositTested !== null && depositTested >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <GitBranch className="h-4 w-4" />,
       detail:
-        releaseObserved === null
+        depositTested === null
           ? "Checking public bridge route evidence"
-          : `${releaseObserved}/${routeTotal} routes already show release proof on the public bridge`,
+          : `${depositTested}/${routeTotal} routes already show deposit-tested evidence on the public bridge`,
     },
     {
-      label: "Routes with release proof",
+      label: "Routes with any release proof",
       value: releaseObservedValue,
       tone: releaseObserved !== null && releaseObserved >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <Activity className="h-4 w-4" />,
       detail:
         automatic === null || depositWatchersLive === null
           ? "Checking automatic release and watcher coverage"
-          : `${automatic}/${routeTotal} routes are fully automatic today; ${depositWatchersLive}/${routeTotal} already have live deposit watchers`,
+          : `${automatic}/${routeTotal} routes are fully automatic today; ${depositWatchersLive}/${routeTotal} already have live deposit watchers. This proof bucket can include manual operator-marked release evidence.`,
     },
   ];
 
@@ -69,7 +69,7 @@ export function PublicOpsBoard() {
           <h3 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">The shortest live proof board</h3>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/60">
             This board is designed to show the fastest things a serious user can verify: validator quorum, deposit and release proof,
-            and the exact blockers still stopping a stronger automatic-release claim.
+            and the exact blockers still stopping a stronger automatic-release claim. Release proof is broader than automatic release.
           </p>
         </div>
         <button
