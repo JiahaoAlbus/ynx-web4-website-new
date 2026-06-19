@@ -28,6 +28,9 @@ type IntelligenceBrief = {
           routes?: number;
           full_loop_tested?: number;
           automatic_loop_ready?: number;
+          deposit_tested?: number;
+          release_evidence_observed?: number;
+          release_observed?: number;
           mapped_route_only?: number;
         };
         items?: Array<{ routeId: string; phase: string; full_loop_tested?: boolean; automatic_loop_ready?: boolean }>;
@@ -237,8 +240,8 @@ export function AI() {
               </div>
             </div>
             <div className="mt-6 space-y-2 font-mono text-sm text-white/72">
-              <p>deposit-tested routes: {depositTested}/{routeTotal || "-"}</p>
-              <p>routes with release evidence: {releaseObserved}/{routeTotal || "-"}</p>
+              <p>deposit-tested routes: {routeSummary.deposit_tested ?? depositTested}/{routeTotal || "-"}</p>
+              <p>routes with release proof: {routeSummary.release_evidence_observed ?? routeSummary.release_observed ?? releaseObserved}/{routeTotal || "-"}</p>
               <p>automatic routes: {routeSummary.automatic_loop_ready ?? "-"}/{routeTotal || "-"}</p>
               <p>minted deposits: {bridgeStats.minted_deposits ?? "-"}</p>
               <p>released withdrawals: {bridgeStats.released_withdrawals ?? "-"}</p>
@@ -280,7 +283,7 @@ export function AI() {
               <Sparkles className="h-5 w-5 text-klein" />
               <div>
                 <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Answer</p>
-                <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink">Latest returned brief</h2>
+                <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink">Latest answer</h2>
               </div>
             </div>
             <div className="mt-8 space-y-3 text-sm leading-7 text-ink/75">
