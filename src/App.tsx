@@ -25,6 +25,7 @@ const Privacy = lazy(() => import("./pages/Privacy").then((module) => ({ default
 const Terms = lazy(() => import("./pages/Terms").then((module) => ({ default: module.Terms })));
 const Risk = lazy(() => import("./pages/Risk").then((module) => ({ default: module.Risk })));
 const Security = lazy(() => import("./pages/Security").then((module) => ({ default: module.Security })));
+const Support = lazy(() => import("./pages/Support").then((module) => ({ default: module.Support })));
 
 function PageFallback() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="terms" element={<Terms />} />
           <Route path="risk" element={<Risk />} />
           <Route path="security" element={<Security />} />
+          <Route path="support" element={<Support />} />
           <Route path="docs" element={<Navigate to="/docs/en/public-testnet-join" replace />} />
           <Route path="docs/*" element={<Docs />} />
         </Route>

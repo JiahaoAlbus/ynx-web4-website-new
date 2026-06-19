@@ -421,6 +421,9 @@ function ChoosePathSection() {
           <Link to="/docs" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
             {isEn ? "Browse docs hub" : "浏览文档中心"}
           </Link>
+          <Link to="/support" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Open support entry" : "打开支持入口"}
+          </Link>
           <Link to="/readiness" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
             {isEn ? "Review readiness and risk" : "查看门禁与风险"}
           </Link>
@@ -1295,6 +1298,12 @@ function RiskNotice() {
             className="rounded-full border border-klein/30 bg-klein/12 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-klein/20"
           >
             {isEn ? "Security" : "安全"}
+          </Link>
+          <Link
+            to="/support"
+            className="rounded-full border border-white/14 px-5 py-3 text-sm font-semibold text-white/78 transition-colors hover:bg-white/8 hover:text-white"
+          >
+            {isEn ? "Support" : "支持"}
           </Link>
         </div>
       </div>

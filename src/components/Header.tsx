@@ -85,6 +85,7 @@ export function Header() {
         title: "Learn",
         items: [
           { name: t("nav.faq"), href: "/faq", description: "Fast answers to the main product questions." },
+          { name: "Support", href: "/support", description: "Grant, sponsor, and early diligence entry." },
           { name: "Risk", href: "/risk", description: "Current project, asset, and legal boundary risks." },
           { name: "Security", href: "/security", description: "How issues are reported and what is still open." },
         ],
@@ -155,7 +156,7 @@ export function Header() {
             asChild
             className="rounded-full border-klein/12 bg-white/80 px-4 hover:border-klein/25"
           >
-            <Link to="/readiness">Readiness</Link>
+            <Link to="/support">Support</Link>
           </Button>
           <Button variant="klein" size="sm" asChild className="rounded-full shadow-lg shadow-klein/18">
             <Link to="/docs">Start Here</Link>
@@ -204,9 +205,9 @@ export function Header() {
           <div className="my-5 h-px bg-border" />
           <div className="grid gap-3">
             <Button variant="outline" className="w-full justify-center rounded-2xl" asChild>
-              <a href="https://github.com/JiahaoAlbus/YNX" target="_blank" rel="noreferrer">
-                GitHub
-              </a>
+              <Link to="/support" onClick={() => setMobileMenuOpen(false)}>
+                Support
+              </Link>
             </Button>
             <Button variant="klein" className="w-full justify-center rounded-2xl" asChild>
               <Link to="/docs/en/ai-web4-official-demo" onClick={() => setMobileMenuOpen(false)}>

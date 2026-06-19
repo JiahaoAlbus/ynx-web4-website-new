@@ -75,6 +75,7 @@ export function Footer() {
               { label: "Terms", to: "/terms" },
               { label: "Risk", to: "/risk" },
               { label: "Security", to: "/security" },
+              { label: "Support", to: "/support" },
             ]}
           />
         </div>
