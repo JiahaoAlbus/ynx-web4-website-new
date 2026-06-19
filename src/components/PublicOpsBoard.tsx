@@ -12,7 +12,9 @@ export function PublicOpsBoard() {
   const validatorsReady = validator?.bonded_count ?? 0;
   const validatorsSigned = validator?.signed_count ?? 0;
   const routeTotal = snapshot?.routes.total ?? 5;
-  const fullLoop = snapshot?.routes.full_loop_tested ?? 0;
+  const depositTested = snapshot?.routes.deposit_tested ?? 0;
+  const releaseObserved = snapshot?.routes.release_observed ?? 0;
+  const depositWatchersLive = snapshot?.routes.deposit_watchers_live ?? 0;
   const automatic = snapshot?.routes.automatic_loop_ready ?? 0;
   const blockers = snapshot?.routes.blockers ?? [];
 
@@ -27,18 +29,18 @@ export function PublicOpsBoard() {
         : "Checking live validator gate",
     },
     {
-      label: "Full-loop-tested routes",
-      value: `${fullLoop}/${routeTotal}`,
-      tone: fullLoop >= routeTotal ? "emerald" : "amber",
+      label: "Routes with release evidence",
+      value: `${releaseObserved}/${routeTotal}`,
+      tone: releaseObserved > 0 ? "emerald" : "amber",
       icon: <GitBranch className="h-4 w-4" />,
-      detail: "Routes with deposit, burn, and release evidence on the public bridge",
+      detail: `${depositTested}/${routeTotal} routes show deposit evidence on the public bridge`,
     },
     {
       label: "Automatic routes",
       value: `${automatic}/${routeTotal}`,
-      tone: automatic >= routeTotal ? "emerald" : automatic > 0 ? "amber" : "rose",
+      tone: automatic >= routeTotal ? "emerald" : automatic > 0 ? "amber" : "amber",
       icon: <Activity className="h-4 w-4" />,
-      detail: "Routes whose deposit and release loops appear ready without manual handoff",
+      detail: `${depositWatchersLive}/${routeTotal} routes have live deposit watchers; automatic release is still stricter`,
     },
   ];
 
@@ -87,7 +89,7 @@ export function PublicOpsBoard() {
           <h4 className="text-sm font-semibold text-ink">Remaining automatic-loop blockers</h4>
         </div>
         <p className="mt-2 text-sm leading-6 text-ink/60">
-          These are not abstract roadmap items. They are the concrete missing links still preventing a more aggressive route-automation claim.
+          These are concrete remaining blockers. They explain why some routes are live and testable today, but not yet fully automatic.
         </p>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {blockers.map((item) => (

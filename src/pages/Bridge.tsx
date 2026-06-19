@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { TaskFlowBand } from "../components/TaskFlowBand";
 import { NETWORK } from "../constants/network";
+import { summarizeBlockers, summarizeDepositStatus, summarizeReleaseStatus, summarizeRoutePhase } from "../lib/routeReadiness";
 import { fetchJsonWithTimeout } from "../lib/request";
 import {
   addOrSwitchEvmChain,
@@ -361,15 +362,15 @@ export function Bridge() {
             {routeReadiness && (
               <div className="mt-4 rounded-xl border border-border bg-surface p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{routeReadiness.phase}</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{summarizeRoutePhase(routeReadiness)}</span>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${routeReadiness.automatic_loop_ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
                     automatic {routeReadiness.automatic_loop_ready ? "ready" : "pending"}
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-ink/60">
-                  deposit watcher: {routeReadiness.evidence?.deposit_watcher_status?.status || "-"} / release adapter: {routeReadiness.evidence?.release_adapter_status?.status || "-"}
+                  deposit watcher: {summarizeDepositStatus(routeReadiness)} / release adapter: {summarizeReleaseStatus(routeReadiness)}
                 </p>
-                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{routeReadiness.blockers.join(", ")}</p>}
+                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{summarizeBlockers(routeReadiness).join(", ")}</p>}
               </div>
             )}
           </div>

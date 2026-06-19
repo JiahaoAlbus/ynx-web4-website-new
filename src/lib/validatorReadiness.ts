@@ -86,7 +86,7 @@ export async function getValidatorReadiness(): Promise<ValidatorReadinessResult>
     const payload = indexerValidators.value;
     const stats = payload?.stats ?? payload;
     signedCount = Number(stats?.signed_count || 0);
-    indexerTotal = Number(stats?.total || 0);
+    indexerTotal = Number(stats?.total || payload?.validators?.length || 0);
   } else {
     errors.push(`indexer_validators_failed:${indexerValidators.reason instanceof Error ? indexerValidators.reason.message : "unknown"}`);
   }

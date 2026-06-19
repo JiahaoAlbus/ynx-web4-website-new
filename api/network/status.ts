@@ -359,14 +359,28 @@ function getCachedSnapshot() {
   return cachedStatus?.payload ?? null;
 }
 
+function isTransientRestartPayload(payload: NetworkStatusResponse | null | undefined) {
+  return payload?.source === "transient-restart-cache";
+}
+
 async function getNetworkStatusCached(forceRefresh = false) {
   const now = Date.now();
 
-  if (!forceRefresh && cachedStatus && now - cachedStatus.fetchedAt < CACHE_TTL_MS) {
+  if (
+    !forceRefresh &&
+    cachedStatus &&
+    !isTransientRestartPayload(cachedStatus.payload) &&
+    now - cachedStatus.fetchedAt < CACHE_TTL_MS
+  ) {
     return cachedStatus.payload;
   }
 
-  if (!forceRefresh && cachedStatus && now - cachedStatus.fetchedAt < REVALIDATE_AFTER_MS) {
+  if (
+    !forceRefresh &&
+    cachedStatus &&
+    !isTransientRestartPayload(cachedStatus.payload) &&
+    now - cachedStatus.fetchedAt < REVALIDATE_AFTER_MS
+  ) {
     if (!inFlightStatus) {
       inFlightStatus = buildNetworkStatus()
         .then((payload) => {

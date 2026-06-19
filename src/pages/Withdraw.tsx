@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpFromLine, CheckCircle2, ExternalLink, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { NETWORK } from "../constants/network";
+import { summarizeBlockers, summarizeReleaseStatus, summarizeRoutePhase } from "../lib/routeReadiness";
 import { fetchJsonWithTimeout } from "../lib/request";
 import {
   addOrSwitchYnx,
@@ -221,15 +222,15 @@ export function Withdraw() {
             {routeReadiness && (
               <div className="mt-4 rounded-xl border border-border bg-surface p-3">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{routeReadiness.phase}</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink/65">{summarizeRoutePhase(routeReadiness)}</span>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${routeReadiness.automatic_loop_ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                    {routeReadiness.evidence?.release_adapter_status?.status || "release status unknown"}
+                    {summarizeReleaseStatus(routeReadiness)}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-ink/60">
                   watcher last scan: {routeReadiness.evidence?.withdrawal_watcher?.last_scan_at || "-"} / releases: {routeReadiness.evidence?.withdrawal_watcher?.releases_executed ?? "-"}
                 </p>
-                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{routeReadiness.blockers.join(", ")}</p>}
+                {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{summarizeBlockers(routeReadiness).join(", ")}</p>}
               </div>
             )}
             <div className="mt-4 space-y-3">

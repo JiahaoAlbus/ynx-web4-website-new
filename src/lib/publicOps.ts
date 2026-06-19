@@ -1,31 +1,18 @@
 import { NETWORK } from "../constants/network";
 import { fetchJsonWithTimeout } from "./request";
+import {
+  countDepositTested,
+  countDepositWatchersLive,
+  countReleaseObserved,
+  routeDisplayName,
+  summarizeBlockers,
+  summarizeDepositStatus,
+  summarizeReleaseStatus,
+  type RouteReadinessLike,
+} from "./routeReadiness";
 import type { ValidatorReadinessResult } from "./validatorReadiness";
 
-type RouteReadinessEvidence = {
-  deposit_watcher_status?: {
-    status?: string;
-    configured?: boolean;
-    live?: boolean;
-    adapter?: string;
-  };
-  release_adapter_status?: {
-    status?: string;
-    configured?: boolean;
-    automatic?: boolean;
-    adapter?: string;
-  };
-};
-
-type RouteReadinessItem = {
-  routeId: string;
-  displayName?: string;
-  asset?: string;
-  sourceNetwork?: string;
-  automatic_loop_ready?: boolean;
-  blockers?: string[];
-  evidence?: RouteReadinessEvidence;
-};
+type RouteReadinessItem = RouteReadinessLike;
 
 type RouteReadinessResponse = {
   ok: boolean;
@@ -46,7 +33,9 @@ export type PublicOpsSnapshot = {
   validator: ValidatorReadinessResult | null;
   routes: {
     total: number;
-    full_loop_tested: number;
+    deposit_watchers_live: number;
+    deposit_tested: number;
+    release_observed: number;
     automatic_loop_ready: number;
     blockers: Array<{
       routeId: string;
@@ -58,10 +47,6 @@ export type PublicOpsSnapshot = {
   };
   errors: string[];
 };
-
-function normalizeRouteLabel(item: RouteReadinessItem) {
-  return item.displayName || item.routeId || item.asset || "Unknown Route";
-}
 
 export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
   const errors: string[] = [];
@@ -99,10 +84,10 @@ export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
     .filter((item) => !item.automatic_loop_ready)
     .map((item) => ({
       routeId: item.routeId,
-      displayName: normalizeRouteLabel(item),
-      blockers: item.blockers || [],
-      depositStatus: item.evidence?.deposit_watcher_status?.status || "unknown",
-      releaseStatus: item.evidence?.release_adapter_status?.status || "unknown",
+      displayName: routeDisplayName(item),
+      blockers: summarizeBlockers(item),
+      depositStatus: summarizeDepositStatus(item),
+      releaseStatus: summarizeReleaseStatus(item),
     }));
 
   return {
@@ -110,7 +95,9 @@ export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
     validator: validatorData,
     routes: {
       total: routeData?.summary?.routes || items.length,
-      full_loop_tested: routeData?.summary?.full_loop_tested || 0,
+      deposit_watchers_live: countDepositWatchersLive(items),
+      deposit_tested: countDepositTested(items),
+      release_observed: countReleaseObserved(items),
       automatic_loop_ready: routeData?.summary?.automatic_loop_ready || 0,
       blockers,
     },

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Bot, Brain, CheckCircle2, ListChecks, Play, RefreshCw, Send, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { countDepositTested, countReleaseObserved, summarizeRoutePhase } from "../lib/routeReadiness";
 import { fetchJsonWithTimeout } from "../lib/request";
 
 type IntelligenceBrief = {
@@ -173,6 +174,9 @@ export function AI() {
   const aiStats = brief?.context?.ai?.stats || {};
   const bridgeStats = brief?.context?.bridge?.health?.stats || {};
   const onchain = brief?.context?.ai?.onchain || {};
+  const routeTotal = routeSummary.routes ?? routeItems.length ?? 0;
+  const depositTested = countDepositTested(routeItems);
+  const releaseObserved = countReleaseObserved(routeItems);
   const answerLines = useMemo(() => answer.split(/\n/).filter((line) => line.trim().length > 0), [answer]);
   const publicActions = ["assets.list", "validators.status", "bridge.readiness", "trade.quote", "trade.preflight", "trade.prepare", "trade.execute", "tx.latest"];
   const actionMap = useMemo(() => new Map(actions.map((item) => [item.action, item])), [actions]);
@@ -233,8 +237,9 @@ export function AI() {
               </div>
             </div>
             <div className="mt-6 space-y-2 font-mono text-sm text-white/72">
-              <p>full-loop routes: {routeSummary.full_loop_tested ?? "-"}/{routeSummary.routes ?? "-"}</p>
-              <p>automatic routes: {routeSummary.automatic_loop_ready ?? "-"}/{routeSummary.routes ?? "-"}</p>
+              <p>deposit-tested routes: {depositTested}/{routeTotal || "-"}</p>
+              <p>routes with release evidence: {releaseObserved}/{routeTotal || "-"}</p>
+              <p>automatic routes: {routeSummary.automatic_loop_ready ?? "-"}/{routeTotal || "-"}</p>
               <p>minted deposits: {bridgeStats.minted_deposits ?? "-"}</p>
               <p>released withdrawals: {bridgeStats.released_withdrawals ?? "-"}</p>
               <p>AI jobs: {aiStats.total_jobs ?? "-"}</p>
@@ -337,7 +342,7 @@ export function AI() {
                 <div key={route.routeId} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface/60 p-4">
                   <div>
                     <p className="font-semibold text-ink">{route.routeId}</p>
-                    <p className="mt-1 font-mono text-xs text-ink/55">{route.phase}</p>
+                    <p className="mt-1 font-mono text-xs text-ink/55">{summarizeRoutePhase(route)}</p>
                     <p className="mt-1 font-mono text-xs text-ink/45">automatic {route.automatic_loop_ready ? "ready" : "pending"}</p>
                   </div>
                   {route.full_loop_tested ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : null}
