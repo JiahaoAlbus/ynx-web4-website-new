@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { Bot, Brain, CheckCircle2, ListChecks, Play, RefreshCw, Send, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import { Bot, Brain, CheckCircle2, Play, RefreshCw, Send, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { countDepositTested, countReleaseObserved, summarizeRoutePhase } from "../lib/routeReadiness";
 import { fetchJsonWithTimeout } from "../lib/request";
@@ -81,6 +82,7 @@ async function getJson<T>(url: string): Promise<T> {
 }
 
 export function AI() {
+  const answerRef = useRef<HTMLDivElement | null>(null);
   const [brief, setBrief] = useState<IntelligenceBrief | null>(null);
   const [question, setQuestion] = useState("What is the current state of AI, bridge, and trading on the public YNX testnet, and what remains before a stronger production claim?");
   const [answer, setAnswer] = useState("");
@@ -181,25 +183,42 @@ export function AI() {
   const depositTested = countDepositTested(routeItems);
   const releaseObserved = countReleaseObserved(routeItems);
   const answerLines = useMemo(() => answer.split(/\n/).filter((line) => line.trim().length > 0), [answer]);
+  const canAsk = Boolean(question.trim()) && !busy;
   const publicActions = ["assets.list", "validators.status", "bridge.readiness", "trade.quote", "trade.preflight", "trade.prepare", "trade.execute", "tx.latest"];
   const actionMap = useMemo(() => new Map(actions.map((item) => [item.action, item])), [actions]);
+  const examplePrompts = [
+    "What can I try first on YNX?",
+    "Explain bridge readiness in plain English.",
+    "What still blocks a stronger production claim?",
+  ];
+
+  function handlePromptKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    if (canAsk) void ask();
+  }
+
+  useEffect(() => {
+    if (!answer) return;
+    answerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [answer]);
 
   return (
     <div className="min-h-screen pt-24 pb-28">
       <main className="mx-auto max-w-7xl px-6">
-        <section className="grid gap-8 py-12 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="grid gap-8 py-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="overflow-hidden rounded-[2rem] border border-border bg-white shadow-sm">
-            <div className="ynx-mesh border-b border-border px-8 py-10">
+            <div className="ynx-mesh border-b border-border px-8 py-9">
               <p className="text-[11px] font-mono uppercase tracking-[0.24em] text-ink/45">Public Intelligence Layer</p>
-              <h1 className="mt-4 max-w-3xl font-display text-5xl font-semibold tracking-tight text-ink md:text-6xl">
-                AI here is presented as an interface to live testnet context, not as magic.
+              <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold tracking-tight text-ink md:text-5xl">
+                Ask the live YNX AI before you touch the bridge, assets, or docs.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-ink/68 md:text-lg">
-                The gateway can summarize current public state, expose allowed actions, and show how policy-gated execution is meant to work.
-                It should be read as a testnet control surface and observability layer, not as proof of production autonomy.
+                This page is the shortest user path into YNX: ask a question, read the current testnet state, then jump into the right action.
+                The AI is grounded in public-testnet context, not positioned as production autonomy.
               </p>
             </div>
-            <div className="grid gap-4 px-8 py-8 md:grid-cols-3">
+            <div className="grid gap-4 px-8 py-7 md:grid-cols-3">
               <div className="rounded-2xl border border-border bg-surface/70 p-5">
                 <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Strongest Evidence</p>
                 <p className="mt-3 text-sm leading-6 text-ink/72">
@@ -225,7 +244,7 @@ export function AI() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-white/45">Current Snapshot</p>
-                <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">Live testnet intelligence</h2>
+              <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight">Live testnet context</h2>
               </div>
               <Brain className="h-6 w-6 text-blue-300" />
             </div>
@@ -255,39 +274,66 @@ export function AI() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
+        <section className="grid items-start gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[2.25rem] border border-klein/15 bg-white p-7 shadow-[0_22px_80px_rgba(0,47,167,0.08)] md:p-8">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Ask YNX</p>
-                <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">Context-aware prompt surface</h2>
+                <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-klein/65">Try the AI</p>
+                <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-ink">Ask YNX Intelligence</h2>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-ink/58">
+                  Press Enter to ask. Use Shift+Enter for a new line. The Ask button stays for mouse and mobile users.
+                </p>
               </div>
-              <Bot className="h-5 w-5 text-klein" />
+              <div className="rounded-2xl bg-klein/8 p-3 text-klein">
+                <Bot className="h-6 w-6" />
+              </div>
             </div>
             <textarea
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              className="mt-8 min-h-36 w-full resize-y rounded-[1.5rem] border border-border bg-surface/65 px-5 py-4 text-sm leading-6 text-ink outline-none focus:border-klein"
+              onKeyDown={handlePromptKeyDown}
+              placeholder="Ask what you should try, what is live, or what still blocks production readiness..."
+              className="mt-7 min-h-44 w-full resize-y rounded-[1.75rem] border border-klein/12 bg-[linear-gradient(180deg,#ffffff_0%,#f7faff_100%)] px-5 py-4 text-base leading-7 text-ink outline-none transition focus:border-klein/45 focus:shadow-[0_0_0_4px_rgba(0,47,167,0.08)]"
             />
-            <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mt-4 flex flex-wrap gap-2">
+              {examplePrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => setQuestion(prompt)}
+                  className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-semibold text-ink/58 transition hover:border-klein/25 hover:text-klein"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-ink/55">{status}</p>
-              <Button onClick={ask} disabled={busy} variant="klein" className="rounded-xl">
+              <Button onClick={ask} disabled={!canAsk} variant="klein" className="rounded-2xl px-6">
                 {busy ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Ask
               </Button>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-klein" />
+          <div className="rounded-[2.25rem] border border-border bg-white p-7 shadow-sm md:p-8">
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Answer</p>
-                <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink">Latest answer</h2>
+                <h2 className="mt-1 font-display text-4xl font-semibold tracking-tight text-ink">Latest answer</h2>
+                <p className="mt-3 text-sm leading-6 text-ink/55">
+                  Long answers stay readable here. Scroll inside this panel without losing the prompt.
+                </p>
               </div>
+              <Sparkles className="h-6 w-6 shrink-0 text-klein" />
             </div>
-            <div className="mt-8 space-y-3 text-sm leading-7 text-ink/75">
+            <div
+              ref={answerRef}
+              className="mt-7 max-h-[42rem] min-h-[26rem] overflow-y-auto rounded-[1.75rem] border border-border bg-surface/55 px-5 py-5 text-base leading-8 text-ink/76 shadow-inner"
+            >
+              <div className="space-y-4 pr-1">
               {answerLines.length > 0 ? answerLines.map((line, index) => <p key={`${line}-${index}`}>{line}</p>) : <p>No answer loaded yet.</p>}
+              </div>
             </div>
           </div>
         </section>

@@ -67,8 +67,8 @@ export function Header() {
       {
         title: "Use",
         items: [
+          { name: "Try AI", href: "/ai", description: "Ask the live YNX intelligence surface." },
           { name: t("nav.trade"), href: "/trading", description: "Swap test assets on the public pilot." },
-          { name: t("nav.ai"), href: "/ai", description: "Run the public AI control and settlement flow." },
           { name: t("nav.testnet"), href: "/testnet", description: "Inspect live endpoints and network state." },
         ],
       },
