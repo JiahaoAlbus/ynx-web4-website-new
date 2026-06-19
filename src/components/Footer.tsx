@@ -10,7 +10,7 @@ export function Footer() {
       <div className="absolute inset-x-0 top-0 h-px ynx-hairline" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6">
-        <div className="ynx-glass-dark rounded-[2rem] border border-white/10 px-8 py-10 lg:px-10">
+        <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,30,0.98)_0%,rgba(9,15,28,0.96)_100%)] px-8 py-10 shadow-[0_28px_90px_rgba(0,0,0,0.28)] lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))]">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/85">
@@ -27,6 +27,9 @@ export function Footer() {
               This site should not imply that a separate legal operating company,
               custodial product, or regulated financial service is already live.
             </p>
+            <p className="mt-4 text-sm leading-7 text-white/62">
+              Best first path: get test assets, bridge into YNX, try a public action, withdraw back out, then inspect readiness evidence.
+            </p>
             <div className="mt-8 flex items-center gap-4">
               <a
                 href="https://github.com/JiahaoAlbus/YNX"
@@ -37,45 +40,45 @@ export function Footer() {
                 <Github className="h-5 w-5" />
               </a>
               <Link
-                to="/about"
+                to="/readiness"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-white/82 transition-colors hover:text-white"
               >
-                Project status
+                Live readiness
                 <ArrowUpRight className="h-4 w-4 text-klein" />
               </Link>
             </div>
           </div>
 
           <FooterColumn
-            title="Explore"
+            title="Start Here"
             links={[
-              { label: "Home", to: "/" },
-              { label: "AI", to: "/ai" },
-              { label: "Builders", to: "/builders" },
-              { label: "Validators", to: "/validators" },
-              { label: "About", to: "/about" },
+              { label: "Get Assets", to: "/test-assets" },
+              { label: "Bridge In", to: "/bridge" },
+              { label: "Trade", to: "/trading" },
+              { label: "Withdraw", to: "/withdraw" },
+              { label: "Readiness", to: "/readiness" },
             ]}
           />
 
           <FooterColumn
-            title="Network"
+            title="Build"
             links={[
               { label: "Testnet", to: "/testnet" },
-              { label: "Bridge", to: "/bridge" },
-              { label: "Readiness", to: "/readiness" },
-              { label: "Assets", to: "/test-assets" },
+              { label: "Builders", to: "/builders" },
+              { label: "Validators", to: "/validators" },
+              { label: "AI", to: "/ai" },
               { label: "Docs", to: "/docs" },
             ]}
           />
 
           <FooterColumn
-            title="Disclosures"
+            title="Project"
             links={[
-              { label: "Privacy", to: "/privacy" },
-              { label: "Terms", to: "/terms" },
+              { label: "About", to: "/about" },
+              { label: "Support", to: "/support" },
               { label: "Risk", to: "/risk" },
               { label: "Security", to: "/security" },
-              { label: "Support", to: "/support" },
+              { label: "Privacy", to: "/privacy" },
             ]}
           />
         </div>

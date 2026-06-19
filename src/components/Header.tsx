@@ -55,37 +55,37 @@ export function Header() {
   }
 
   const primaryLinks: NavItem[] = [
-    { name: t("nav.home"), href: "/" },
-    { name: t("nav.testnet"), href: "/testnet" },
-    { name: t("nav.ai"), href: "/ai" },
-    { name: t("nav.docs"), href: "/docs" },
-    { name: t("nav.about"), href: "/about" },
+    { name: "Start", href: "/test-assets", description: "Get gas and test assets first." },
+    { name: t("nav.bridge"), href: "/bridge", description: "Move test assets into YNX." },
+    { name: t("nav.withdraw"), href: "/withdraw", description: "Release wrapped assets back out." },
+    { name: t("nav.readiness"), href: "/readiness", description: "Check live proof and blockers." },
+    { name: t("nav.docs"), href: "/docs", description: "Open the task-based docs hub." },
   ];
 
   const groupedMenus = useMemo<NavGroup[]>(
     () => [
       {
+        title: "Use",
+        items: [
+          { name: t("nav.trade"), href: "/trading", description: "Swap test assets on the public pilot." },
+          { name: t("nav.ai"), href: "/ai", description: "Run the public AI control and settlement flow." },
+          { name: t("nav.testnet"), href: "/testnet", description: "Inspect live endpoints and network state." },
+        ],
+      },
+      {
         title: "Build",
         items: [
-          { name: t("nav.builders"), href: "/builders", description: "Connect apps, RPC, and live tooling." },
-          { name: t("nav.validators"), href: "/validators", description: "Run infrastructure and join the network." },
-          { name: t("nav.assets"), href: "/test-assets", description: "Get gas and test assets before trying flows." },
+          { name: t("nav.builders"), href: "/builders", description: "Connect apps, RPC, wallets, and tooling." },
+          { name: t("nav.validators"), href: "/validators", description: "Run validator and infrastructure flows." },
+          { name: "AI Demo", href: "/docs/en/ai-web4-official-demo", description: "Walk through the official AI/Web4 demo." },
         ],
       },
       {
-        title: "Operate",
+        title: "Project",
         items: [
-          { name: t("nav.bridge"), href: "/bridge", description: "Deposit Sepolia assets into YNX testnet." },
-          { name: t("nav.withdraw"), href: "/withdraw", description: "Burn wrapped assets and release back out." },
-          { name: t("nav.trade"), href: "/trading", description: "Test swap paths and AI preflight." },
-          { name: t("nav.readiness"), href: "/readiness", description: "Review gates, evidence, and blockers." },
-        ],
-      },
-      {
-        title: "Learn",
-        items: [
-          { name: t("nav.faq"), href: "/faq", description: "Fast answers to the main product questions." },
+          { name: t("nav.about"), href: "/about", description: "See the project scope and current boundaries." },
           { name: "Support", href: "/support", description: "Grant, sponsor, and early diligence entry." },
+          { name: t("nav.faq"), href: "/faq", description: "Fast answers to the main product questions." },
           { name: "Risk", href: "/risk", description: "Current project, asset, and legal boundary risks." },
           { name: "Security", href: "/security", description: "How issues are reported and what is still open." },
         ],
@@ -95,7 +95,7 @@ export function Header() {
   );
 
   const mobileGroups: NavGroup[] = [
-    { title: "Primary", items: primaryLinks },
+    { title: "Main path", items: primaryLinks },
     ...groupedMenus,
   ];
 
@@ -125,7 +125,7 @@ export function Header() {
 
         <nav className="hidden items-center gap-1 lg:flex">
           {primaryLinks.map((link) => (
-            <NavLink key={link.href} href={link.href} label={link.name} active={location.pathname === link.href} />
+            <NavLink key={link.href} href={link.href} label={link.name} active={isPathActive(location.pathname, link.href)} />
           ))}
 
           <div className="mx-2 h-5 w-px bg-border/80" />
@@ -136,7 +136,7 @@ export function Header() {
               title={group.title}
               items={group.items}
               currentPath={location.pathname}
-              active={group.items.some((item) => item.href === location.pathname)}
+              active={group.items.some((item) => isPathActive(location.pathname, item.href))}
               open={activeDropdown === group.title}
               onOpen={() => openDropdown(group.title)}
               onClose={() => scheduleCloseDropdown(group.title)}
@@ -159,7 +159,7 @@ export function Header() {
             <Link to="/support">Support</Link>
           </Button>
           <Button variant="klein" size="sm" asChild className="rounded-full shadow-lg shadow-klein/18">
-            <Link to="/docs">Start Here</Link>
+            <Link to="/test-assets">Get Assets</Link>
           </Button>
         </div>
 
@@ -188,7 +188,7 @@ export function Header() {
                       key={link.href}
                       to={link.href}
                       className={`rounded-2xl px-4 py-3 text-base font-medium ${
-                        location.pathname === link.href ? "bg-klein/6 text-klein" : "text-ink"
+                        isPathActive(location.pathname, link.href) ? "bg-klein/6 text-klein" : "text-ink"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -210,8 +210,8 @@ export function Header() {
               </Link>
             </Button>
             <Button variant="klein" className="w-full justify-center rounded-2xl" asChild>
-              <Link to="/docs/en/ai-web4-official-demo" onClick={() => setMobileMenuOpen(false)}>
-                {t("hero.cta.build")}
+              <Link to="/test-assets" onClick={() => setMobileMenuOpen(false)}>
+                Get Assets
               </Link>
             </Button>
           </div>
@@ -219,6 +219,12 @@ export function Header() {
       )}
     </motion.header>
   );
+}
+
+function isPathActive(currentPath: string, href: string) {
+  if (href === "/") return currentPath === "/";
+  if (href === "/docs") return currentPath === "/docs" || currentPath.startsWith("/docs/");
+  return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 
 function NavLink({
@@ -286,7 +292,7 @@ function NavDropdown({
                 key={item.href}
                 to={item.href}
                 className={`block rounded-xl px-3 py-3 text-sm transition ${
-                  item.href === currentPath
+                  isPathActive(currentPath, item.href)
                     ? "bg-klein/6 text-klein"
                     : "text-ink/70 hover:bg-surface hover:text-ink"
                 }`}

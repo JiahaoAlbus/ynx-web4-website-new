@@ -312,65 +312,89 @@ function ChoosePathSection() {
   const { language } = useTranslation();
   const isEn = language === "en";
 
-  const paths = isEn
+  const steps = isEn
     ? [
         {
-          icon: <Search className="h-5 w-5" />,
-          title: "I want to understand YNX quickly",
-          desc: "Start with the product framing, current boundaries, and the cleanest docs path.",
-          href: "/about",
-          cta: "Open About",
-        },
-        {
-          icon: <Globe className="h-5 w-5" />,
-          title: "I want to check the live network",
-          desc: "See public endpoints, validator signals, and the current public operating surface.",
-          href: "/testnet",
-          cta: "View Testnet",
-        },
-        {
-          icon: <Sparkles className="h-5 w-5" />,
-          title: "I want to build or run the demo",
-          desc: "Go straight to RPC, EVM access, join guides, and the official AI/Web4 workflow.",
-          href: "/builders",
-          cta: "Build Path",
-        },
-        {
+          step: "01",
           icon: <Wallet className="h-5 w-5" />,
-          title: "I want to try bridge, assets, or swap",
-          desc: "Get test assets first, then bridge in, trade, or withdraw through public flows.",
+          title: "Get test gas and assets",
+          desc: "Start here if you want something usable in minutes. Add the network, request gas, and load the test assets first.",
           href: "/test-assets",
-          cta: "Start With Assets",
+          cta: "Open assets",
+        },
+        {
+          step: "02",
+          icon: <Globe className="h-5 w-5" />,
+          title: "Bridge into YNX",
+          desc: "Move public testnet assets into YNX and see which routes already have live deposit and release proof.",
+          href: "/bridge",
+          cta: "Open bridge",
+        },
+        {
+          step: "03",
+          icon: <Sparkles className="h-5 w-5" />,
+          title: "Use the public actions",
+          desc: "Try the swap surface or the AI execution flow once assets are already inside the testnet.",
+          href: "/trading",
+          cta: "Open trade",
+        },
+        {
+          step: "04",
+          icon: <Download className="h-5 w-5" />,
+          title: "Withdraw back out",
+          desc: "Burn wrapped assets and follow the release path back to the source testnet without guessing the next step.",
+          href: "/withdraw",
+          cta: "Open withdraw",
+        },
+        {
+          step: "05",
+          icon: <Search className="h-5 w-5" />,
+          title: "Verify the live proof",
+          desc: "Read the readiness board after the flow and see what is automatic, what is signer-gated, and what is still blocked.",
+          href: "/readiness",
+          cta: "Open readiness",
         },
       ]
     : [
         {
-          icon: <Search className="h-5 w-5" />,
-          title: "我想先快速理解 YNX",
-          desc: "先看产品定位、当前边界，以及最清晰的阅读路径。",
-          href: "/about",
-          cta: "查看关于",
-        },
-        {
-          icon: <Globe className="h-5 w-5" />,
-          title: "我想先看网络是否真的在运行",
-          desc: "直接看公开端点、验证者信号和当前运行表面。",
-          href: "/testnet",
-          cta: "查看测试网",
-        },
-        {
-          icon: <Sparkles className="h-5 w-5" />,
-          title: "我想开发或跑演示",
-          desc: "直接进入 RPC、EVM 接入、加入手册和官方 AI/Web4 演示流程。",
-          href: "/builders",
-          cta: "开发路径",
-        },
-        {
+          step: "01",
           icon: <Wallet className="h-5 w-5" />,
-          title: "我想试跨链、资产和交易",
-          desc: "先领测试资产，再体验跨链、交易和提现路径。",
+          title: "先领测试 gas 和资产",
+          desc: "如果你想最快上手，就从这里开始。先加网络、领 gas，再把测试资产配好。",
           href: "/test-assets",
-          cta: "先拿资产",
+          cta: "打开资产页",
+        },
+        {
+          step: "02",
+          icon: <Globe className="h-5 w-5" />,
+          title: "把资产跨进 YNX",
+          desc: "把公开测试网资产跨进来，并直接看到哪些路线已经有真实充值和释放证据。",
+          href: "/bridge",
+          cta: "打开跨链",
+        },
+        {
+          step: "03",
+          icon: <Sparkles className="h-5 w-5" />,
+          title: "使用公开功能",
+          desc: "资产进来以后，可以去试交易页面或 AI 执行流程，不用再猜入口。",
+          href: "/trading",
+          cta: "打开交易",
+        },
+        {
+          step: "04",
+          icon: <Download className="h-5 w-5" />,
+          title: "把资产提回去",
+          desc: "销毁 wrapped 资产并跟踪释放路径，看看哪些步骤已经打通，哪些还需要人工条件。",
+          href: "/withdraw",
+          cta: "打开提现",
+        },
+        {
+          step: "05",
+          icon: <Search className="h-5 w-5" />,
+          title: "最后看证据板",
+          desc: "流程跑完之后去看 readiness，明确哪些是自动的，哪些还卡在 signer 或 lockbox。",
+          href: "/readiness",
+          cta: "打开门禁",
         },
       ];
 
@@ -380,15 +404,15 @@ function ChoosePathSection() {
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
             <div className="text-[11px] font-bold uppercase tracking-[0.26em] text-klein/70">
-              {isEn ? "Start by task" : "按任务开始"}
+              {isEn ? "Start in order" : "按顺序开始"}
             </div>
             <h2 className="mt-4 text-4xl font-display font-bold tracking-[-0.05em] text-ink md:text-5xl">
-              {isEn ? "Most people do not want every page. They want the right next step." : "大多数人不是想看所有页面，而是想找到下一步。"}
+              {isEn ? "The shortest usable path is now a five-step flow." : "现在最短、最好用的路径就是这五步。"}
             </h2>
             <p className="mt-5 text-lg leading-8 text-ink/64">
               {isEn
-                ? "Pick the closest intention below and the site will route you into the right operating path, rather than making you decode internal product labels."
-                : "从下面选最接近你当前目的的一条路径，网站会把你带到更合适的入口，而不是让你先理解内部命名。"}
+                ? "Instead of making users decode internal labels first, the site now points to the actual public flow most people want: assets, bridge, action, withdraw, verify."
+                : "不用先理解内部分类了。网站现在先给出大多数人真正要走的公开流程：领资产、跨进来、使用、提回去、看证据。"}
             </p>
           </div>
           <Link to="/docs" className="inline-flex items-center gap-2 text-sm font-semibold text-klein transition-colors hover:text-klein-dark">
@@ -397,35 +421,36 @@ function ChoosePathSection() {
           </Link>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-2">
-          {paths.map((path) => (
+        <div className="mt-12 grid gap-6 xl:grid-cols-5 md:grid-cols-2">
+          {steps.map((path) => (
             <Link
-              key={path.title}
+              key={path.step}
               to={path.href}
               className="group ynx-panel rounded-[32px] border border-klein/10 p-7 transition-all hover:-translate-y-1 hover:border-klein/22 hover:shadow-[0_20px_80px_rgba(0,47,167,0.08)]"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="rounded-2xl border border-klein/10 bg-klein/6 p-3 text-klein">{path.icon}</div>
-                <ArrowRight className="h-4 w-4 text-ink/25 transition-all group-hover:translate-x-1 group-hover:text-klein" />
+                <div className="text-[11px] font-mono uppercase tracking-[0.22em] text-klein/55">{path.step}</div>
               </div>
               <h3 className="mt-6 text-2xl font-display font-bold tracking-tight text-ink">{path.title}</h3>
               <p className="mt-3 text-sm leading-7 text-ink/62">{path.desc}</p>
-              <div className="mt-6 inline-flex rounded-full border border-klein/12 bg-white/85 px-3 py-2 text-xs font-semibold text-klein">
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-klein/12 bg-white/85 px-3 py-2 text-xs font-semibold text-klein">
                 {path.cta}
+                <ArrowRight className="h-4 w-4 text-ink/25 transition-all group-hover:translate-x-1 group-hover:text-klein" />
               </div>
             </Link>
           ))}
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
-          <Link to="/docs" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
-            {isEn ? "Browse docs hub" : "浏览文档中心"}
+          <Link to="/builders" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Builder setup" : "开发者接入"}
           </Link>
-          <Link to="/support" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
-            {isEn ? "Open support entry" : "打开支持入口"}
+          <Link to="/docs/en/ai-web4-official-demo" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Official AI demo" : "官方 AI 演示"}
           </Link>
-          <Link to="/readiness" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
-            {isEn ? "Review readiness and risk" : "查看门禁与风险"}
+          <Link to="/about" className="rounded-full border border-border bg-white px-4 py-2 text-ink/70 transition hover:border-klein/20 hover:text-klein">
+            {isEn ? "Project boundaries" : "项目边界"}
           </Link>
         </div>
       </div>

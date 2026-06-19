@@ -34,24 +34,24 @@ export function PublicOpsBoard() {
         : "Checking live validator gate",
     },
     {
-      label: "Deposit-tested routes",
+      label: "Routes with deposit proof",
       value: depositTestedValue,
       tone: depositTested !== null && depositTested >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <GitBranch className="h-4 w-4" />,
       detail:
         releaseObserved === null
           ? "Checking public bridge route evidence"
-          : `${releaseObserved}/${routeTotal} routes show release evidence or manual proof on the public bridge`,
+          : `${releaseObserved}/${routeTotal} routes already show release proof on the public bridge`,
     },
     {
-      label: "Routes with release evidence",
+      label: "Routes with release proof",
       value: releaseObservedValue,
       tone: releaseObserved !== null && releaseObserved >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <Activity className="h-4 w-4" />,
       detail:
         automatic === null || depositWatchersLive === null
           ? "Checking automatic release and watcher coverage"
-          : `${automatic}/${routeTotal} routes are fully automatic today; ${depositWatchersLive}/${routeTotal} have live deposit watchers`,
+          : `${automatic}/${routeTotal} routes are fully automatic today; ${depositWatchersLive}/${routeTotal} already have live deposit watchers`,
     },
   ];
 
@@ -66,10 +66,10 @@ export function PublicOpsBoard() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/45">Public Operations</p>
-          <h3 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">The live rehearsal surface in one place</h3>
+          <h3 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">The shortest live proof board</h3>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/60">
-            This board is designed to show what can be verified quickly: validator quorum, bridge route depth, and the specific blockers
-            still preventing a stronger automation claim.
+            This board is designed to show the fastest things a serious user can verify: validator quorum, deposit and release proof,
+            and the exact blockers still stopping a stronger automatic-release claim.
           </p>
         </div>
         <button
@@ -97,10 +97,10 @@ export function PublicOpsBoard() {
       <div className="rounded-[2rem] border border-border bg-white p-6 shadow-sm">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-amber-500" />
-          <h4 className="text-sm font-semibold text-ink">Remaining automatic-loop blockers</h4>
+          <h4 className="text-sm font-semibold text-ink">What still blocks wider automatic release</h4>
         </div>
         <p className="mt-2 text-sm leading-6 text-ink/60">
-          These are concrete remaining blockers. They explain why some routes are live and testable today, but not yet fully automatic.
+          These are the concrete remaining blockers. They explain why several routes are already live and testable today, but still not yet automatic end to end.
         </p>
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           {blockers.map((item) => (
