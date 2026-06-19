@@ -28,7 +28,7 @@ const MIN_VALIDATORS = 4;
 const MIN_PUBLIC_PEERS = 2;
 const CHAIN_ID = NETWORK.chainId;
 
-async function fetchJson(url: string, timeoutMs = 8000): Promise<any> {
+async function fetchJson(url: string, timeoutMs = 12000): Promise<any> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {

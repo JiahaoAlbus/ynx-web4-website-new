@@ -32,11 +32,11 @@ export type PublicOpsSnapshot = {
   updated_at: string;
   validator: ValidatorReadinessResult | null;
   routes: {
-    total: number;
-    deposit_watchers_live: number;
-    deposit_tested: number;
-    release_observed: number;
-    automatic_loop_ready: number;
+    total: number | null;
+    deposit_watchers_live: number | null;
+    deposit_tested: number | null;
+    release_observed: number | null;
+    automatic_loop_ready: number | null;
     blockers: Array<{
       routeId: string;
       displayName: string;
@@ -55,7 +55,7 @@ export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
     import("./validatorReadiness").then((mod) => mod.getValidatorReadiness()),
     fetchJsonWithTimeout<RouteReadinessResponse>(
       `${NETWORK.endpoints.rpc}/bridge/route-readiness`,
-      { timeoutMs: 4000, cache: "no-store" },
+      { timeoutMs: 12000, cache: "no-store" },
     ),
   ]);
 
@@ -80,6 +80,7 @@ export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
         null);
 
   const items = routeData?.items || [];
+  const hasRouteData = Boolean(routeData && (items.length > 0 || routeData.summary?.routes));
   const blockers = items
     .filter((item) => !item.automatic_loop_ready)
     .map((item) => ({
@@ -94,11 +95,11 @@ export async function getPublicOpsSnapshot(): Promise<PublicOpsSnapshot> {
     updated_at: new Date().toISOString(),
     validator: validatorData,
     routes: {
-      total: routeData?.summary?.routes || items.length,
-      deposit_watchers_live: countDepositWatchersLive(items),
-      deposit_tested: countDepositTested(items),
-      release_observed: countReleaseObserved(items),
-      automatic_loop_ready: routeData?.summary?.automatic_loop_ready || 0,
+      total: hasRouteData ? routeData?.summary?.routes || items.length : null,
+      deposit_watchers_live: hasRouteData ? countDepositWatchersLive(items) : null,
+      deposit_tested: hasRouteData ? countDepositTested(items) : null,
+      release_observed: hasRouteData ? countReleaseObserved(items) : null,
+      automatic_loop_ready: hasRouteData ? routeData?.summary?.automatic_loop_ready || 0 : null,
       blockers,
     },
     errors,

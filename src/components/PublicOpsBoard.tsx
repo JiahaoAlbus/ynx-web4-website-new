@@ -9,38 +9,49 @@ export function PublicOpsBoard() {
   const { snapshot, loading, error, refresh } = usePublicOps();
 
   const validator = snapshot?.validator;
-  const validatorsReady = validator?.bonded_count ?? 0;
-  const validatorsSigned = validator?.signed_count ?? 0;
+  const validatorsReady = validator?.bonded_count ?? null;
+  const validatorsSigned = validator?.signed_count ?? null;
   const routeTotal = snapshot?.routes.total ?? 5;
-  const depositTested = snapshot?.routes.deposit_tested ?? 0;
-  const releaseObserved = snapshot?.routes.release_observed ?? 0;
-  const depositWatchersLive = snapshot?.routes.deposit_watchers_live ?? 0;
-  const automatic = snapshot?.routes.automatic_loop_ready ?? 0;
+  const depositTested = snapshot?.routes.deposit_tested ?? null;
+  const releaseObserved = snapshot?.routes.release_observed ?? null;
+  const depositWatchersLive = snapshot?.routes.deposit_watchers_live ?? null;
+  const automatic = snapshot?.routes.automatic_loop_ready ?? null;
   const blockers = snapshot?.routes.blockers ?? [];
+
+  const validatorTarget = validator?.min_validators ?? 4;
+  const validatorsReadyValue = validatorsReady === null ? `—/${validatorTarget}` : `${validatorsReady}/${validatorTarget}`;
+  const depositTestedValue = depositTested === null ? `—/${routeTotal}` : `${depositTested}/${routeTotal}`;
+  const releaseObservedValue = releaseObserved === null ? `—/${routeTotal}` : `${releaseObserved}/${routeTotal}`;
 
   const cards = [
     {
       label: "Bonded validators",
-      value: `${validatorsReady}/${validator?.min_validators ?? 4}`,
-      tone: validatorsReady >= (validator?.min_validators ?? 4) ? "emerald" : "amber",
+      value: validatorsReadyValue,
+      tone: validatorsReady !== null && validatorsReady >= validatorTarget ? "emerald" : "amber",
       icon: <ShieldCheck className="h-4 w-4" />,
       detail: validator
-        ? `${validator.unjailed_count} unjailed, ${validatorsSigned}/${validator.indexer_total || validator.bonded_count} signed`
+        ? `${validator.unjailed_count} unjailed, ${validatorsSigned ?? 0}/${validator.indexer_total || validator.bonded_count} signed`
         : "Checking live validator gate",
     },
     {
       label: "Deposit-tested routes",
-      value: `${depositTested}/${routeTotal}`,
-      tone: depositTested > 0 ? "emerald" : "amber",
+      value: depositTestedValue,
+      tone: depositTested !== null && depositTested >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <GitBranch className="h-4 w-4" />,
-      detail: `${releaseObserved}/${routeTotal} routes show release evidence or manual proof on the public bridge`,
+      detail:
+        releaseObserved === null
+          ? "Checking public bridge route evidence"
+          : `${releaseObserved}/${routeTotal} routes show release evidence or manual proof on the public bridge`,
     },
     {
-      label: "Automatic release-ready routes",
-      value: `${automatic}/${routeTotal}`,
-      tone: automatic >= routeTotal ? "emerald" : "amber",
+      label: "Routes with release evidence",
+      value: releaseObservedValue,
+      tone: releaseObserved !== null && releaseObserved >= Math.max(1, routeTotal - 1) ? "emerald" : "amber",
       icon: <Activity className="h-4 w-4" />,
-      detail: `${depositWatchersLive}/${routeTotal} routes have live deposit watchers, but release still needs signer or lockbox completion`,
+      detail:
+        automatic === null || depositWatchersLive === null
+          ? "Checking automatic release and watcher coverage"
+          : `${automatic}/${routeTotal} routes are fully automatic today; ${depositWatchersLive}/${routeTotal} have live deposit watchers`,
     },
   ];
 

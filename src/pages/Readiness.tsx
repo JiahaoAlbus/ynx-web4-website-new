@@ -91,7 +91,7 @@ type Gate = {
 };
 
 async function getJson<T>(url: string): Promise<T> {
-  return fetchJsonWithTimeout<T>(url, { timeoutMs: 3500 });
+  return fetchJsonWithTimeout<T>(url, { timeoutMs: 12000 });
 }
 
 export function Readiness() {
