@@ -207,6 +207,55 @@ export default {
         />
       </section>
 
+      <section className="max-w-7xl mx-auto px-6 mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.45, ease: motionEase.standard }}
+          className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"
+        >
+          <div className="rounded-[32px] border border-klein/15 bg-white px-8 py-7 shadow-[0_20px_60px_rgba(0,47,167,0.08)]">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-klein/8 px-3 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.24em] text-klein">
+              Deploy With Less Guesswork
+            </div>
+            <h2 className="max-w-2xl font-display text-3xl font-semibold tracking-tight text-ink">
+              Start with the canonical commands, then use AI only when something breaks.
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink/65">
+              The fastest stable path is still the repo-backed join guide. We now document Linux and Windows-from-zero separately, and the AI page is positioned as a troubleshooting layer, not a replacement for the manual.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button variant="klein" asChild>
+                <Link to="/docs/en/public-testnet-join">
+                  Open Join Guide
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/ai">
+                  Ask Deployment AI
+                  <Cpu className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-[32px] border border-border bg-surface px-7 py-7">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.24em] text-ink/42">
+              Recommended Prompt
+            </p>
+            <pre className="mt-4 overflow-x-auto whitespace-pre-wrap rounded-2xl bg-white/90 p-5 font-mono text-[13px] leading-6 text-ink/72 shadow-sm">
+              <code>{`I am deploying YNX on a fresh Linux or Windows machine.
+I ran: <exact command>
+I expected: <expected result>
+I got: <exact error output>
+Tell me the next command only, and say whether this is a local machine issue, a missing package issue, or a YNX-side issue.`}</code>
+            </pre>
+          </div>
+        </motion.div>
+      </section>
+
       <motion.section
         initial="hidden"
         whileInView="visible"
