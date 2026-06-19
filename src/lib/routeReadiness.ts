@@ -47,13 +47,16 @@ export function isDepositWatcherLive(route: RouteReadinessLike) {
   return status === "live" || route.evidence?.deposit_watcher_status?.live === true;
 }
 
-export function hasDepositEvidence(route: RouteReadinessLike) {
+export function hasDepositTested(route: RouteReadinessLike) {
   return (
-    Number(route.evidence?.minted_deposits || 0) > 0 ||
     route.phase === "deposit_tested" ||
     route.full_loop_ready === true ||
     route.full_loop_tested === true
   );
+}
+
+export function hasManualDepositProof(route: RouteReadinessLike) {
+  return Number(route.evidence?.minted_deposits || 0) > 0 && !hasDepositTested(route);
 }
 
 export function hasReleaseEvidence(route: RouteReadinessLike) {
@@ -66,27 +69,59 @@ export function hasReleaseEvidence(route: RouteReadinessLike) {
 
 export function summarizeRoutePhase(route: RouteReadinessLike) {
   if (route.automatic_loop_ready) return "Automatic route ready";
+  if (route.full_loop_tested) return "Full loop tested";
+  if (route.full_loop_ready) return "Full loop ready";
+  if (hasDepositTested(route)) return "Deposit tested";
+  if (hasManualDepositProof(route)) return "Manual proof observed";
   if (hasReleaseEvidence(route)) return "Release observed";
-  if (hasDepositEvidence(route)) return "Deposit tested";
   if (isDepositWatcherLive(route)) return "Watcher live";
   if (route.phase === "mapped_route_only") return "Mapped route";
   return humanizeToken(route.phase);
 }
 
 export function summarizeDepositStatus(route: RouteReadinessLike) {
-  if (hasDepositEvidence(route)) return "deposit tested";
+  if (hasDepositTested(route)) return "deposit tested";
+  if (hasManualDepositProof(route) && isDepositWatcherLive(route)) return "manual proof, watcher live";
+  if (hasManualDepositProof(route)) return "manual proof observed";
   if (isDepositWatcherLive(route)) return "watcher live";
   return humanizeToken(route.evidence?.deposit_watcher_status?.status || route.phase);
 }
 
 export function summarizeReleaseStatus(route: RouteReadinessLike) {
   if (route.automatic_loop_ready) return "automatic release ready";
-  if (hasReleaseEvidence(route)) return "release observed";
+  if (hasReleaseEvidence(route)) {
+    const raw = route.evidence?.release_adapter_status?.status;
+    if (raw === "release_disabled") return "release observed, adapter disabled";
+    if (raw === "release_pending_signer") return "release observed, signer pending";
+    if (raw === "release_pending_lockbox") return "release observed, lockbox pending";
+    return "release observed";
+  }
   return humanizeToken(route.evidence?.release_adapter_status?.status || "pending");
 }
 
 export function summarizeBlockers(route: RouteReadinessLike) {
-  return (route.blockers || []).map(humanizeToken);
+  const explicit = (route.blockers || []).map(humanizeToken);
+  if (explicit.length > 0) {
+    return explicit;
+  }
+
+  const releaseStatus = route.evidence?.release_adapter_status?.status;
+  if (releaseStatus === "release_pending_signer") {
+    return ["release signer pending"];
+  }
+  if (releaseStatus === "release_pending_lockbox") {
+    return ["source lockbox unconfigured"];
+  }
+  if (releaseStatus === "release_disabled") {
+    return ["release adapter disabled"];
+  }
+
+  const depositStatus = route.evidence?.deposit_watcher_status?.status;
+  if (depositStatus === "unconfigured") {
+    return ["deposit watcher unconfigured"];
+  }
+
+  return [];
 }
 
 export function countDepositWatchersLive(routes: RouteReadinessLike[]) {
@@ -94,7 +129,7 @@ export function countDepositWatchersLive(routes: RouteReadinessLike[]) {
 }
 
 export function countDepositTested(routes: RouteReadinessLike[]) {
-  return routes.filter(hasDepositEvidence).length;
+  return routes.filter(hasDepositTested).length;
 }
 
 export function countReleaseObserved(routes: RouteReadinessLike[]) {

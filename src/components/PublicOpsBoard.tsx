@@ -29,18 +29,18 @@ export function PublicOpsBoard() {
         : "Checking live validator gate",
     },
     {
-      label: "Routes with release evidence",
-      value: `${releaseObserved}/${routeTotal}`,
-      tone: releaseObserved > 0 ? "emerald" : "amber",
+      label: "Deposit-tested routes",
+      value: `${depositTested}/${routeTotal}`,
+      tone: depositTested > 0 ? "emerald" : "amber",
       icon: <GitBranch className="h-4 w-4" />,
-      detail: `${depositTested}/${routeTotal} routes show deposit evidence on the public bridge`,
+      detail: `${releaseObserved}/${routeTotal} routes show release evidence or manual proof on the public bridge`,
     },
     {
-      label: "Automatic routes",
+      label: "Automatic release-ready routes",
       value: `${automatic}/${routeTotal}`,
-      tone: automatic >= routeTotal ? "emerald" : automatic > 0 ? "amber" : "amber",
+      tone: automatic >= routeTotal ? "emerald" : "amber",
       icon: <Activity className="h-4 w-4" />,
-      detail: `${depositWatchersLive}/${routeTotal} routes have live deposit watchers; automatic release is still stricter`,
+      detail: `${depositWatchersLive}/${routeTotal} routes have live deposit watchers, but release still needs signer or lockbox completion`,
     },
   ];
 
