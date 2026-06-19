@@ -49,31 +49,14 @@ function Hero() {
   const { t, language } = useTranslation();
   const isEn = language === "en";
 
-  const guidePoints = isEn
-    ? [
-        "Define machine boundaries before execution starts",
-        "Issue revocable sessions instead of permanent trust",
-        "Settle AI and machine actions with verifiable proof",
-      ]
-    : [
-        "在执行前先定义机器可行动的边界",
-        "发放可撤销的会话权限，而不是永久信任",
-        "用可验证证明完成 AI 与机器动作结算",
-      ];
+  const guidePoints = [t("hero.guide.1"), t("hero.guide.2"), t("hero.guide.3")];
 
-  const summaryCards = isEn
-    ? [
-        { label: "Core framing", value: "Web4 execution layer" },
-        { label: "Primary audience", value: "Builders, operators, AI apps" },
-        { label: "Current state", value: "Public testnet on live endpoints" },
-        { label: "Operating form", value: "Project stage, no public legal entity yet" },
-      ]
-    : [
-        { label: "核心定位", value: "Web4 执行层" },
-        { label: "主要用户", value: "开发者、运营者、AI 应用" },
-        { label: "当前状态", value: "公开测试网与线上端点运行中" },
-        { label: "当前形态", value: "项目阶段，尚未公开设立法律实体" },
-      ];
+  const summaryCards = [
+    { label: t("hero.card.core.label"), value: t("hero.card.core.value") },
+    { label: t("hero.card.audience.label"), value: t("hero.card.audience.value") },
+    { label: t("hero.card.state.label"), value: t("hero.card.state.value") },
+    { label: t("hero.card.form.label"), value: t("hero.card.form.value") },
+  ];
 
   return (
     <section className="relative overflow-hidden border-b border-border/60 bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_48%,#ffffff_100%)] px-6 pb-24 pt-36 md:pb-32 md:pt-44">
@@ -103,9 +86,7 @@ function Hero() {
             transition={{ duration: 0.72, ease: motionEase.emphasized }}
             className="max-w-5xl text-5xl font-display font-bold tracking-[-0.06em] text-ink md:text-7xl xl:text-[5.6rem] xl:leading-[0.92]"
           >
-            {isEn
-              ? "A cleaner execution layer for AI, apps, and machine payments."
-              : "为 AI、应用与机器支付打造更清晰的执行层。"}
+            {t("hero.title")}
           </motion.h1>
 
           <motion.p
@@ -131,7 +112,7 @@ function Hero() {
                 <div className="mb-2 flex items-center gap-2 text-klein">
                   <Sparkles className="h-4 w-4" />
                   <span className="text-[10px] uppercase tracking-[0.22em]">
-                    {isEn ? "Protocol rule" : "协议原则"}
+                    {t("hero.rule")}
                   </span>
                 </div>
                 {point}
