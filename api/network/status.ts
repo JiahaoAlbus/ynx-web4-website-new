@@ -42,8 +42,16 @@ const NETWORK = {
 
 const CACHE_TTL_MS = 15_000;
 const REVALIDATE_AFTER_MS = 45_000;
+const LAST_HEALTHY_TTL_MS = 10 * 60_000;
+const RESTART_OFFLINE_THRESHOLD = 5;
+const RESTART_ONLINE_FLOOR = 2;
 
 type CachedNetworkStatus = {
+  payload: NetworkStatusResponse;
+  fetchedAt: number;
+};
+
+type LastHealthySnapshot = {
   payload: NetworkStatusResponse;
   fetchedAt: number;
 };
@@ -194,6 +202,46 @@ const ENDPOINTS: Record<string, EndpointConfig> = {
 
 let cachedStatus: CachedNetworkStatus | null = null;
 let inFlightStatus: Promise<NetworkStatusResponse> | null = null;
+let lastHealthyStatus: LastHealthySnapshot | null = null;
+
+function getCount(payload: NetworkStatusResponse, key: string) {
+  const value = payload[key];
+  return typeof value === "number" ? value : 0;
+}
+
+function isHealthySnapshot(payload: NetworkStatusResponse) {
+  return payload.summary === "healthy" || getCount(payload, "offline") === 0;
+}
+
+function shouldServeLastHealthySnapshot(payload: NetworkStatusResponse) {
+  if (!lastHealthyStatus) {
+    return false;
+  }
+
+  const ageMs = Date.now() - lastHealthyStatus.fetchedAt;
+  if (ageMs > LAST_HEALTHY_TTL_MS) {
+    return false;
+  }
+
+  const offlineCount = getCount(payload, "offline");
+  const onlineCount = getCount(payload, "online");
+
+  return (
+    offlineCount >= RESTART_OFFLINE_THRESHOLD &&
+    onlineCount <= RESTART_ONLINE_FLOOR &&
+    isHealthySnapshot(lastHealthyStatus.payload)
+  );
+}
+
+function withTransientRestartSnapshot(payload: NetworkStatusResponse) {
+  return {
+    ...payload,
+    updated_at: new Date().toISOString(),
+    source: "transient-restart-cache",
+    summary: "degraded",
+    note: "Short restart window detected; serving last healthy snapshot while probes recover.",
+  };
+}
 
 async function fetchWithTimeout(config: EndpointConfig, timeoutMs: number) {
   const controller = new AbortController();
@@ -299,6 +347,14 @@ async function buildNetworkStatus(): Promise<NetworkStatusResponse> {
   return results;
 }
 
+function storeSnapshot(payload: NetworkStatusResponse) {
+  cachedStatus = { payload, fetchedAt: Date.now() };
+  if (isHealthySnapshot(payload)) {
+    lastHealthyStatus = { payload, fetchedAt: Date.now() };
+  }
+  return payload;
+}
+
 function getCachedSnapshot() {
   return cachedStatus?.payload ?? null;
 }
@@ -314,8 +370,14 @@ async function getNetworkStatusCached(forceRefresh = false) {
     if (!inFlightStatus) {
       inFlightStatus = buildNetworkStatus()
         .then((payload) => {
-          cachedStatus = { payload, fetchedAt: Date.now() };
-          return payload;
+          if (shouldServeLastHealthySnapshot(payload) && lastHealthyStatus) {
+            cachedStatus = {
+              payload: withTransientRestartSnapshot(lastHealthyStatus.payload),
+              fetchedAt: Date.now(),
+            };
+            return cachedStatus.payload;
+          }
+          return storeSnapshot(payload);
         })
         .finally(() => {
           inFlightStatus = null;
@@ -327,8 +389,14 @@ async function getNetworkStatusCached(forceRefresh = false) {
   if (!inFlightStatus) {
     inFlightStatus = buildNetworkStatus()
       .then((payload) => {
-        cachedStatus = { payload, fetchedAt: Date.now() };
-        return payload;
+        if (shouldServeLastHealthySnapshot(payload) && lastHealthyStatus) {
+          cachedStatus = {
+            payload: withTransientRestartSnapshot(lastHealthyStatus.payload),
+            fetchedAt: Date.now(),
+          };
+          return cachedStatus.payload;
+        }
+        return storeSnapshot(payload);
       })
       .finally(() => {
         inFlightStatus = null;
