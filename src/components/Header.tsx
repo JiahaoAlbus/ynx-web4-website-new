@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
-import { ChevronDown, Globe2, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "../contexts/LanguageContext";
 import { Button } from "./ui/button";
@@ -55,39 +55,39 @@ export function Header() {
   }
 
   const primaryLinks: NavItem[] = [
-    { name: t("nav.start"), href: "/test-assets", description: t("nav.desc.start") },
-    { name: t("nav.bridge"), href: "/bridge", description: t("nav.desc.bridge") },
-    { name: t("nav.withdraw"), href: "/withdraw", description: t("nav.desc.withdraw") },
-    { name: t("nav.readiness"), href: "/readiness", description: t("nav.desc.readiness") },
-    { name: t("nav.docs"), href: "/docs", description: t("nav.desc.docs") },
+    { name: "Start", href: "/test-assets", description: "Get gas and test assets first." },
+    { name: t("nav.bridge"), href: "/bridge", description: "Move test assets into YNX." },
+    { name: t("nav.withdraw"), href: "/withdraw", description: "Release wrapped assets back out." },
+    { name: t("nav.readiness"), href: "/readiness", description: "Check live proof and blockers." },
+    { name: t("nav.docs"), href: "/docs", description: "Open the task-based docs hub." },
   ];
 
   const groupedMenus = useMemo<NavGroup[]>(
     () => [
       {
-        title: t("nav.use"),
+        title: "Use",
         items: [
-          { name: t("nav.trade"), href: "/trading", description: t("nav.desc.trade") },
-          { name: t("nav.ai"), href: "/ai", description: t("nav.desc.ai") },
-          { name: t("nav.testnet"), href: "/testnet", description: t("nav.desc.testnet") },
+          { name: t("nav.trade"), href: "/trading", description: "Swap test assets on the public pilot." },
+          { name: t("nav.ai"), href: "/ai", description: "Run the public AI control and settlement flow." },
+          { name: t("nav.testnet"), href: "/testnet", description: "Inspect live endpoints and network state." },
         ],
       },
       {
-        title: t("nav.build"),
+        title: "Build",
         items: [
-          { name: t("nav.builders"), href: "/builders", description: t("nav.desc.builders") },
-          { name: t("nav.validators"), href: "/validators", description: t("nav.desc.validators") },
-          { name: t("nav.ai_demo"), href: "/docs/en/ai-web4-official-demo", description: t("nav.desc.ai_demo") },
+          { name: t("nav.builders"), href: "/builders", description: "Connect apps, RPC, wallets, and tooling." },
+          { name: t("nav.validators"), href: "/validators", description: "Run validator and infrastructure flows." },
+          { name: "AI Demo", href: "/docs/en/ai-web4-official-demo", description: "Walk through the official AI/Web4 demo." },
         ],
       },
       {
-        title: t("nav.project"),
+        title: "Project",
         items: [
-          { name: t("nav.about"), href: "/about", description: t("nav.desc.about") },
-          { name: t("nav.support"), href: "/support", description: t("nav.desc.support") },
-          { name: t("nav.faq"), href: "/faq", description: t("nav.desc.faq") },
-          { name: t("nav.risk"), href: "/risk", description: t("nav.desc.risk") },
-          { name: t("nav.security"), href: "/security", description: t("nav.desc.security") },
+          { name: t("nav.about"), href: "/about", description: "See the project scope and current boundaries." },
+          { name: "Support", href: "/support", description: "Grant, sponsor, and early diligence entry." },
+          { name: t("nav.faq"), href: "/faq", description: "Fast answers to the main product questions." },
+          { name: "Risk", href: "/risk", description: "Current project, asset, and legal boundary risks." },
+          { name: "Security", href: "/security", description: "How issues are reported and what is still open." },
         ],
       },
     ],
@@ -95,7 +95,7 @@ export function Header() {
   );
 
   const mobileGroups: NavGroup[] = [
-    { title: t("nav.main_path"), items: primaryLinks },
+    { title: "Main path", items: primaryLinks },
     ...groupedMenus,
   ];
 
@@ -144,11 +144,10 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <LanguageSwitcher />
+        <div className="hidden items-center gap-3 lg:flex">
           <Button variant="ghost" size="sm" asChild className="text-ink/60 hover:text-ink">
             <a href="https://github.com/JiahaoAlbus/YNX" target="_blank" rel="noreferrer">
-              {t("nav.github")}
+              GitHub
             </a>
           </Button>
           <Button
@@ -157,10 +156,10 @@ export function Header() {
             asChild
             className="rounded-full border-klein/12 bg-white/80 px-4 hover:border-klein/25"
           >
-            <Link to="/support">{t("nav.support")}</Link>
+            <Link to="/support">Support</Link>
           </Button>
           <Button variant="klein" size="sm" asChild className="rounded-full shadow-lg shadow-klein/18">
-            <Link to="/test-assets">{t("nav.get_assets")}</Link>
+            <Link to="/test-assets">Get Assets</Link>
           </Button>
         </div>
 
@@ -204,105 +203,21 @@ export function Header() {
             ))}
           </div>
           <div className="my-5 h-px bg-border" />
-          <LanguageSwitcher mobile />
-          <div className="my-5 h-px bg-border" />
           <div className="grid gap-3">
             <Button variant="outline" className="w-full justify-center rounded-2xl" asChild>
               <Link to="/support" onClick={() => setMobileMenuOpen(false)}>
-                {t("nav.support")}
+                Support
               </Link>
             </Button>
             <Button variant="klein" className="w-full justify-center rounded-2xl" asChild>
               <Link to="/test-assets" onClick={() => setMobileMenuOpen(false)}>
-                {t("nav.get_assets")}
+                Get Assets
               </Link>
             </Button>
           </div>
         </motion.div>
       )}
     </motion.header>
-  );
-}
-
-function LanguageSwitcher({ mobile = false }: { mobile?: boolean }) {
-  const { locale, languages, setLanguage, t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const current = languages.find((item) => item.code === locale) || languages[0];
-
-  if (mobile) {
-    return (
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-ink/40">{t("language.label")}</p>
-          <p className="text-xs text-ink/45">{t("language.content_note")}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {languages.map((item) => (
-            <button
-              key={item.code}
-              type="button"
-              data-testid={`language-option-${item.code}`}
-              onClick={() => setLanguage(item.code)}
-              className={`rounded-2xl border px-3 py-3 text-left text-sm transition ${
-                item.code === locale
-                  ? "border-klein/30 bg-klein text-white"
-                  : "border-border bg-white text-ink/72 hover:border-klein/20 hover:text-ink"
-              }`}
-            >
-              <span className="block font-semibold">{item.nativeLabel}</span>
-              <span className={`mt-1 block text-xs ${item.code === locale ? "text-white/68" : "text-ink/40"}`}>
-                {item.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        data-testid="language-trigger"
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-white px-3 text-sm font-semibold text-ink/72 shadow-sm transition hover:border-klein/20 hover:text-ink"
-        aria-label={t("language.label")}
-      >
-        <Globe2 className="h-4 w-4 text-klein" />
-        <span>{current.shortLabel}</span>
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      {open ? (
-        <div className="absolute right-0 top-full z-50 mt-3 w-[260px] rounded-[1.5rem] border border-border bg-white p-3 text-ink shadow-[0_22px_70px_rgba(10,15,28,0.12)]">
-          <div className="px-2 pb-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-klein/70">{t("language.note")}</p>
-            <p className="mt-1 text-xs leading-5 text-ink/45">{t("language.content_note")}</p>
-          </div>
-          <div className="space-y-1">
-            {languages.map((item) => (
-              <button
-                key={item.code}
-                type="button"
-                data-testid={`language-option-${item.code}`}
-                onClick={() => {
-                  setLanguage(item.code);
-                  setOpen(false);
-                }}
-                className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition ${
-                  item.code === locale ? "bg-klein/6 text-klein" : "text-ink/70 hover:bg-surface hover:text-ink"
-                }`}
-              >
-                <span className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">{item.nativeLabel}</span>
-                  <span className="text-xs text-ink/38">{item.shortLabel}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
   );
 }
 

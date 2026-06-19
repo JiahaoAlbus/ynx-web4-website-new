@@ -1,10 +1,8 @@
 import { ArrowUpRight, Github } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "../contexts/LanguageContext";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  const { t } = useTranslation();
 
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-ink py-20 text-white">
@@ -16,7 +14,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,0.7fr))]">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/12 bg-white/8 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.24em] text-klein/85">
-              {t("footer.badge")}
+              Public Testnet Project
             </div>
             <Link
               to="/"
@@ -25,10 +23,12 @@ export function Footer() {
               YNX
             </Link>
             <p className="mt-5 text-base leading-8 text-white/78">
-              {t("footer.body")}
+              YNX is currently a Web4 and AI-execution public testnet project.
+              This site should not imply that a separate legal operating company,
+              custodial product, or regulated financial service is already live.
             </p>
             <p className="mt-4 text-sm leading-7 text-white/62">
-              {t("footer.path")}
+              Best first path: get test assets, bridge into YNX, try a public action, withdraw back out, then inspect readiness evidence.
             </p>
             <div className="mt-8 flex items-center gap-4">
               <a
@@ -43,41 +43,41 @@ export function Footer() {
                 to="/readiness"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-white/82 transition-colors hover:text-white"
               >
-                {t("footer.readiness")}
+                Live readiness
                 <ArrowUpRight className="h-4 w-4 text-klein" />
               </Link>
             </div>
           </div>
 
           <FooterColumn
-            title={t("footer.start_here")}
+            title="Start Here"
             links={[
-              { label: t("nav.get_assets"), to: "/test-assets" },
-              { label: t("nav.bridge"), to: "/bridge" },
-              { label: t("nav.trade"), to: "/trading" },
-              { label: t("nav.withdraw"), to: "/withdraw" },
-              { label: t("nav.readiness"), to: "/readiness" },
+              { label: "Get Assets", to: "/test-assets" },
+              { label: "Bridge In", to: "/bridge" },
+              { label: "Trade", to: "/trading" },
+              { label: "Withdraw", to: "/withdraw" },
+              { label: "Readiness", to: "/readiness" },
             ]}
           />
 
           <FooterColumn
-            title={t("footer.build")}
+            title="Build"
             links={[
-              { label: t("nav.testnet"), to: "/testnet" },
-              { label: t("nav.builders"), to: "/builders" },
-              { label: t("nav.validators"), to: "/validators" },
-              { label: t("nav.ai"), to: "/ai" },
-              { label: t("nav.docs"), to: "/docs" },
+              { label: "Testnet", to: "/testnet" },
+              { label: "Builders", to: "/builders" },
+              { label: "Validators", to: "/validators" },
+              { label: "AI", to: "/ai" },
+              { label: "Docs", to: "/docs" },
             ]}
           />
 
           <FooterColumn
-            title={t("footer.project")}
+            title="Project"
             links={[
-              { label: t("nav.about"), to: "/about" },
-              { label: t("nav.support"), to: "/support" },
-              { label: t("nav.risk"), to: "/risk" },
-              { label: t("nav.security"), to: "/security" },
+              { label: "About", to: "/about" },
+              { label: "Support", to: "/support" },
+              { label: "Risk", to: "/risk" },
+              { label: "Security", to: "/security" },
               { label: "Privacy", to: "/privacy" },
             ]}
           />
@@ -87,7 +87,8 @@ export function Footer() {
           <div>
             <p className="text-sm text-white/58">&copy; {currentYear} YNX Project.</p>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-white/58">
-              {t("footer.boundary")}
+              Public testnet only. Test assets have no mainnet value. Company formation,
+              dedicated legal ownership, and broader institutional controls remain in progress.
             </p>
           </div>
           <div className="flex flex-wrap gap-5 text-sm text-white/62">
@@ -97,7 +98,7 @@ export function Footer() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 transition-colors hover:text-white"
             >
-              {t("footer.explorer")}
+              Explorer
               <ArrowUpRight className="h-3.5 w-3.5 text-klein" />
             </a>
             <a
@@ -106,7 +107,7 @@ export function Footer() {
               rel="noreferrer"
               className="inline-flex items-center gap-2 transition-colors hover:text-white"
             >
-              {t("footer.faucet")}
+              Faucet
               <ArrowUpRight className="h-3.5 w-3.5 text-klein" />
             </a>
           </div>
