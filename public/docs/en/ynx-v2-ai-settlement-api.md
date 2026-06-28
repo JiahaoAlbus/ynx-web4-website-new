@@ -19,7 +19,7 @@ The API is designed for:
 
 The public testnet has three AI layers:
 
-- Intelligence API: live YNX context and chat at `https://ai.ynxweb4.com/ai/chat`
+- Intelligence API: live YNX context and chat at `https://ai.ynxweb4.com/ai/chat` and native streaming at `https://ai.ynxweb4.com/ai/chat/stream`
 - Gateway settlement API: jobs, vaults, payments, x402, audit, and stats at `https://ai.ynxweb4.com`
 - On-chain settlement rail: `YNXAISettlement` at `0x87e8a50880584abaB283cDeC18d884A7BDc42Fcf`
 
@@ -39,6 +39,7 @@ Public Intelligence endpoints:
 ```text
 Brief:      https://ai.ynxweb4.com/ai/intelligence/brief
 Chat:       POST https://ai.ynxweb4.com/ai/chat
+Chat NDJSON: POST https://ai.ynxweb4.com/ai/chat/stream
 Mode:       live deterministic by default; Ollama or external LLM when configured
 ```
 
@@ -79,6 +80,7 @@ Finalize tx: 0xc9380f194927e15d0b7543a6ee8d7e5834e992a630501f4779aaca293f140ef2
 
 - `GET /ai/intelligence/brief` — live YNX context from Bridge, route readiness, assets, Web4, and AI settlement state
 - `POST /ai/chat` — live YNX assistant response
+- `POST /ai/chat/stream` — NDJSON streaming response with per-request `requestId`, `meta`, `delta`, and `done` events
 
 Example:
 
@@ -97,6 +99,15 @@ Response shape:
   "model": "",
   "answer": "..."
 }
+```
+
+Streaming response event shape:
+
+```json
+{"requestId":"chat_...","type":"meta","status":"started","mode":"llm:ollama"}
+{"requestId":"chat_...","type":"delta","delta":"mock ","done":false}
+{"requestId":"chat_...","type":"delta","delta":"answer","done":false}
+{"requestId":"chat_...","type":"done","done":true,"mode":"llm:ollama","model":"qwen2.5:1.5b"}
 ```
 
 When a runtime model is configured, the gateway keeps the same endpoint and
@@ -130,7 +141,70 @@ AI_LLM_MODEL=qwen2.5:1.5b
 - `POST /ai/vaults/:id/deposit` — increase vault balance
 - `POST /ai/payments/quote` — quote payment amount
 - `POST /ai/payments/charge` — execute charge from vault
+- `GET /ai/payments/:id` — payment detail (policy-scoped when Web4 enforcement is enabled)
 - `GET /x402/resource` — x402-style paywalled resource
+
+Protected accountability / forensics actions on the same gateway:
+
+- `POST /ai/actions/run` with `action: "ai.trace.report"` — protected trace
+  summary for an address, lot, or transaction target
+- `POST /ai/actions/run` with `action: "ai.forensics.case.create"` — create a
+  protected structured case from trace evidence
+- `POST /ai/actions/run` with `action: "ai.forensics.case.review"` — append
+  review notes or move case review/escalation state
+- `GET /ai/forensics/cases?policy_id=...` — list policy-scoped cases
+- `GET /ai/forensics/cases/:case_id?policy_id=...` — fetch one policy-scoped
+  case
+
+The forensics layer is defensive and evidence-oriented:
+
+- it supports accountability, victim support, and operator/compliance review
+- it does not grant transfer, seizure, or freeze authority by itself
+- any stronger enforcement decision must go through a separate reviewed path
+
+Architecture decision:
+
+- this is the adopted V2 accountability / forensics strategy for YNX
+- it extends the existing lot-lineage evidence layer instead of replacing it
+- it should not be described as a permanent per-unit serial-number model for
+  fungible assets
+- stable provenance comes from lot anchors such as `issuance_id` and optional
+  `deposit_batch_id`, plus exact/proportional lineage depending on whether
+  merges or splits occurred
+
+Current protected case-create request shape accepts:
+
+- `policy_id`
+- `kind`
+- `target`
+- optional `direction`
+- optional `max_depth` or `maxDepth`
+- optional `denom`
+- optional `min_amount` or `minAmount`
+- optional `min_tainted_amount` or `minTaintedAmount`
+- optional `since_height` or `sinceHeight`
+- optional `until_height` or `untilHeight`
+
+Current protected case output includes:
+
+- flow graph traversal
+- comparative taint models
+- entity attribution
+- address clustering
+- suspicious pattern detection
+- evidence chain
+- risk scoring
+- dossier/action-queue output
+- provenance anchors
+
+Current persistence/runtime behavior:
+
+- protected forensics cases persist in the AI gateway data store alongside jobs,
+  vaults, payments, and audit logs
+- case review state and review logs survive gateway restart
+- `GET /health` and `GET /ready` expose persistence metadata plus aggregated
+  forensic-case counts by review and escalation state for easier operator
+  verification
 
 ## 6. Optional On-chain Mirroring
 
@@ -157,13 +231,23 @@ curl -s https://ai.ynxweb4.com/ai/vaults \
   -d '{
     "owner": "demo-owner",
     "policy_id": "policy_demo",
-    "balance": 0,
     "max_per_payment": 50,
     "onchain": true,
-    "onchain_value_wei": "100000000000000000",
+    "onchain_value_wei": "0",
     "onchain_max_per_payment_wei": "50000000000000000"
   }' | jq
 ```
+
+Security note:
+
+- vault creation is expected to create an empty vault
+- funding should happen through `POST /ai/vaults/:id/deposit`
+- direct positive `balance` bootstrap on create is disabled by default so local
+  machine-payment balance cannot be injected by request body alone
+- local deposit-based balance increases are also disabled by default unless you
+  explicitly enable a dev/demo path such as `AI_ALLOW_LOCAL_VAULT_DEPOSITS=1`
+- production funding should come from a verified deposit path, not from a bare
+  request body that increments local accounting
 
 When enabled, the response includes:
 

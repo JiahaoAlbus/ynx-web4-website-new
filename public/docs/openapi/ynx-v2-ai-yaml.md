@@ -5,7 +5,7 @@ openapi: 3.1.0
 info:
   title: YNX v2 AI Intelligence and Settlement API
   version: 2.0.0
-  description: Live chain intelligence, AI assistant responses, AI jobs, machine-payment vaults, programmable charges, and x402-style protected resources.
+  description: Live chain intelligence, AI assistant responses, AI jobs, machine-payment vaults, programmable charges, protected accountability and forensics workflows, and x402-style protected resources.
 servers:
   - url: http://127.0.0.1:38090
 paths:
@@ -41,6 +41,27 @@ paths:
       responses:
         "200":
           description: OK
+  /ai/chat/stream:
+    post:
+      summary: Stream the YNX Intelligence Layer answer
+      description: Streams NDJSON events with a per-request requestId. Emits meta, delta, and done events; falls back to deterministic live context when no runtime LLM is available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: NDJSON stream
+          content:
+            application/x-ndjson:
+              schema:
+                type: string
+                example: |
+                  {"requestId":"chat_123","type":"meta","status":"started","mode":"llm:ollama"}
+                  {"requestId":"chat_123","type":"delta","delta":"Hello ","done":false}
+                  {"requestId":"chat_123","type":"done","done":true,"mode":"llm:ollama","model":"qwen2.5:1.5b"}
   /ai/actions:
     get:
       summary: List supported AI actions
@@ -51,7 +72,7 @@ paths:
   /ai/actions/run:
     post:
       summary: Run an AI action
-      description: Runs public read/preparation actions or Web4-protected actions. trade.prepare returns wallet transaction parameters; trade.execute submits only after Web4 policy/session authorization, limits, and a configured testnet agent signer.
+      description: Runs public read/preparation actions or Web4-protected actions. trade.prepare returns wallet transaction parameters; trade.execute submits only after Web4 policy/session authorization, limits, and a configured testnet agent signer. Protected accountability actions such as ai.trace.report, ai.forensics.case.create, and ai.forensics.case.review also require Web4 policy/session authorization.
       requestBody:
         required: true
         content:
@@ -59,6 +80,26 @@ paths:
             schema:
               $ref: "#/components/schemas/RunActionRequest"
             examples:
+              traceReport:
+                value:
+                  action: ai.trace.report
+                  policy_id: pol_example
+                  kind: address
+                  target: ynx1example
+              createForensicsCase:
+                value:
+                  action: ai.forensics.case.create
+                  policy_id: pol_example
+                  kind: address
+                  target: ynx1example
+                  review_note: Initial victim-support trace request
+              reviewForensicsCase:
+                value:
+                  action: ai.forensics.case.review
+                  policy_id: pol_example
+                  case_id: case_example
+                  review_status: under_review
+                  note: Escalating for operator review
               tradePreflight:
                 value:
                   action: trade.preflight
@@ -91,6 +132,7 @@ paths:
   /ai/jobs:
     get:
       summary: List jobs
+      description: When Web4 policy enforcement is enabled, this read surface is policy-scoped and expects `policy_id` plus `x-ynx-session`.
       responses:
         "200":
           description: OK
@@ -108,6 +150,7 @@ paths:
   /ai/jobs/{job_id}:
     get:
       summary: Get job detail
+      description: When Web4 policy enforcement is enabled, this read surface is policy-scoped and expects `policy_id` plus `x-ynx-session`.
       parameters:
         - in: path
           name: job_id
@@ -206,6 +249,39 @@ paths:
       responses:
         "200":
           description: OK
+  /ai/payments/{payment_id}:
+    get:
+      summary: Get payment detail
+      description: When Web4 policy enforcement is enabled, this read surface is policy-scoped and expects `policy_id` plus `x-ynx-session`.
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /ai/forensics/cases:
+    get:
+      summary: List protected forensics cases
+      description: Policy-scoped protected case list. Expects `policy_id` plus `x-ynx-session` when Web4 policy enforcement is enabled.
+      responses:
+        "200":
+          description: OK
+  /ai/forensics/cases/{case_id}:
+    get:
+      summary: Get protected forensics case detail
+      description: Policy-scoped protected case detail. Expects `policy_id` plus `x-ynx-session` when Web4 policy enforcement is enabled.
+      parameters:
+        - in: path
+          name: case_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
   /x402/resource:
     get:
       summary: Access x402-style protected resource
@@ -282,6 +358,9 @@ components:
             - trade.prepare
             - trade.execute
             - ai.monitor.create
+            - ai.trace.report
+            - ai.forensics.case.create
+            - ai.forensics.case.review
             - bridge.watchers.scan
             - bridge.withdrawals.scan
         from_symbol:
@@ -304,5 +383,67 @@ components:
         policy_id:
           type: string
           description: Required for Web4-protected write/operator actions.
+        kind:
+          type: string
+          description: Trace target kind for protected accountability actions.
+          enum: [address, lot, tx]
+        target:
+          type: string
+          description: Trace target value used by ai.trace.report and ai.forensics.case.create.
+        case_id:
+          type: string
+          description: Required by ai.forensics.case.review and protected case detail operations.
+        direction:
+          type: string
+          description: Optional trace-graph traversal direction for protected case creation.
+          enum: [upstream, downstream, both]
+          default: both
+        max_depth:
+          type: integer
+          description: Optional hop limit for protected graph traversal.
+          minimum: 1
+          maximum: 32
+          default: 4
+        maxDepth:
+          type: integer
+          description: CamelCase alias of max_depth.
+          minimum: 1
+          maximum: 32
+        denom:
+          type: string
+          description: Optional asset denom filter for protected trace/case creation.
+        min_amount:
+          type: string
+          description: Optional minimum amount filter for protected graph traversal.
+        minAmount:
+          type: string
+          description: CamelCase alias of min_amount.
+        min_tainted_amount:
+          type: string
+          description: Optional minimum tainted amount filter for protected graph traversal.
+        minTaintedAmount:
+          type: string
+          description: CamelCase alias of min_tainted_amount.
+        since_height:
+          type: integer
+          description: Optional starting block height for protected graph traversal.
+        sinceHeight:
+          type: integer
+          description: CamelCase alias of since_height.
+        until_height:
+          type: integer
+          description: Optional ending block height for protected graph traversal.
+        untilHeight:
+          type: integer
+          description: CamelCase alias of until_height.
+        note:
+          type: string
+          description: Optional manual review note for ai.forensics.case.review.
+        next_status:
+          type: string
+          description: Next review status for ai.forensics.case.review.
+        escalation_status:
+          type: string
+          description: Optional escalation state for ai.forensics.case.review.
 
 ```

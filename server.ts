@@ -10,6 +10,7 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
   const AI_GATEWAY_CHAT_URL = "https://ai.ynxweb4.com/ai/chat";
+  const AI_GATEWAY_STREAM_URL = "https://ai.ynxweb4.com/ai/chat/stream";
 
   // Logger middleware
   app.use((req, res, next) => {
@@ -60,16 +61,29 @@ async function startServer() {
     };
 
     try {
-      writeEvent({ type: "meta", requestId, status: "started" });
-
-      const upstream = await fetch(AI_GATEWAY_CHAT_URL, {
+      const upstream = await fetch(AI_GATEWAY_STREAM_URL, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-request-id": requestId,
+        },
         body: JSON.stringify({ message }),
         signal: abortController.signal,
       });
 
-      if (!upstream.ok) {
+      if (upstream.ok && upstream.body) {
+        const reader = upstream.body.getReader();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (abortController.signal.aborted) break;
+          res.write(value);
+        }
+        res.end();
+        return;
+      }
+
+      if (upstream.status !== 404) {
         const text = await upstream.text();
         writeEvent({
           type: "error",
@@ -81,7 +95,28 @@ async function startServer() {
         return;
       }
 
-      const json = (await upstream.json()) as { answer?: string; mode?: string; model?: string; llm_error?: string };
+      writeEvent({ type: "meta", requestId, status: "started" });
+
+      const fallback = await fetch(AI_GATEWAY_CHAT_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ message }),
+        signal: abortController.signal,
+      });
+
+      if (!fallback.ok) {
+        const text = await fallback.text();
+        writeEvent({
+          type: "error",
+          requestId,
+          status: fallback.status,
+          message: text || `upstream_${fallback.status}`,
+        });
+        res.end();
+        return;
+      }
+
+      const json = (await fallback.json()) as { answer?: string; mode?: string; model?: string; llm_error?: string };
       const answer = typeof json.answer === "string" ? json.answer : "";
       const tokens = answer.match(/\S+\s*/g) || [];
 
