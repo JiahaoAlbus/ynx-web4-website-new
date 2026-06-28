@@ -54,6 +54,12 @@ type ChatResponse = {
   llm_error?: string;
 };
 
+type ChatStreamEvent =
+  | { type: "meta"; requestId: string; status?: string; mode?: string; llm_error?: string | null }
+  | { type: "delta"; requestId: string; delta: string; done?: boolean }
+  | { type: "done"; requestId: string; done: true }
+  | { type: "error"; requestId: string; status?: number; message: string };
+
 type ActionCatalog = {
   ok: boolean;
   actions: Array<{
@@ -83,6 +89,8 @@ async function getJson<T>(url: string): Promise<T> {
 
 export function AI() {
   const answerRef = useRef<HTMLDivElement | null>(null);
+  const activeRequestRef = useRef<string>("");
+  const streamAbortRef = useRef<AbortController | null>(null);
   const [brief, setBrief] = useState<IntelligenceBrief | null>(null);
   const [question, setQuestion] = useState("What is the current state of AI, bridge, and trading on the public YNX testnet, and what remains before a stronger production claim?");
   const [answer, setAnswer] = useState("");
@@ -115,22 +123,68 @@ export function AI() {
 
   async function ask() {
     if (!question.trim()) return;
+    streamAbortRef.current?.abort();
+    const abortController = new AbortController();
+    streamAbortRef.current = abortController;
     setBusy(true);
-    setStatus("Querying live YNX context...");
+    setAnswer("");
+    setStatus("Streaming live YNX context...");
     try {
-      const response = await fetch(AI_CHAT_URL, {
+      const response = await fetch("/api/ai/chat/stream", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        signal: AbortSignal.timeout(6000),
+        signal: abortController.signal,
         body: JSON.stringify({ message: question }),
       });
-      if (!response.ok) throw new Error(`chat ${response.status}`);
-      const json = (await response.json()) as ChatResponse;
-      setAnswer(json.answer);
-      setMode(json.mode || json.model || "-");
-      setStatus(json.llm_error ? `Live fallback: ${json.llm_error}` : "Answer updated");
+      if (!response.ok || !response.body) throw new Error(`chat ${response.status}`);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line) as ChatStreamEvent;
+
+          if (event.type === "meta") {
+            activeRequestRef.current = event.requestId;
+            if (event.mode) setMode(event.mode);
+            if (event.llm_error) setStatus(`Live fallback: ${event.llm_error}`);
+            continue;
+          }
+
+          if (event.requestId !== activeRequestRef.current) continue;
+
+          if (event.type === "delta") {
+            setAnswer((current) => current + event.delta);
+            setStatus("Streaming answer...");
+            continue;
+          }
+
+          if (event.type === "done") {
+            setStatus("Answer updated");
+            continue;
+          }
+
+          if (event.type === "error") {
+            throw new Error(event.message);
+          }
+        }
+      }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "AI chat unavailable");
+      if (error instanceof Error && error.name === "AbortError") {
+        setStatus("Previous stream cancelled");
+      } else {
+        setStatus(error instanceof Error ? error.message : "AI chat unavailable");
+      }
     } finally {
       setBusy(false);
     }
@@ -202,6 +256,12 @@ export function AI() {
     if (!answer) return;
     answerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [answer]);
+
+  useEffect(() => {
+    return () => {
+      streamAbortRef.current?.abort();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen pt-24 pb-28">
