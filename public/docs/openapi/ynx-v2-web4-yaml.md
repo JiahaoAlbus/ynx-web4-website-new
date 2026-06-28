@@ -5,7 +5,7 @@ openapi: 3.1.0
 info:
   title: YNX v2 Web4 API
   version: 2.0.0
-  description: Wallet bootstrap, sovereignty policies, session delegation, agents, intents, and audit surfaces.
+  description: Wallet bootstrap, sovereignty policies, session delegation, agents, intents, YNX Card mock controls, and audit surfaces.
 servers:
   - url: http://127.0.0.1:38091
 paths:
@@ -24,6 +24,7 @@ paths:
   /web4/audit:
     get:
       summary: Web4 audit stream
+      description: Policy-scoped audit stream. Requires `policy_id` plus `x-ynx-session` with `audit.read` capability when policy enforcement is enabled.
       responses:
         "200":
           description: OK
@@ -36,6 +37,7 @@ paths:
   /web4/wallet/verify:
     post:
       summary: Complete wallet bootstrap
+      description: Verifies the issued wallet bootstrap challenge against a real signature recovered to the requested wallet address before returning an API key. Bootstrap challenges and bootstrap api keys expire by default, and bootstrap api keys are single-use for policy creation by default.
       responses:
         "200":
           description: OK
@@ -47,9 +49,15 @@ paths:
           description: OK
     post:
       summary: Create sovereignty policy
+      description: When bootstrap gating is enabled, requires `x-ynx-api-key` from a previously verified wallet bootstrap so policy ownership stays linked to wallet identity. Bootstrap api keys are single-use for policy creation by default, and expired bootstrap api keys are rejected.
       parameters:
         - in: header
           name: x-ynx-owner
+          required: false
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-api-key
           required: false
           schema:
             type: string
@@ -213,6 +221,90 @@ paths:
           required: false
           schema:
             type: string
+  /web4/cards:
+    get:
+      summary: List YNX Card mock records
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create YNX Card mock
+      description: Owner-scoped mock-card creation under an existing policy. This is not a live issuer integration.
+      parameters:
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created
+  /web4/cards/{card_id}:
+    get:
+      summary: Get YNX Card mock detail and recent authorizations
+      parameters:
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/cards/{card_id}/authorize:
+    post:
+      summary: Run a mock card authorization decision
+      description: Evaluates session, policy, and card-specific merchant/MCC/country/limit rules before returning an approve or decline decision.
+      parameters:
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-session
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approved
+        "403":
+          description: Declined
+  /web4/cards/{card_id}/freeze:
+    post:
+      summary: Freeze YNX Card mock
+      parameters:
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /web4/cards/{card_id}/resume:
+    post:
+      summary: Resume YNX Card mock
+      parameters:
+        - in: path
+          name: card_id
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-ynx-owner
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
       responses:
         "201":
           description: Created

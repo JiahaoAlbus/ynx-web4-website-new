@@ -81,7 +81,7 @@ Core endpoint groups:
 - `POST /web4/policies`
 - `POST /web4/policies/:id/sessions`
 - `POST /web4/intents`
-- `GET /web4/audit`
+- `GET /web4/audit` (policy-scoped; use `policy_id` + `x-ynx-session`)
 
 Start with:
 
@@ -103,11 +103,16 @@ Core endpoint groups:
 
 - `GET /health`
 - `POST /ai/vaults`
+- `POST /ai/vaults/:id/deposit`
 - `POST /ai/jobs`
 - `POST /ai/jobs/:id/commit`
 - `POST /ai/jobs/:id/finalize`
-- `POST /ai/payments`
+- `POST /ai/payments/charge`
+- `GET /ai/payments/:id` (policy-scoped when Web4 enforcement is enabled)
 - `GET /x402/resource`
+
+For secure-by-default setups, treat vault creation as empty-state only and keep
+local deposit emulation disabled unless you explicitly need a dev/demo flow.
 
 Start with:
 

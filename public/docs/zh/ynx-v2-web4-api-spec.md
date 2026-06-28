@@ -17,16 +17,20 @@ YNX v2 Web4 API 的执行顺序是：
 - `content-type: application/json`
 - `x-ynx-owner: <owner secret 或 owner id>`（Owner 级操作）
 - `x-ynx-session: <session token>`（委托操作）
+- `x-ynx-api-key: <bootstrap api key>`（启用 bootstrap gating 时用于 wallet-backed policy 创建）
 
 ## 3. 钱包自举
 
 - `POST /web4/wallet/bootstrap`
-- `POST /web4/wallet/verify`
+- `POST /web4/wallet/verify`（必须提交对 challenge message 的真实钱包签名）
+- bootstrap api key 默认只能用于一次 policy 创建
+- bootstrap challenge 和 bootstrap api key 默认都有有效期
 
 ## 4. 策略与会话
 
 - `GET /web4/policies`
-- `POST /web4/policies`
+- `POST /web4/policies`（启用 bootstrap gating 时需要 `x-ynx-api-key`）
+- 过期的 bootstrap api key 会被拒绝
 - `GET /web4/policies/:policy_id`
 - `POST /web4/policies/:policy_id/sessions`
 - `POST /web4/policies/:policy_id/pause`
@@ -86,7 +90,40 @@ YNX v2 Web4 API 的执行顺序是：
 - `POST /web4/agents/:agent_id/self-update`
 - `POST /web4/agents/:agent_id/replicate`
 
-## 7. Intent 生命周期
+## 7. YNX Card Mock
+
+- `GET /web4/cards`
+- `POST /web4/cards`（需要 `x-ynx-owner`）
+- `GET /web4/cards/:card_id`
+- `POST /web4/cards/:card_id/authorize`
+  - 请求头需要：
+    - `x-ynx-session`
+  - 请求体至少应包含：
+    - `policy_id`
+    - `amount`
+  - 常见字段：
+    - `agent_id`
+    - `merchant`
+    - `mcc`
+    - `country`
+  - 当前支持的规则包括：
+    - `require_agent`
+    - `allowed_agents`
+    - `allowed_merchants`
+    - `blocked_merchants`
+    - `allowed_mccs`
+    - `blocked_mccs`
+    - `allowed_countries`
+    - `blocked_countries`
+    - `max_per_txn`
+    - `max_daily_spend`
+    - `max_total_spend`
+- `POST /web4/cards/:card_id/freeze`（需要 `x-ynx-owner`）
+- `POST /web4/cards/:card_id/resume`（需要 `x-ynx-owner`）
+
+这里当前是 programmable mock-card control layer，不是已经接入真实发卡服务商。
+
+## 8. Intent 生命周期
 
 - `GET /web4/intents`
 - `POST /web4/intents`
@@ -95,14 +132,14 @@ YNX v2 Web4 API 的执行顺序是：
 - `POST /web4/intents/:intent_id/challenge`
 - `POST /web4/intents/:intent_id/finalize`
 
-## 8. 可观测接口
+## 9. 可观测接口
 
 - `GET /health`
 - `GET /web4/overview`
 - `GET /web4/stats`
-- `GET /web4/audit`
+- `GET /web4/audit` —— 按 policy 受控读取，需要 `policy_id` + `x-ynx-session`
 
-## 9. 常见错误码语义
+## 10. 常见错误码语义
 
 - `policy_required`
 - `policy_action_denied`
@@ -112,3 +149,10 @@ YNX v2 Web4 API 的执行顺序是：
 - `policy_service_host_denied`
 - `replication_limit_reached`
 - `replication_cooldown`
+- `card_inactive`
+- `merchant_not_allowed`
+- `merchant_blocked`
+- `mcc_not_allowed`
+- `mcc_blocked`
+- `country_not_allowed`
+- `country_blocked`
