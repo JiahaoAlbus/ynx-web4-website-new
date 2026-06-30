@@ -59,6 +59,7 @@ type RouteReadinessResponse = {
   items: Array<{
     routeId: string;
     phase: string;
+    displayName?: string;
     automatic_loop_ready?: boolean;
     blockers?: string[];
     evidence?: {
@@ -122,6 +123,17 @@ export function Bridge() {
 
   const route = useMemo(() => routes.find((item) => item.routeId === routeId) || routes[0], [routeId, routes]);
   const amountRaw = route ? parseUnits(amount, route.decimals) : 0n;
+  const readinessItems = useMemo(
+    () =>
+      (readiness?.items || []).map((item) => {
+        const routeMeta = routes.find((candidate) => candidate.routeId === item.routeId);
+        return {
+          ...item,
+          displayName: item.displayName || routeMeta?.displayName || item.routeId,
+        };
+      }),
+    [readiness, routes],
+  );
 
   async function connectSourceWallet() {
     await addOrSwitchEvmChain({
@@ -298,9 +310,17 @@ export function Bridge() {
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-mono uppercase tracking-widest text-ink/45">Source to YNX</p>
-                <h2 className="mt-1 text-2xl font-display font-bold">Sepolia Bridge</h2>
+                <h2 className="mt-1 text-2xl font-display font-bold">Interactive Bridge Lane</h2>
+                <p className="mt-2 text-sm leading-6 text-ink/60">
+                  Wallet-triggered deposit is currently exposed for the live Sepolia lockbox lanes. The other public routes still appear below with their exact readiness state.
+                </p>
               </div>
               <Button variant="outline" onClick={addYnxNetwork}>Add YNX Network</Button>
+            </div>
+
+            <div className="mb-6 rounded-2xl border border-klein/15 bg-klein/5 p-4 text-sm text-ink/70">
+              MetaMask can add and use chain <span className="font-mono">9102 / 0x238e</span>, but MetaMask’s own XChain Swaps surface may still fail because it does not natively registry-map this custom chain.
+              Use network connect / deposit / withdraw here, not MetaMask Swaps, when testing YNX.
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -373,6 +393,40 @@ export function Bridge() {
                 {!!routeReadiness.blockers?.length && <p className="mt-2 break-words font-mono text-xs text-amber-700">{summarizeBlockers(routeReadiness).join(", ")}</p>}
               </div>
             )}
+          </div>
+
+          <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-ink/45">All public routes</p>
+                <h3 className="mt-1 font-display text-lg font-semibold">Route maturity board</h3>
+              </div>
+              <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink/60">
+                {readiness?.summary?.full_loop_tested ?? 0}/{(readiness?.summary?.routes ?? readinessItems.length) || 0} full-loop-tested
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {readinessItems.map((item) => (
+                <div key={item.routeId} className="rounded-2xl border border-border bg-surface/70 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-ink">{item.displayName}</p>
+                    <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-ink/60">
+                      {summarizeRoutePhase(item)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] font-mono uppercase tracking-[0.18em] text-ink/40">{item.routeId}</p>
+                  <p className="mt-3 text-sm text-ink/65">
+                    deposit watcher: {summarizeDepositStatus(item)} / release adapter: {summarizeReleaseStatus(item)}
+                  </p>
+                  <p className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${item.automatic_loop_ready ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                    automatic {item.automatic_loop_ready ? "ready" : "pending"}
+                  </p>
+                  {!!item.blockers?.length && (
+                    <p className="mt-3 break-words font-mono text-xs text-amber-700">{summarizeBlockers(item).join(", ")}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">

@@ -78,10 +78,10 @@ type ActionRunResponse = {
   error?: string;
 };
 
-const AI_BRIEF_URL = "https://ai.ynxweb4.com/ai/intelligence/brief";
-const AI_CHAT_URL = "https://ai.ynxweb4.com/ai/chat";
-const AI_ACTIONS_URL = "https://ai.ynxweb4.com/ai/actions";
-const AI_ACTION_RUN_URL = "https://ai.ynxweb4.com/ai/actions/run";
+const AI_BRIEF_URL = "/api/ai/intelligence/brief";
+const AI_CHAT_URL = "/api/ai/chat";
+const AI_ACTIONS_URL = "/api/ai/actions";
+const AI_ACTION_RUN_URL = "/api/ai/actions/run";
 
 async function getJson<T>(url: string): Promise<T> {
   return fetchJsonWithTimeout<T>(url, { timeoutMs: 3500 });

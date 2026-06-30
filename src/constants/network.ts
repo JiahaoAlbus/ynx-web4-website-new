@@ -4,7 +4,7 @@ export const NETWORK = {
   evmChainId: "9102",
   evmChainIdHex: "0x238e",
   denom: "anyxt",
-  symbol: "ANYXT",
+  symbol: "NYXT",
   endpoints: {
     rpc: "https://rpc.ynxweb4.com",
     evm: "https://evm.ynxweb4.com",

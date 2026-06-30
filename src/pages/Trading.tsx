@@ -31,7 +31,7 @@ type Registry = {
 };
 
 const BRIDGE_ASSETS_URL = "https://rpc.ynxweb4.com/bridge/assets";
-const AI_ACTION_RUN_URL = "https://ai.ynxweb4.com/ai/actions/run";
+const AI_ACTION_RUN_URL = "/api/ai/actions/run";
 const PAIR_QUOTE = "0x8f79306e";
 const PAIR_SWAP = "0xf3e6ea8a";
 const YUSD = "YUSD.test";

@@ -9,8 +9,50 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 async function startServer() {
   const app = express();
   const PORT = 3000;
+  const AI_GATEWAY_BASE_URL = "https://ai.ynxweb4.com";
   const AI_GATEWAY_CHAT_URL = "https://ai.ynxweb4.com/ai/chat";
   const AI_GATEWAY_STREAM_URL = "https://ai.ynxweb4.com/ai/chat/stream";
+
+  function applyNoStore(res: express.Response) {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  }
+
+  async function proxyAiJson(
+    req: express.Request,
+    res: express.Response,
+    options: {
+      pathname: string;
+      method?: "GET" | "POST";
+      body?: unknown;
+    },
+  ) {
+    const abortController = new AbortController();
+    req.on("close", () => abortController.abort());
+
+    try {
+      const upstream = await fetch(`${AI_GATEWAY_BASE_URL}${options.pathname}`, {
+        method: options.method || "GET",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: options.body == null ? undefined : JSON.stringify(options.body),
+        signal: abortController.signal,
+      });
+
+      const text = await upstream.text();
+      applyNoStore(res);
+      res.status(upstream.status);
+      res.type("application/json");
+      res.send(text);
+    } catch (err: any) {
+      applyNoStore(res);
+      res.status(502).json({
+        ok: false,
+        error: err?.name === "AbortError" ? "proxy_aborted" : "proxy_failed",
+        message: err?.message || "proxy_failed",
+      });
+    }
+  }
 
   // Logger middleware
   app.use((req, res, next) => {
@@ -25,7 +67,7 @@ async function startServer() {
 
     try {
       const status = await getNetworkStatus();
-      res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      applyNoStore(res);
       res.json(status);
     } catch (err: any) {
       console.error(`[API] Fatal error in status route:`, err);
@@ -37,6 +79,30 @@ async function startServer() {
   app.get("/api/ping", (req, res) => {
     console.log(`[API] Received ping`);
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  app.get("/api/ai/intelligence/brief", async (req, res) => {
+    await proxyAiJson(req, res, { pathname: "/ai/intelligence/brief" });
+  });
+
+  app.get("/api/ai/actions", async (req, res) => {
+    await proxyAiJson(req, res, { pathname: "/ai/actions" });
+  });
+
+  app.post("/api/ai/actions/run", async (req, res) => {
+    await proxyAiJson(req, res, {
+      pathname: "/ai/actions/run",
+      method: "POST",
+      body: req.body || {},
+    });
+  });
+
+  app.post("/api/ai/chat", async (req, res) => {
+    await proxyAiJson(req, res, {
+      pathname: "/ai/chat",
+      method: "POST",
+      body: req.body || {},
+    });
   });
 
   app.post("/api/ai/chat/stream", async (req, res) => {
